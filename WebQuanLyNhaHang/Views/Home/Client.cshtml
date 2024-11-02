@@ -1,0 +1,47 @@
+﻿<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/asset/css/base.css">
+    <link rel="stylesheet" href="~/asset/css/home.css">
+    <link rel="stylesheet" href="~/asset/css/responsive.css">
+    <link rel="stylesheet" type="text/css" href="btl.css">
+    <link rel="stylesheet" href="~/asset/css/error.css">
+    <title>Kính chào quý khách</title>
+</head>
+
+<body>
+    <div class="hide-on-mobile-tablet">
+        <div class="outer-container">
+            <div class="error-container">
+                <img src="~/asset/img/imgWeb/error.png" alt="image-logo">
+                <div class="error-title">THIẾT BỊ KHÔNG PHÙ HỢP</div>
+                <div class="error-message">Ứng dụng không phù hợp trên thiết bị của bạn</div>
+            </div>
+        </div>
+    </div>
+    <div class="container header-icon hide-on-pc">
+        <div class="text-center ">
+            <img class="logo" src="~/asset/img/imgWeb/icon_staff.svg" alt="">
+            <div class="dba__name text-center">DAB coffee & eatery. Xin kính chào quý khách</div>
+        </div>
+        <div class="text-tt text-center">Mời bạn nhập tên để nhà hàng phục vụ bạn nhanh chóng hơn, chính xác hơn</div>
+
+        <div class="text-center">
+            <form asp-controller="home" asp-action="CustomerInfo" method="post">
+                <input maxlength="18" placeholder="Tên của bạn" name="CustomerName" type="text" class="inputName">
+                <button type="submit" class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
+                    Bắt đầu
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
+

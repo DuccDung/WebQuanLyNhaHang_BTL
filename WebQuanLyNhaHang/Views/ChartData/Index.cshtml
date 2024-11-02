@@ -1,0 +1,30 @@
+﻿@model List<WebQuanLyNhaHang.ViewModel.ChartData>
+
+<div id="barchart" style="width:600px; height:400px;"></div>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Lấy dữ liệu từ ViewModel đã được serialize thành JSON
+        var chartData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+
+        var seriesData = chartData.map(function (item) {
+            return {
+                type: 'column',
+                name: item.Name,
+                data: item.Data
+            };
+        });
+
+        // Vẽ biểu đồ với dữ liệu từ ViewModel
+        Highcharts.chart('barchart', {
+            title: {
+                text: 'Combination chart'
+            },
+            xAxis: {
+                categories: ['Apples', 'Oranges', 'Pears', 'Bananas', 'Plums']
+            },
+            series: seriesData
+        });
+    });
+</script>

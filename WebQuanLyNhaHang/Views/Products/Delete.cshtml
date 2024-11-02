@@ -1,0 +1,57 @@
+﻿@model WebQuanLyNhaHang.Models.Product
+
+@{
+    Layout = "Header_Left_Layout";
+}
+
+<div class="content-wrapper">
+    <h4>Sản Phẩm Bạn Muốn Xóa</h4>
+    <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.TenSanPham)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.TenSanPham)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.MoTa)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.MoTa)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.GiaTien)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.GiaTien)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.SoLuong)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.SoLuong)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.PathPhoto)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.PathPhoto)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Cate)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Cate.CateId)
+            </dd>
+        </dl>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="ProductId" />
+            <input type="submit" value="Delete" class="btn btn-danger waves-effect waves-light" /> |
+            <a asp-action="Index">Trở lại</a>
+        </form>
+</div>
+
+
+

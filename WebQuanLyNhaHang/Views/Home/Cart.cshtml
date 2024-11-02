@@ -1,0 +1,148 @@
+﻿<html lang="en">
+
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
+
+        <link rel="stylesheet" href="~/asset/css/base.css">
+        <link rel="stylesheet" href="~/asset/css/home.css">
+        <link rel="stylesheet" href="~/asset/css/responsive.css">
+        <link rel="stylesheet" type="text/css" href="btl.css">
+        <link rel="stylesheet" href="~/asset/css/card.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="~/asset/font/fontawesome-free-6.5.2-web/fontawesome-free-6.5.2-web/css/all.min.css">
+        <title>Kính chào quý khách</title>
+</head>
+
+@model WebQuanLyNhaHang.ViewModel.ViewModelCart
+@{
+    int? DhId = Context.Session.GetInt32("DhId");
+    int? BanId = Context.Session.GetInt32("BanId");
+}
+<body>
+    <div class="foreground" >
+        <div class="header__card">
+            <div class=" text__cart-title">
+                <div>
+                    <div>
+                        <a asp-controller="Home" asp-action="Menu">
+                            <div class="btn-back">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="page-title">
+                    Các món đang gọi
+                </div>
+                <div class="clear-button__container">
+                    <div class="btn--clear-cart">
+                        Clear
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cart__content_">
+            <div class="container__card">
+                @foreach (var item in Model.CTHD_PctByDh(DhId))
+                {
+                    <div class="bought--item">
+                        <div class="item-editor">
+                            <div class="item-box">
+                                <div class="item-inner--right">
+                                    <div class="card-img" style="background-image: url(@item.PathPhoto);">
+                                    </div>
+                                    <div class="card-product-info">
+                                        <span>
+                                            <span style="color: var(--primary--color)">@item.SoLuong x</span> @item.TenSanPham
+                                        </span>
+                                        <span class="card-product--description">
+                                            @item.Condition
+                                        </span>
+                                        <span class="card-product--price">
+                                            @String.Format("{0:N0}", item.ThanhTien)đ
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="item-inner--left">
+                                    <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </div>
+                                    <div class="btn-edit">
+                                        <span>edit</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card__total-price">
+                <div>Tổng Tiền</div>
+                <div>@String.Format("{0:N0}", @Model.TongtienById(DhId).TongTien)đ</div>
+            </div>
+            <div class="btn-sumbit">
+                <a asp-controller="Home" asp-action="OrderSuccess">
+                    <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
+                        Gửi yêu cầu gọi món
+                    </button>
+                </a>
+            </div>
+        </div>
+       
+
+    </div>
+    <!-- Thêm SignalR script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Lắng nghe sự kiện khi click vào nút remove
+            $(document).on('click','.btn-remove' ,function () {
+                var cthdId = $(this).data('id'); // Lấy id từ thuộc tính data-id của div
+
+                $.ajax({
+                    url: '@Url.Action("RemoveItem", "Home")', // Đường dẫn đến action xử lý
+                    type: 'POST', // Phương thức gửi là POST
+                    data: {
+                        id: cthdId  // Gửi id chi tiết đơn hàng
+                    },
+                    success: function(response) {
+                        $("div#cart__content_").html(response); // trả về 1 patialView
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Đã có lỗi xảy ra: " + error);
+                    }
+                });
+            });
+        });
+
+        // ==== ==== sử lý sự thay đổi của database
+        const connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+        // Khởi tạo kết nối SignalR
+        connection.start().catch(err => console.error(err.toString()));
+
+        connection.on("DatabaseUpdated", function () {
+            console.log("Database đã được thay đổi");
+           // Gọi AJAX để lấy partial view từ server
+            $.get('/Home/GetCTHD', function (data) {
+                const content = document.getElementById("cart__content_");
+                content.innerHTML = data; //Thay thế nội dung của danh sách bằng HTML từ partial view
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>

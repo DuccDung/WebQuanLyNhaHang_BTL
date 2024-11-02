@@ -1,0 +1,60 @@
+﻿@model WebQuanLyNhaHang.Models.DonHang
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>DonHang</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.GioVao)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.GioVao)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.GioRa)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.GioRa)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.TongTien)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TongTien)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Ban)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Ban.BanId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Kh)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Kh.KhId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Km)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Km.KmId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Nv)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Nv.NvId)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.DhId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

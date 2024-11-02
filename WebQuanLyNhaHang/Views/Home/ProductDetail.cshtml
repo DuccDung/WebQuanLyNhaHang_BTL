@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/asset/css/base.css">
+    <link rel="stylesheet" href="~/asset/css/responsive.css">
+    <link rel="stylesheet" type="text/css" href="btl.css">
+    <link rel="stylesheet" href="~/asset/css/productDetail.css">
+    <title>Kính chào quý khách</title>
+</head>
+<style>
+    .product-detail {
+        background-color: #fff;
+        width: 100%;
+        transform: translateY(100%);
+        /* Bắt đầu từ dưới màn hình */
+        transition: transform 0.3s ease-in-out;
+        /* Hiệu ứng chuyển động */
+        position: relative;
+    }
+
+        .product-detail.active {
+            transform: translateY(0);
+            /* Di chuyển lên khi active */
+        }
+</style>
+@model WebQuanLyNhaHang.Models.Product // Đón class ViewModel đển nhận dữ liệu sử lý
+
+<body>
+    <form asp-controller="Home" asp-action="CreateProductDetail" method="post">
+        <div class="app__product product-detail">
+            <div class="container-fluid img-container bg-light p-0">
+                <img src="@Model.PathPhoto" class="img-fluid" alt="Responsive image">
+            </div>
+            <div class="app__product-container">
+                <div class="container__productDetail">
+                    <div class="content-box">
+                        <div class="content-padding">
+                            <div class="component__item-buy-detail--name">@Model.TenSanPham</div>
+                        </div>
+                        <div class="component__item-buy-detail--description"></div>
+                    </div>
+                    <div class="bottom-box">
+                        <div class="content-padding">
+                            @await Component.InvokeAsync("ProductCondition", new { ProductID = Model.ProductId })
+
+                            <div class="note-section">
+                                <div class="parent_note">
+                                    <img src="/asset/img/imgWeb/note.svg" alt="note_icon" class="note_icon">
+                                    <label class="input__decreption">
+                                        <textarea name="ghichu" placeholder="Do you have a message for the restaurant?"></textarea>
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="app__product-foodter">
+                <div class="content-padding">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Quantity Input -->
+                        <div class="input-group quantity-input">
+                            <button class="btn btn-outline-secondary" type="button" id="button-minus">-</button>
+                            <input type="text" value="@Model.ProductId" hidden name="ProductID">
+                            <input type="text" name="soluong" class="form-control text-center" value="@ViewData["SoLuong"]" id="quantity"
+                                   aria-label="Quantity">
+                            <button class="btn btn-outline-secondary" type="button" id="button-plus">+</button>
+                        </div>
+                        <!-- Add to order button --> 
+                        <button type="submit" class="btn btn-secondary btn-lg add-to-order">
+                            Add to order <br><span class="small" id="Productdetail-price">(@String.Format("{0:N0}", Model.GiaTien)đ)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+   
+    <script>
+        window.onload = function () {
+            // Thêm lớp 'active' để chi tiết sản phẩm xuất hiện từ dưới lên
+            document.querySelector('.product-detail').classList.add('active');
+        };
+        // sử lý (+,-) số lượng
+            document.getElementById('button-plus').addEventListener('click', function () {
+                let quantityInput = document.getElementById('quantity');
+                let currentValue = parseInt(quantityInput.value);
+                quantityInput.value = currentValue + 1;
+                });
+
+            document.getElementById('button-minus').addEventListener('click', function () {
+                let quantityInput = document.getElementById('quantity');
+                let currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {  // Ensure value doesn't go below 1
+                quantityInput.value = currentValue - 1;
+                    }
+                });
+    </script>
+
+</body>
+</html>

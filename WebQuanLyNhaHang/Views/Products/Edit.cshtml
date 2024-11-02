@@ -1,0 +1,54 @@
+﻿@model WebQuanLyNhaHang.Models.Product
+
+@{
+    Layout = "Header_Left_Layout";
+}
+
+<div class="content-wrapper">
+    <h4>Chỉnh Sửa Sản Phẩm</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4 col-lg-3"></div>
+        <div class="col-md-4 col-lg-6">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="ProductId" />
+                <div class="form-group">
+                    <label asp-for="CateId" class="control-label"></label>
+                    <select asp-for="CateId" class="form-control" asp-items="ViewBag.CateId"></select>
+                    <span asp-validation-for="CateId" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="TenSanPham" class="control-label"></label>
+                    <input asp-for="TenSanPham" class="form-control" />
+                    <span asp-validation-for="TenSanPham" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="MoTa" class="control-label"></label>
+                    <input asp-for="MoTa" class="form-control" />
+                    <span asp-validation-for="MoTa" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="GiaTien" class="control-label"></label>
+                    <input asp-for="GiaTien" class="form-control" />
+                    <span asp-validation-for="GiaTien" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="SoLuong" class="control-label"></label>
+                    <input asp-for="SoLuong" class="form-control" />
+                    <span asp-validation-for="SoLuong" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">File ảnh</label>
+                    <input type="file" name="FileInterface" />
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Save" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4 col-lg-3"></div>
+    </div>
+</div>
+ @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

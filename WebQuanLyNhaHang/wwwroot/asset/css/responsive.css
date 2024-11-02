@@ -1,0 +1,27 @@
+/* mobile & tablet (Bootstrap sm and md) */
+@media (max-width: 991.98px) {
+    .hide-on-mobile-tablet {
+        display: none;
+    }
+}
+
+/* tablet (Bootstrap md) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .hide-on-tablet {
+        display: none;
+    }
+}
+
+/* mobile (Bootstrap xs and sm) */
+@media (max-width: 767.98px) {
+    .hide-on-mobile {
+        display: none;
+    }
+}
+
+/* pc (Bootstrap lg and up) */
+@media (min-width: 992px) {
+    .hide-on-pc {
+        display: none;
+    }
+}

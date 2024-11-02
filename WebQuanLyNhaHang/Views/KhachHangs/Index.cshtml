@@ -1,0 +1,59 @@
+﻿@model IEnumerable<WebQuanLyNhaHang.Models.KhachHang>
+@{
+    Layout = "Header_Left_Layout";
+}
+<div class="content-wrapper">
+    <!-- 1-3-block row end -->
+    <div class="main-header">
+        <h4>Khách Hàng</h4>
+    </div>
+    <!-- 2-1 block start -->
+    <div class="row">
+        <div class="col-xl-12 col-lg-12">
+            <div class="card">
+                <div class="card-block">
+                    <div class="table-responsive">
+                        <table class="table m-b-0 photo-table">
+                            <thead>
+                                <tr class="text-uppercase">
+                                    <th>Ảnh</th>
+                                    <th>Tên Nhân Viên</th>
+                                    <th>Địa Chỉ</th>
+                                    <th>Ngày Sinh</th>
+                                    <th>Tên Tài Khoản</th>
+                                    <th>Mật Khẩu</th>
+                                    <th>Chỉnh Sửa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                               
+                                @foreach(var item in Model)
+                                {
+                                    <tr>
+                                        <th>
+                                            <img class="img-fluid img-circle" style="width: 50px; height: 50px;" src="@item.PathPhoto" alt="Khach Hàng">
+                                        </th>
+                                        <td>
+                                            @item.TenKhachHang
+                                        </td>
+                                        <td>@item.DiaChi</td>
+                                        <td>@item.SoDienThoai</td>
+                                        <td>@item.TaiKhoan</td>
+                                        <td>@item.MatKhau</td>
+                                        <td>
+                                            <a asp-controller="KhachHangs" asp-action="Details" asp-route-id="@item.KhId" class="btn btn-flat flat-info txt-info waves-effect waves-light">
+                                                Info
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <a asp-controller="KhachHangs" asp-action="Create" class="btn btn-success waves-effect waves-light">Thêm Khách Hàng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,71 @@
+﻿@model WebQuanLyNhaHang.Models.NhanVien
+
+@{
+    Layout = "Header_Left_Layout";
+    ViewData["Title"] = "Quản Lý Nhân Viên";
+}
+<div class="content-wrapper">
+    <div class="row">
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-header-text">Nhập Thông Tin Thay Đổi</h5>
+                </div>
+                <!-- end of modal -->
+                <div class="card-block">
+                    <form asp-controller="NhanViens" asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <input type="number" asp-for="NvId" hidden value="@Model.NvId" />
+                        <div class="form-group row">
+                            <label for="example-text-input" class="col-xs-2 col-form-label form-control-label">Tên Nhân Viên</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" asp-for="TenNhanVien" value="@Model.TenNhanVien" id="example-text-input">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="example-search-input" class="col-xs-2 col-form-label form-control-label">Ngày Sinh</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" asp-for="NgaySinh" value="@Model.NgaySinh" id="example-search-input">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="example-search-input" class="col-xs-2 col-form-label form-control-label">Địa Chỉ</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" asp-for="DiaChi" value="@Model.DiaChi" id="example-search-input">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="example-email-input" class="col-xs-2 col-form-label form-control-label">Hệ Số Lương</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" asp-for="HeSoLuong" value="@Model.HeSoLuong" id="example-email-input">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="example-url-input" class="col-xs-2 col-form-label form-control-label">Tên Tài Khoản</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" asp-for="TaiKhoan" value="@Model.TaiKhoan" id="example-url-input">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="example-tel-input" class="col-xs-2 col-form-label form-control-label">Mật Khẩu</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" asp-for="MatKhau" value="@Model.MatKhau" id="example-tel-input">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="file" class="col-md-2 col-form-label form-control-label">Đổi Ảnh Nền</label>
+                            <div class="col-md-9">
+                                <label for="file" class="custom-file">
+                                    <input type="file" name="fileImg" id="file" class="custom-file-input">
+                                    <span class="custom-file-control"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-inverse-success waves-effect waves-light">success</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3"></div>
+    </div>
+</div>

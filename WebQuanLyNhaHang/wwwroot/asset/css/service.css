@@ -1,0 +1,153 @@
+﻿/* bieu tuong nguoi dung*/
+.header-banner .fa-user-circle {
+    color: #c0b8b8;
+    /* Màu của biểu tượng */
+}
+
+.header-banner p {
+    margin: 0;
+    /* Loại bỏ margin cho các đoạn văn */
+}
+
+
+.banner-img {
+    width: 100%;
+    /* Ảnh vẫn chiếm toàn bộ chiều rộng khung */
+    max-height: 800px;
+    /* Giới hạn chiều cao tối đa */
+    height: auto;
+    /* Giữ nguyên tỉ lệ chiều cao */
+    object-fit: cover;
+    /* Cắt ảnh để chiếm đầy không gian mà không bị méo */
+    display: block;
+    /* Đảm bảo ảnh là một khối để căn giữa */
+    margin: 0 auto;
+    /* Căn giữa hình ảnh */
+    margin-top: 10px;
+}
+
+
+
+/* Đặt card chiếm toàn bộ chiều cao có sẵn */
+.row.my-4 {
+    height: 100%;
+    /* Chiều cao tối đa của hàng */
+}
+
+.card {
+    flex-grow: 1;
+    /* Card chiếm không gian còn lại trong hàng */
+    display: flex;
+    /* Sử dụng flex để canh giữa nội dung */
+    flex-direction: column;
+    /* Xếp theo chiều dọc */
+    justify-content: center;
+    /* Căn giữa nội dung */
+    align-items: center;
+    /* Căn giữa theo chiều ngang */
+    max-height: none;
+    /* Loại bỏ giới hạn chiều cao tối đa */
+    border: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+
+
+}
+.card-body{
+    flex: 1 1 auto;
+    color: var(--bs-card-color);
+    text-align: center;
+    padding: 10px;
+ }
+.card-title{
+    text-align:center;
+}
+    .card-img-top {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        margin: 0 auto;
+        padding: 10px;
+        margin-top: 20px;
+        /* Thay đổi khoảng cách ở đây */
+    }
+
+
+/* Nút gọi món điều chỉnh lại chiều cao */
+.btn-lg-custom {
+    padding: 15px 0;
+    /* Điều chỉnh lại padding để nút không bị quá cao */
+    font-size: 1.25rem;
+    width: 100%;
+    /* Nút chiếm 100% chiều rộng */
+    max-width: 100%;
+    /* Đảm bảo nút không bị giới hạn kích thước */
+}
+
+/* Modal */
+.modal-dialog {
+    position: fixed;
+    /* Đặt modal cố định */
+    bottom: 0;
+    /* Gắn modal vào dưới cùng của khung hiển thị */
+    left: 0;
+    /* Căn trái */
+    right: 0;
+    /* Căn phải */
+    margin: 0;
+    /* Không có lề */
+    width: 100%;
+    /* Chiếm toàn bộ chiều rộng */
+    height: 50%;
+    /* Chiếm 50% chiều cao */
+    border-radius: 20px 20px 0 0;
+    /* Bo tròn các góc trên */
+    overflow: hidden;
+    /* Ẩn phần nội dung tràn ra ngoài */
+}
+
+.modal-content {
+    border: none;
+    /* Xóa viền mặc định */
+    border-radius: 0;
+    /* Xóa bo tròn */
+    height: 100%;
+    /* Chiếm 100% chiều cao modal */
+}
+
+
+
+
+.star {
+    font-size: 30px;
+    cursor: pointer;
+    color: gray;
+}
+
+    .star:hover,
+    .star.selected {
+        color: gold;
+    }
+
+
+.btn-lg-custom {
+    padding: 15px 0;
+    font-size: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.icon-left {
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+
+.custom-padding {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.container-menu-button {
+    max-width: 420px;
+}

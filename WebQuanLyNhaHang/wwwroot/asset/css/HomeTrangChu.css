@@ -1,0 +1,267 @@
+﻿body {
+    font-family: 'Roboto', sans-serif;
+    margin-bottom: 0;
+}
+
+
+.item_center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+a {
+    text-decoration: none;
+    color: #191919;
+    -o-transition: .5s;
+    -ms-transition: .5s;
+    -moz-transition: .5s;
+    -webkit-transition: .5s;
+    transition: .5s;
+}
+
+ul {
+    padding: 0;
+}
+
+
+/* ============== top nav ===================== */
+.header-meta-list {
+    display: flex;
+    margin: 0;
+    padding: 4px 0;
+    justify-content: center;
+}
+
+    .header-meta-list div {
+        font-size: 12px;
+        color: #00000099;
+        padding: 0 4.2%;
+    }
+
+.interfaceCustomer img {
+    width: 30px;
+    height: 30px;
+    display: block;
+    border-radius: 100%;
+}
+
+.header-meta-list div {
+    display: flex;
+    align-items: center;
+}
+
+.top-bar {
+    position: relative;
+    z-index: 1000;
+}
+
+/* ========================== */
+/* ============ bannar_home =======*/
+.banner_home {
+    width: 100%;
+    position: relative;
+    top: -59px;
+}
+
+.owl-carousel .banner {
+    display: block;
+    width: 100%;
+    position: relative;
+}
+
+.aspect-ratio {
+    position: relative;
+    width: 100%;
+    padding-top: 30.5%;
+    /* Tỉ lệ 16:9 */
+}
+
+    .aspect-ratio img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.header__menu {
+    border-bottom: 1px solid #00000026;
+    background: rgba(255, 255, 255, 0.8);
+    height: 60px;
+    width: 100%;
+    position: sticky;
+    top: -1;
+    z-index: 999;
+}
+
+.header_nav {
+    display: flex;
+}
+
+.header_menu > ul {
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.svg-logo {
+    height: 55px;
+    fill: #fff;
+    padding-top: 5px;
+    width: 200px;
+}
+
+.clearfix {
+    display: flex;
+    margin-left: 100px;
+}
+
+    .clearfix li {
+        list-style-type: none;
+        padding: 19px 16px 19px;
+    }
+
+/* Ẩn submenu theo mặc định */
+.has_child .submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+}
+
+/* Hiển thị submenu khi di chuột vào mục cha */
+.has_child:hover .submenu {
+    display: block;
+    display: block;
+    color: #000;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+    font-family: 'SF Pro Text', sans-serif;
+}
+
+.clearfix a {
+    display: block;
+    color: #000;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+    font-family: system-ui;
+}
+
+.owl-nav {
+    display: none;
+}
+
+
+
+/* ========== footer============================ */
+
+
+/* Đặt nền và căn chỉnh chung cho footer */
+#footer {
+    background: #000000D9;
+    padding-top: 34px;
+    padding-bottom: 54px;
+}
+
+    #footer .footer_title {
+        font-family: 'SF Pro Text';
+        font-weight: 600;
+        font-size: 14px;
+        color: #fff;
+        margin-top: 0;
+        margin-bottom: 16px;
+    }
+
+/* Định dạng các cột trong footer */
+.footer_col {
+    margin-bottom: 20px;
+}
+
+#footer a {
+    color: #fff;
+    line-height: 20px;
+    font-family: 'Lato', sans-serif;
+    text-decoration: none;
+}
+
+    #footer a:hover {
+        color: #007bff;
+        /* Màu chữ khi hover */
+        text-decoration: underline;
+    }
+
+/* Định dạng cho các danh sách liên kết */
+.footer_linklists li {
+    list-style: none;
+    margin-bottom: 10px;
+}
+
+    .footer_linklists li a {
+        display: inline-block;
+        color: #555;
+        transition: color 0.3s ease;
+    }
+
+        .footer_linklists li a:hover {
+            color: #007bff;
+        }
+
+/* Định dạng cho phần liên hệ và địa chỉ */
+.hotline_footer p,
+.address_footer p {
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #fff;
+}
+
+.hotline_footer img,
+.address_footer img {
+    margin-right: 8px;
+    width: 20px;
+    height: 20px;
+}
+
+/* Định dạng cho các icon mạng xã hội */
+.tch_social_links {
+    display: flex;
+    gap: 10px;
+    padding-top: 10px;
+}
+
+    .tch_social_links li {
+        list-style: none;
+    }
+
+        .tch_social_links li a img {
+            width: 30px;
+            height: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .tch_social_links li a:hover img {
+            transform: scale(1.1);
+        }
+
+/* Đường kẻ ngang phân cách */
+#footer hr {
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+/* Định dạng danh sách thông tin công ty */
+.footer_itemlists {
+    list-style: none;
+    padding: 0;
+}
+
+    .footer_itemlists li {
+        font-size: 12px;
+        color: #fff;
+        line-height: 18px;
+        font-family: 'Lato', sans-serif;
+    }
+

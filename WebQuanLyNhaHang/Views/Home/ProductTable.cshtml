@@ -1,0 +1,28 @@
+﻿@using Microsoft.AspNetCore.Http 
+@model List<WebQuanLyNhaHang.ViewModel.CategoryProduct> //Xử Lý tìm kiếm , đây là 1 partialView đưa vào list product-cate trang này sẽ Ren() sản phẩm như trang menu
+@{
+    int? DhId = Context.Session.GetInt32("DhId");
+}
+
+    @foreach (var product in Model)
+    {
+        <div class="menu-list">
+            <table>
+                <tr class="menu-item">
+                    <td class="menu__product-img" style="width:10px">
+                        <div class="product__item-img" style="background-image: url(@product.PathPhoto);"></div>
+                    </td>
+                    <td class="menu__product-name">
+                        <div>@product.TenSanPham</div>
+                        <div class="menu__product-price" style="text-align: left; color:orange;">
+                            @String.Format("{0:N0}", product.GiaTien)đ
+                        </div>
+                    </td>
+                <td class="menu__product-plus">
+                    @await Component.InvokeAsync("MenuAddSub", new { ProductId = product.ProductId, DhId = DhId }) @* component +- *@
+                </td>
+                </tr>
+            </table>
+        </div>
+    }
+

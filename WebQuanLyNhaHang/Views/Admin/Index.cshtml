@@ -1,0 +1,76 @@
+﻿@{
+    Layout = "Header_Left_Layout";
+}
+
+<!-- Sidebar chat end-->
+<div class="content-wrapper">
+    <!-- Container-fluid starts -->
+    <!-- Main content starts -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="main-header">
+                <h4>Thông Tin Chính</h4>
+            </div>
+        </div>
+        <!-- 4-blocks row start -->
+        <div class="row dashboard-header">
+            <div class="col-lg-3 col-md-6">
+                <div class="card dashboard-product">
+                    <span>Đơn Hàng Online</span>
+                    <h2 class="dashboard-total-products">4500</h2>
+                    <span class="label label-warning">Sales</span>Số sản phẩm bán ra trong ngày
+                    <div class="side-box">
+                        <i class="ti-signal text-warning-color"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card dashboard-product">
+                    <span>Đơn Hàng Tại Quán</span>
+                    <h2 class="dashboard-total-products">3700</h2>
+                    <span class="label label-warning">Sales</span>Số sản phẩm bán ra trong ngày
+                    <div class="side-box ">
+                        <i class="ti-gift text-primary-color"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card dashboard-product">
+                    <span>Doanh Thu</span>
+                    <h2 class="dashboard-total-products"><span>3970000</span>đ</h2>
+                    <span class="label label-success">Sales</span>Tại quán
+                    <div class="side-box">
+                        <i class="ti-direction-alt text-success-color"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card dashboard-product">
+                    <span>Doanh Thu</span>
+                    <h2 class="dashboard-total-products"><span>2078000</span>đ</h2>
+                    <span class="label label-danger">Sales</span>Online
+                    <div class="side-box">
+                        <i class="ti-rocket text-danger-color"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 4-blocks row end -->
+        <!-- 1-3-block row start -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-header-text">Biểu Đồ Doanh Thu Các Năm</h5>
+                    </div>
+                    <div class="card-block">
+                         @await Component.InvokeAsync("Chart")
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+

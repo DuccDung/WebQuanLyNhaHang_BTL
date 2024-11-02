@@ -1,0 +1,64 @@
+﻿@model WebQuanLyNhaHang.Models.NhanVien
+
+@{
+    Layout = "Header_Left_Layout";
+}
+
+<div class="content-wrapper">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-header-text">Thêm Nhân Viên</h5>
+            </div>
+
+            <div class="card-block">
+                <div>
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group">
+                            <label asp-for="TenNhanVien" class="control-label"></label>
+                            <input asp-for="TenNhanVien" class="form-control" />
+                            <span asp-validation-for="TenNhanVien" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="NgaySinh" class="control-label"></label>
+                            <input asp-for="NgaySinh" class="form-control" />
+                            <span asp-validation-for="NgaySinh" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="DiaChi" class="control-label"></label>
+                            <input asp-for="DiaChi" class="form-control" />
+                            <span asp-validation-for="DiaChi" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="HeSoLuong" class="control-label"></label>
+                            <input asp-for="HeSoLuong" class="form-control" />
+                            <span asp-validation-for="HeSoLuong" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="PathPhoto" class="control-label"></label>
+                            <input asp-for="PathPhoto" class="form-control" />
+                            <span asp-validation-for="PathPhoto" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="TaiKhoan" class="control-label"></label>
+                            <input asp-for="TaiKhoan" class="form-control" />
+                            <span asp-validation-for="TaiKhoan" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="MatKhau" class="control-label"></label>
+                            <input asp-for="MatKhau" class="form-control" />
+                            <span asp-validation-for="MatKhau" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Create" class="btn btn-primary" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

@@ -1,0 +1,161 @@
+﻿<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+@model WebQuanLyNhaHang.ViewModel.ViewModelBan
+@{
+    Layout = "Header_Left_Layout";
+}
+<style>
+    /* CSS cho bảng thanh toán */
+    .container-buy {
+        width: 80%;
+        max-width: 800px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1001;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+        .container-buy.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+    /* CSS cho overlay */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+        z-index: 1000;
+    }
+
+        .overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+</style>
+<div class="content-wrapper">
+    <div class="row dashboard-header" >
+        @foreach (var item in Model.RenBan())
+        {
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="card dashboard-product" data-id="@item.BanId" onclick="loadComponent(@item.BanId)">
+                    <h2 class="dashboard-total-products">Bàn @item.BanId</h2>
+                    @if (Model.DonHangByBan(item.BanId) != 0)
+                    {
+                        <span class="label label-success">@Model.DonHangByBan(item.BanId) Đơn Hàng</span>
+                    }
+                    else
+                    {
+                        <span class="label label-warning">Không Có Đơn Hàng</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<div id="component-FormBuy">
+
+</div>
+<script>
+    function loadComponent(id) {
+        $.ajax({
+            url: '/Admin/GetFormBuy',
+            method: 'GET',
+            data: { id: id },
+            success: function (response) {
+                $('#component-FormBuy').html(response); // Cập nhật nội dung component
+                // Chạy script sau khi nội dung được cập nhật
+                $('.container-buy').addClass('visible');
+                $('.overlay').addClass('visible');
+            },
+            error: function (error) {
+                console.error('Error loading component:', error);
+            }
+        });
+    }
+
+</script>
+
+ @* <audio id="success-sound" src="~/asset/sound/Thongbao.mp3" preload="auto"></audio>
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+ <script>
+     // Kết nối tới SignalR Hub
+     const connection = new signalR.HubConnectionBuilder()
+         .withUrl("/chathub") // Thay bằng URL của SignalR Hub của bạn
+         .build();
+
+     // Bắt đầu kết nối
+     connection.start()
+         .then(() => console.log("Kết nối SignalR thành công"))
+         .catch(function (err) {
+             console.error("Lỗi khi kết nối:", err);
+         });
+
+     // Lắng nghe sự kiện 'OderSuccess'
+     connection.on("OderSuccess", function () {
+         console.log("Nhận được sự kiện OderSuccess"); // Ghi log để kiểm tra
+         // Phát âm thanh khi nhận được sự kiện
+         location.reload();
+         var audio = document.getElementById('success-sound');
+         audio.play().catch(function (error) {
+             console.error("Lỗi khi phát âm thanh:", error);
+         });
+     });
+
+   
+ </script> *@
+
+<audio id="success-sound" src="/asset/sound/Thongbao1.mp3" preload="auto"></audio>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+<script>
+    // Kết nối tới SignalR Hub
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chathub") // Thay bằng URL của SignalR Hub của bạn
+        .build();
+
+    // Bắt đầu kết nối
+    connection.start()
+        .then(() => console.log("Kết nối SignalR thành công"))
+        .catch(function (err) {
+            console.error("Lỗi khi kết nối:", err);
+        });
+
+    // Lắng nghe sự kiện 'OderSuccess'
+    connection.on("OderSuccess", function () {
+        console.log("Nhận được sự kiện OderSuccess"); // Ghi log để kiểm tra
+        var audio = document.getElementById('success-sound');
+        console.log("Đang cố gắng phát âm thanh..."); // Thêm log kiểm tra
+        audio.play().then(function () {
+            console.log("Âm thanh đã được phát thành công");
+            // Đợi âm thanh kết thúc rồi mới tải lại trang
+            audio.onended = function () {
+                console.log("Âm thanh kết thúc, tải lại trang");
+                location.reload();
+            };
+        }).catch(function (error) {
+            console.error("Lỗi khi phát âm thanh:", error);
+            // Nếu có lỗi khi phát âm thanh, vẫn tải lại trang
+            location.reload();
+        });
+    });
+</script>
+
+

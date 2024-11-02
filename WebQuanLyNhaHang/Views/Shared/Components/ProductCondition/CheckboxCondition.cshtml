@@ -1,0 +1,33 @@
+﻿@model List<WebQuanLyNhaHang.Models.ProductConditions>
+
+<div class="component__product-selector flag__scroll">
+    <div>
+        <div class="item-selector-header">
+            Loại
+        </div>
+        @foreach(var item in Model)
+        {
+            @* <div class="select-item">
+                <div class="component__cs-radio">
+                    <span class="component__cs-radio--border">
+                        <span class="radio-fill"></span>
+                    </span>
+                    <span class="radio-label">@item.Condition</span>
+                </div>
+                <span class="price_customize">0 đ</span>
+            </div> *@
+
+
+            <div class="select-item">
+                <div class="component__cs-radio">
+                    <input class="component__cs-radio--border" type="radio" id="check" name="condition" value="@item.Condition" checked>
+                    <label class="radio-label" for="check">@item.Condition</label>
+                    <span class="price_customize">0 đ</span>
+                </div>
+               
+            </div>
+
+        }
+    </div>
+</div>
+

@@ -1,0 +1,160 @@
+﻿@using Microsoft.AspNetCore.Http
+@model WebQuanLyNhaHang.ViewModel.ViewModelMenu  // Đón class ViewModel đển nhận dữ liệu sử lý
+@{
+    int? DhId = Context.Session.GetInt32("DhId");
+}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet"
+          href="~/asset/font/fontawesome-free-6.5.2-web/fontawesome-free-6.5.2-web/css/all.min.css">
+
+    <link rel="stylesheet" href="~/asset/css/base.css">
+    <link rel="stylesheet" href="~/asset/css/responsive.css">
+    <link rel="stylesheet" type="text/css" href="btl.css">
+    <link rel="stylesheet" href="~/WebQuanLyNhaHang.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/asset/css/menu.css">
+    <title>Kính chào quý khách</title>
+</head>
+<body>
+    <div class="app__menu">
+        <div class="header__menu-inner" style="position:fixed; top:0; left:0; right:0; z-index:1000;">
+            <a asp-controller="Home" asp-action="Service">
+                   <div class="call-staff--mini-home">
+                <i class="fa-solid fa-house"></i>
+            </div>
+            </a>
+            <div class="search-area animation">
+                <div class="header-area__search-form">
+                    <div class="header-area__search-form--inner">
+                        <div class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <input type="text" id="txtSearchBox" placeholder="Bạn muốn tìm món gì ?" class="input-text--search">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="menu__category-nav">
+            @await Component.InvokeAsync("Category")
+        </div>
+        <div class="" style="position:fixed; top:0; right:0; left:0; height:50px; background-color:#fff; z-index: 20;"></div>
+        <div class="container__menu" id="content" style="margin-top: 90px;">
+
+            @foreach (var category in Model.Categories())
+            {
+                <div id="@category.CateId" class="label-container">
+                    @category.TenLoaiSanPham
+                </div>
+
+                foreach (var product in Model.FindProductByCate(category.CateId))
+                {
+                    <div class="menu-list">
+                        <table>
+                            <tr class="menu-item">
+                                <td class="menu__product-img" style="width:10px">
+                                    <div class="product__item-img"
+                                         style="background-image: url(@product.PathPhoto);">
+                                    </div>
+                                </td>
+                                <td class="menu__product-name">
+                                    <div>@product.TenSanPham</div>
+                                    <div class="menu__product-price" style="text-align: left; color:orange;">
+                                        @String.Format("{0:N0}", product.GiaTien)đ
+                                    </div>
+                                </td>
+                               
+                                <td class="menu__product-plus">
+                                    @* @if(Model.CountProductDetail(DhId ,product.ProductId) != 0){
+                                        @await Component.InvokeAsync("MenuItemEdit", new { ProductId = product.ProductId, DhId = DhId })
+                                    }
+                                    else
+                                    {
+                                         <a asp-controller="Home" asp-action="ProductDetail" asp-route-ProductID="@product.ProductId"><button>+</button></a>
+                                    } *@
+                                    @await Component.InvokeAsync("MenuAddSub", new { ProductId = product.ProductId, DhId = DhId }) @* component +- *@
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                }
+            }
+        </div>
+        @{
+            int soluong = Model.CountProductDetail(DhId); // đếm số lượng của chi tiết hóa đơn
+            @if (soluong != 0)
+            {
+                <div class="app__menu">
+                    <a asp-controller="Home" asp-action="Cart" asp-route-DhId="DhId">
+                        <div class="foodter">
+                            <div class="foodter__icon-left foodter__icon">
+                                <i class="fa-solid fa-cart-plus"></i>
+                            </div>
+                            <div class="foodter__content">Xem giỏ hàng(@soluong món)</div>
+                            <div class="foodter__icon-right foodter__icon">
+                                <i class="fa-solid fa-angle-right"></i>
+                            </div>
+                        </div>
+                </a>
+                </div>
+            }
+        }
+    </div>
+    <script src="~/js/scripts.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+
+        function scrollToCategory(categoryId) {
+            // Lấy phần tử của danh mục cần cuộn tới
+            const targetElement = document.getElementById(categoryId);
+
+            // Lấy chiều cao của thanh điều hướng cố định
+            const navHeight = document.querySelector('.menu__category-nav').offsetHeight + document.querySelector('.header__menu-inner').offsetHeight;
+            // Tính toán vị trí cần cuộn tới, bù thêm khoảng cách tương ứng với chiều cao của thanh điều hướng
+            const scrollPosition = targetElement.offsetTop - navHeight;
+
+            // Cuộn đến vị trí tính toán
+            window.scrollTo({
+                top: scrollPosition,
+                behavior: 'smooth'
+            });
+        }
+
+        // chức năng tìm kiếm trong trang menu 
+        $(document).ready(function () {
+            // Sự kiện input cho ô tìm kiếm
+            $('#txtSearchBox').on('input', function () {
+                var txtsearch = $(this).val(); // Lấy giá trị của ô tìm kiếm
+                console.log(txtsearch); // Kiểm tra giá trị khi người dùng nhập
+                // Kiểm tra nếu ô tìm kiếm không rỗng
+                if (txtsearch && txtsearch.length > 0) {
+                    $.ajax({
+                        url: '@Url.Action("GetName", "Home")', // Đường dẫn đến action
+                        data: { txtsearch: txtsearch }, // Dữ liệu gửi đi
+                        success: function (response) {
+                            // Cập nhật nội dung của phần tử có id là "content" bằng dữ liệu trả về
+                            $("div#content").html(response);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error:', error);
+                        }
+                    });
+                } else {
+                    // Nếu ô tìm kiếm rỗng, có thể xóa nội dung hoặc đặt lại
+                    // $("div#content").html(''); Hoặc làm gì đó khác nếu cần
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
