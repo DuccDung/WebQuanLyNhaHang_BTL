@@ -52,10 +52,6 @@ public partial class QlnhaHangBtlContext : DbContext
     public virtual DbSet<Thuong> Thuongs { get; set; }
     public virtual DbSet<ProductConditions> ProductConditions { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=2620041612004\\SQLEXPRESS;Initial Catalog=QLNhaHang_BTL;User ID=sa;Password=Dung@123;Trust Server Certificate=True");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Ban>(entity =>
@@ -347,7 +343,6 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.MoTa).HasMaxLength(200);
             entity.Property(e => e.PathPhoto).HasMaxLength(300);
             entity.Property(e => e.TenSanPham).HasMaxLength(100);
-            entity.Property(e => e.SoLuong);
 
             entity.HasOne(d => d.Cate).WithMany(p => p.Products)
                 .HasForeignKey(d => d.CateId)

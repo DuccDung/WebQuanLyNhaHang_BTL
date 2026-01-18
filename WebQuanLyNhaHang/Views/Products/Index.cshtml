@@ -38,9 +38,6 @@
                                     @Html.DisplayNameFor(model => model.GiaTien)
                                 </th>
                                 <th>
-                                    @Html.DisplayNameFor(model => model.SoLuong)
-                                </th>
-                                <th>
                                     Chỉnh Sửa
                                 </th>
                             </tr>
@@ -59,10 +56,6 @@
                                     <td>
                                         @Html.DisplayFor(modelItem => item.GiaTien)
                                     </td>
-                                    <td>
-                                        @Html.DisplayFor(modelItem => item.SoLuong)
-                                    </td>
-
                                     <td>
                                         <a class="btn btn-info waves-effect waves-light" asp-action="Edit" asp-route-id="@item.ProductId">Edit</a>
                                         <a class="btn btn-disable disabled" asp-action="Details" asp-route-id="@item.ProductId">Details</a>

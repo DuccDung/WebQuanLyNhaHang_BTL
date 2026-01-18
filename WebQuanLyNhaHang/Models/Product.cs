@@ -15,7 +15,6 @@ public partial class Product
 
     public decimal? GiaTien { get; set; }
 
-    public int? SoLuong {  get; set; }
     public string? PathPhoto { get; set; }
 
     public virtual Category? Cate { get; set; }
