@@ -1,65 +1,169 @@
-﻿@{
-	Layout = "Head_Layout";
+@{
+    Layout = null;
+    var errorMessage = ViewBag.Error as string;
+    var hasError = !string.IsNullOrWhiteSpace(errorMessage);
+    var submittedName = Context?.Request?.HasFormContentType == true
+        ? Context.Request.Form["name"].ToString()
+        : string.Empty;
 }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>F&amp;B Admin Dashboard - Login</title>
+    <link rel="stylesheet" href="~/assets/css/admin-login.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="login-page">
+        <section class="login-media" aria-hidden="true">
+            <img
+                src="~/assets/images/login-cover.png"
+                alt="Coffee and pastries"
+                class="login-media__image" />
+        </section>
 
-<section class="login p-fixed d-flex text-center bg-primary common-img-bg">
-	<!-- Container-fluid starts -->
-	<div class="container-fluid">
-		<div class="row">
+        <section class="login-content">
+            <div class="login-container">
+                <header class="login-header">
+                    <h1>CHÚC BẠN CÓ MỘT NGÀY LÀM VIỆC TỐT LÀNH!</h1>
+                    <div class="login-header__subtitle">
+                        <span>ĐĂNG NHẬP ĐỂ TIẾP TỤC</span>
+                    </div>
+                </header>
 
-			<div class="col-sm-12">
-				<h3 class="txt-danger">@ViewBag.Error</h3>
-				<div class="login-card card-block">
-					<form asp-controller="Admin" asp-action="Login" class="md-float-material">
-						<div class="text-center">
-							<img src="~/assets/images/logo-black.png" alt="logo">
-						</div>
-						<h3 class="text-center txt-primary">
-							Đăng Nhập Tài Khoản
-						</h3>
-						<div class="row">
-							<div class="col-md-12">
-								<div class="md-input-wrapper">
-									<input type="text" name="name" class="md-form-control" required="required" />
-									<label>Tên Tài Khoản</label>
-								</div>
-							</div>
-							<div class="col-md-12">
-								<div class="md-input-wrapper">
-									<input type="password" name="password" class="md-form-control" required="required" />
-									<label>Mật Khẩu</label>
-								</div>
-							</div>
-							<div class="col-sm-6 col-xs-12">
-								<div class="rkmd-checkbox checkbox-rotate checkbox-ripple m-b-25">
-									<label class="input-checkbox checkbox-primary">
-										<input type="checkbox" id="checkbox">
-										<span class="checkbox"></span>
-									</label>
-									<div class="captions">Remember Me</div>
+                <form id="login-form" class="login-form" asp-controller="Admin" asp-action="Login" method="post">
+                    @if (hasError)
+                    {
+                        <div id="login-error" class="login-alert">
+                            <span id="login-error-text">@errorMessage</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="login-error" class="login-alert" hidden>
+                            <span id="login-error-text"></span>
+                        </div>
+                    }
 
-								</div>
-							</div>
-							<div class="col-sm-6 col-xs-12 forgot-phone text-right">
-								<a href="forgot-password.html" class="text-right f-w-600"> Forget Password?</a>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-xs-10 offset-xs-1">
-								<button type="submit" class="btn btn-primary btn-md btn-block waves-effect text-center m-b-20">ĐĂNG NHẬP</button>
-							</div>
-						</div>
-						<!-- <div class="card-footer"> -->
+                    <div class="login-field">
+                        <span class="login-field__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M20 21a8 8 0 0 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"></circle>
+                            </svg>
+                        </span>
+                        <input
+                            id="name"
+                            class="login-input"
+                            type="text"
+                            name="name"
+                            value="@submittedName"
+                            placeholder="Tên tài khoản"
+                            autocomplete="username"
+                            required />
+                    </div>
 
-						<!-- </div> -->
-					</form>
-					<!-- end of form -->
-				</div>
-				<!-- end of login-card -->
-			</div>
-			<!-- end of col-sm-12 -->
-		</div>
-		<!-- end of row -->
-	</div>
-	<!-- end of container-fluid -->
-</section>
+                    <div class="login-field">
+                        <span class="login-field__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="4" y="11" width="16" height="10" rx="2" stroke="currentColor" stroke-width="2"></rect>
+                                <path d="M8 11V7a4 4 0 1 1 8 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                        </span>
+                        <input
+                            id="password"
+                            class="login-input login-input--password"
+                            type="password"
+                            name="password"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            required />
+                        <button
+                            id="toggle-password"
+                            class="login-password-toggle"
+                            type="button"
+                            aria-label="Hiện mật khẩu"
+                            aria-pressed="false">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                            </svg>
+                            <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden>
+                                <path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                <path d="M10.6 10.7A3 3 0 0 0 13.3 13.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                <path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c6.5 0 10 8 10 8a16.9 16.9 0 0 1-4.2 4.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M6.6 6.7A17.2 17.2 0 0 0 2 12s3.5 8 10 8a9.7 9.7 0 0 0 4-.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button id="login-submit" class="login-submit" type="submit">
+                        <svg id="login-spinner" class="login-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden>
+                            <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                        <span id="login-submit-text">Đăng nhập</span>
+                    </button>
+                </form>
+
+                <div class="login-actions">
+                    <button id="forgot-password" class="login-link" type="button">
+                        Quên mật khẩu?
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="forgot-modal" class="support-modal" hidden>
+        <div class="support-modal__backdrop"></div>
+        <div
+            class="support-modal__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="support-modal-title">
+            <button id="close-modal" class="support-modal__close" type="button" aria-label="Đóng">
+                ×
+            </button>
+
+            <header class="support-modal__header">
+                <h2 id="support-modal-title">Quên mật khẩu?</h2>
+                <p>Vui lòng liên hệ với quản trị viên hệ thống để được hỗ trợ đặt lại mật khẩu.</p>
+            </header>
+
+            <div class="support-modal__body">
+                <article class="support-card">
+                    <div class="support-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.3 19.3 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8l-1.3 1.3a16 16 0 0 0 6.5 6.5l1.3-1.3a2 2 0 0 1 1.8-.6l3 .5A2 2 0 0 1 22 16.9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3>Hotline hỗ trợ</h3>
+                        <p>1900 xxxx (8:00 - 22:00)</p>
+                    </div>
+                </article>
+
+                <article class="support-card">
+                    <div class="support-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"></rect>
+                            <path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3>Email hỗ trợ</h3>
+                        <p>support@fnb.com</p>
+                    </div>
+                </article>
+
+                <button id="confirm-support" class="support-modal__confirm" type="button">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/assets/js/admin-login.js" asp-append-version="true"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Hubs;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
 
 namespace WebQuanLyNhaHang.Controllers
 {
+    [AdminSessionAuthorize]
     public class DonHangsController : Controller
     {
         private readonly QlnhaHangBtlContext _context;
@@ -63,8 +65,6 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // POST: DonHangs/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("DhId,KhId,BanId,KmId,GioVao,GioRa,TongTien,NvId")] DonHang donHang)
@@ -103,8 +103,6 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // POST: DonHangs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("DhId,KhId,BanId,KmId,GioVao,GioRa,TongTien,NvId")] DonHang donHang)
@@ -182,26 +180,5 @@ namespace WebQuanLyNhaHang.Controllers
         {
             return _context.DonHangs.Any(e => e.DhId == id);
         }
-        //[HttpPost]
-        //public IActionResult RemoveItem(int id) // id của cthd 
-        //{
-        //    var CTHD = _context.ChiTietHoaDons.Find(id);  // tìm chi tiết hóa đơn
-        //    if (CTHD != null)
-        //    {
-        //        _context.ChiTietHoaDons.Remove(CTHD); // xóa chi tiết hóa đơn
-        //        _context.SaveChanges();
-
-        //        // Tạo ViewModel chứa dữ liệu cần thiết để render lại partial view
-        //        //ViewModelCart viewModelCart = new ViewModelCart(_context);
-
-        //        // Trả về partial view với viewModel
-        //        return PartialView("CTHDTable");
-        //    }
-        //    else
-        //    {
-        //        throw new Exception("Lỗi xóa CTDH trong Cart");
-        //    }
-        //}
-
     }
 }

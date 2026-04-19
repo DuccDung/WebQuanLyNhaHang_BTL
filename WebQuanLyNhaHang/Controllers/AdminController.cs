@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
 
@@ -7,74 +8,94 @@ namespace WebQuanLyNhaHang.Controllers
     public class AdminController : Controller
     {
         private readonly QlnhaHangBtlContext _context;
-        public AdminController(QlnhaHangBtlContext context) {
+
+        public AdminController(QlnhaHangBtlContext context)
+        {
             _context = context;
         }
+
+        [AdminSessionAuthorize]
         public IActionResult Index()
         {
             return View();
         }
+
         public IActionResult Login()
         {
+            if (HttpContext.Session.GetInt32("NhanVienId").HasValue)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             return View();
         }
+
         [HttpPost]
-		public IActionResult Login(string name, string password)
-		{
-			// Kiểm tra xem name và password có hợp lệ hay không
-			if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(password))
-			{
-				ViewBag.Error = "Tên đăng nhập và mật khẩu không được để trống.";
-				return View();
-			}
+        [ValidateAntiForgeryToken]
+        public IActionResult Login(string? name, string? password)
+        {
+            name = name?.Trim();
+            password = password?.Trim();
 
-			// Tìm kiếm nhân viên dựa trên tên đăng nhập và mật khẩu
-			var nhanVien = _context.NhanViens.FirstOrDefault(e => e.TaiKhoan == name && e.MatKhau == password);
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(password))
+            {
+                ViewBag.Error = "Tên đăng nhập và mật khẩu không được để trống.";
+                return View();
+            }
 
-			// Nếu tìm thấy, chuyển hướng đến trang Admin
-			if (nhanVien != null)
-			{
-				HttpContext.Session.SetInt32("NhanVienId", nhanVien.NvId); // Lưu Id Bàn vào Session
-				return RedirectToAction("Index", "Admin");
-			}
+            var nhanVien = _context.NhanViens.FirstOrDefault(e => e.TaiKhoan == name && e.MatKhau == password);
+            if (nhanVien == null)
+            {
+                ViewBag.Error = "Tài khoản hoặc mật khẩu không đúng.";
+                return View();
+            }
 
-			// Nếu không tìm thấy, đặt thông báo lỗi và trả về view
-			ViewBag.Error = "Tài khoản hoặc mật khẩu không đúng.";
-			return View();
-		}
+            HttpContext.Session.SetInt32("NhanVienId", nhanVien.NvId);
+            HttpContext.Session.SetString("NhanVienName", nhanVien.TenNhanVien ?? nhanVien.TaiKhoan);
+            HttpContext.Session.SetString("NhanVienTaiKhoan", nhanVien.TaiKhoan);
 
-		public IActionResult Ban()
-		{
-			ViewModelBan viewModelBan = new ViewModelBan(_context);
-			return View(viewModelBan);
-		}
-		[HttpGet]
-		public IActionResult GetFormBuy(int id) // nhận giá trị id bàn
-		{
-			ViewModelGetFormBuy viewModel = new ViewModelGetFormBuy(_context);
-			var donhangs = viewModel.CTDH_Product(id);
-			return PartialView("GetFormBuy" , donhangs); 
-		}
+            return RedirectToAction(nameof(Index));
+        }
+
+        [AdminSessionAuthorize]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Remove("NhanVienId");
+            HttpContext.Session.Remove("NhanVienName");
+            HttpContext.Session.Remove("NhanVienTaiKhoan");
+
+            return RedirectToAction(nameof(Login));
+        }
+
+        [AdminSessionAuthorize]
+        public IActionResult Ban()
+        {
+            ViewModelBan viewModelBan = new ViewModelBan(_context);
+            return View(viewModelBan);
+        }
+
         [HttpGet]
+        [AdminSessionAuthorize]
+        public IActionResult GetFormBuy(int id)
+        {
+            ViewModelGetFormBuy viewModel = new ViewModelGetFormBuy(_context);
+            var donhangs = viewModel.CTDH_Product(id);
+            return PartialView("GetFormBuy", donhangs);
+        }
+
+        [HttpGet]
+        [AdminSessionAuthorize]
         public IActionResult ProcessPayment(int BanId)
         {
-            // Lấy danh sách các đơn hàng có BanId nhất định
             var donHangList = _context.DonHangs.Where(e => e.BanId == BanId).ToList();
 
-            // Cập nhật BanId của mỗi đơn hàng thành null
             foreach (var donHang in donHangList)
             {
                 donHang.BanId = null;
             }
 
-            // Lưu thay đổi vào cơ sở dữ liệu
-           _context.SaveChanges();
-
-			// Trả về partial view "BuySuccess"
-			//return PartialView("_BuySuccess");
-			return NoContent();
+            _context.SaveChanges();
+            return NoContent();
         }
-
-
     }
 }

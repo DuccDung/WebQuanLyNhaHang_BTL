@@ -1,14 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 
 namespace WebQuanLyNhaHang.Controllers
 {
+    [AdminSessionAuthorize]
     public class NhanViensController : Controller
     {
         private readonly QlnhaHangBtlContext _context;
@@ -49,8 +51,6 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // POST: NhanViens/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("NvId,TenNhanVien,NgaySinh,DiaChi,HeSoLuong,PathPhoto,TaiKhoan,MatKhau")] NhanVien nhanVien)
@@ -64,64 +64,43 @@ namespace WebQuanLyNhaHang.Controllers
             return View(nhanVien);
         }
 
-        //// GET: NhanViens/Edit/5
-        //public async Task<IActionResult> Edit(int? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var nhanVien = await _context.NhanViens.FindAsync(id);
-        //    if (nhanVien == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return View(nhanVien);
-        //}
-
         // POST: NhanViens/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-            public async Task<IActionResult> Edit([Bind("NvId,TenNhanVien,NgaySinh,DiaChi,HeSoLuong,TaiKhoan,MatKhau")] NhanVien nhanVien, IFormFile fileImg)
+        public async Task<IActionResult> Edit([Bind("NvId,TenNhanVien,NgaySinh,DiaChi,HeSoLuong,TaiKhoan,MatKhau")] NhanVien nhanVien, IFormFile fileImg)
+        {
+            var _NhanVien = await _context.NhanViens.FindAsync(nhanVien.NvId);
+            if (_NhanVien == null)
             {
-                var _NhanVien = await _context.NhanViens.FindAsync(nhanVien.NvId);
-                if (_NhanVien == null)
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    try
-                    {
-                        // Cập nhật các thuộc tính
-                        _NhanVien.TenNhanVien = nhanVien.TenNhanVien;
-                        _NhanVien.NgaySinh = nhanVien.NgaySinh;
-                        _NhanVien.DiaChi = nhanVien.DiaChi;
-                        _NhanVien.HeSoLuong = nhanVien.HeSoLuong;
-                        _NhanVien.TaiKhoan = nhanVien.TaiKhoan;
-                        _NhanVien.MatKhau = nhanVien.MatKhau;
-
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (DbUpdateConcurrencyException)
-                    {
-                        if (!NhanVienExists(nhanVien.NvId))
-                        {
-                            return NotFound();
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                    }
-                    return RedirectToAction("Index", "NhanViens");
-                }
+                return NotFound();
             }
+            else
+            {
+                try
+                {
+                    _NhanVien.TenNhanVien = nhanVien.TenNhanVien;
+                    _NhanVien.NgaySinh = nhanVien.NgaySinh;
+                    _NhanVien.DiaChi = nhanVien.DiaChi;
+                    _NhanVien.HeSoLuong = nhanVien.HeSoLuong;
+                    _NhanVien.TaiKhoan = nhanVien.TaiKhoan;
+                    _NhanVien.MatKhau = nhanVien.MatKhau;
 
-
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!NhanVienExists(nhanVien.NvId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction("Index", "NhanViens");
+            }
+        }
 
         public async Task<IActionResult> Delete(int id)
         {
