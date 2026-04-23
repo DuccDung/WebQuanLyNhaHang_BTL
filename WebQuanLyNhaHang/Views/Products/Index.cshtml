@@ -1,73 +1,544 @@
-﻿@model IEnumerable<WebQuanLyNhaHang.Models.Product>
-
+@model WebQuanLyNhaHang.ViewModel.ProductsIndexViewModel
+@using System.Globalization
+@using Microsoft.AspNetCore.Http
 @{
-    Layout = "Header_Left_Layout";
+    Layout = null;
+    var products = Model?.Products?.ToList() ?? new List<WebQuanLyNhaHang.Models.Product>();
+    var createProduct = Model?.CreateProduct ?? new WebQuanLyNhaHang.Models.Product();
+    var createCategoryOptions = Model?.CategoryOptions ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+    var createModalOpen = Model?.OpenCreateModal ?? false;
+    var culture = CultureInfo.GetCultureInfo("vi-VN");
+    var adminName = Context.Session.GetString("NhanVienName") ?? "Admin";
+    var adminAccount = Context.Session.GetString("NhanVienTaiKhoan") ?? "admin";
+    var initials = string.Concat(
+        adminName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(2)
+            .Select(part => char.ToUpperInvariant(part[0])));
+
+    var totalProducts = products.Count;
+    var totalCategories = products
+        .Select(product => product.Cate?.TenLoaiSanPham)
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+    var productsWithImage = products.Count(product => !string.IsNullOrWhiteSpace(product.PathPhoto));
+    var readyProducts = products.Count(product =>
+        !string.IsNullOrWhiteSpace(product.PathPhoto)
+        && !string.IsNullOrWhiteSpace(product.MoTa)
+        && product.GiaTien.HasValue
+        && product.GiaTien > 0m);
+    var averagePrice = products.Count > 0
+        ? products.Average(product => product.GiaTien ?? 0m)
+        : 0m;
+    var filterCategoryOptions = products
+        .Select(product => product.Cate?.TenLoaiSanPham)
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(name => name)
+        .ToList();
+
+    string FormatCurrency(decimal? value) => $"{(value ?? 0m).ToString("N0", culture)}d";
+
+    string ResolveTypeLabel(WebQuanLyNhaHang.Models.Product product)
+    {
+        var categoryName = product.Cate?.TenLoaiSanPham?.Trim().ToUpperInvariant() ?? string.Empty;
+
+        if (categoryName is "TEA" or "JUICE" or "HOT DRINK" or "SIGNATURE" or "BEST MENU")
+        {
+            return "Do uong";
+        }
+
+        if (categoryName is "CAKE" or "APPETIZERS")
+        {
+            return "Mon an";
+        }
+
+        if (categoryName == "TOPPING")
+        {
+            return "Topping";
+        }
+
+        return "San pham";
+    }
+
+    (string CssClass, string Label) ResolveStatus(WebQuanLyNhaHang.Models.Product product)
+    {
+        if (string.IsNullOrWhiteSpace(product.PathPhoto))
+        {
+            return ("is-yellow", "Thieu anh");
+        }
+
+        if (!product.GiaTien.HasValue || product.GiaTien <= 0m)
+        {
+            return ("is-red", "Thieu gia");
+        }
+
+        if (string.IsNullOrWhiteSpace(product.MoTa))
+        {
+            return ("is-blue", "Can mo ta");
+        }
+
+        return ("is-green", "San sang");
+    }
+
+    string NormalizeValue(string? value) =>
+        (value ?? string.Empty).Trim().ToLowerInvariant();
 }
-<style>
-    td{
-        vertical-align:middle;
-        text-align:center;
-    }
-
-    .table td, .table th {
-        padding: .75rem;
-        vertical-align: top;
-        border-top: 1px solid #eceeef;
-        text-align: center;
-    }
-</style>
-
-<div class="content-wrapper">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-header-text">Danh Sách Sản Phẩm</h5>
-        </div>
-        <div class="card-block">
-            <div class="row">
-                <div class="col-sm-12 table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>
-                                    @Html.DisplayNameFor(model => model.PathPhoto)
-                                </th>
-                                <th>
-                                    @Html.DisplayNameFor(model => model.TenSanPham)
-                                </th>
-                                <th>
-                                    @Html.DisplayNameFor(model => model.GiaTien)
-                                </th>
-                                <th>
-                                    Chỉnh Sửa
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td>
-                                        <img src="@item.PathPhoto" alt="Hình ảnh ví dụ" style="width:80px; height:80px; ">
-                                    </td>
-                                    <td>
-                                        @Html.DisplayFor(modelItem => item.TenSanPham)
-                                    </td>
-
-                                    <td>
-                                        @Html.DisplayFor(modelItem => item.GiaTien)
-                                    </td>
-                                    <td>
-                                        <a class="btn btn-info waves-effect waves-light" asp-action="Edit" asp-route-id="@item.ProductId">Edit</a>
-                                        <a class="btn btn-disable disabled" asp-action="Details" asp-route-id="@item.ProductId">Details</a>
-                                        <a class="btn btn-danger waves-effect waves-light" asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
-                                    </td>
-                                </tr>
-                            }
-                            <a asp-controller="Products" asp-action="Create" class="btn btn-success waves-effect waves-light">Thêm Sản Phẩm</a>
-                        </tbody>
-                    </table>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sản phẩm</title>
+    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/admin-products.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-app">
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
                 </div>
+                <span>F&amp;B Admin</span>
             </div>
+
+            <nav class="sidebar__nav">
+                <a class="nav-item" href="@Url.Action("Index", "Admin")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="4" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                        </svg>
+                    </span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="nav-item is-active" href="@Url.Action("Index", "Products")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                            <path d="m12 12 8-4.5M12 12 4 7.5M12 12v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span>San pham</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "DonHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="20" r="1.7" fill="currentColor"></circle>
+                            <circle cx="18" cy="20" r="1.7" fill="currentColor"></circle>
+                            <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.5L22 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Don hang</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "KhachHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M20 21a4 4 0 0 0-2.4-3.65M6.4 17.35A4 4 0 0 0 4 21M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 11a3 3 0 1 0 0-6M6 11A3 3 0 1 0 6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Khach hang</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "NhanViens")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M18.5 9.5 20 11l2.5-2.5M20 7.5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Nhan vien</span>
+                </a>
+
+                <div class="nav-group is-open" id="sales-group">
+                    <button class="nav-item nav-item--button is-active" id="sales-group-toggle" type="button" aria-expanded="true">
+                        <span class="nav-item__main">
+                            <span class="nav-item__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            <span>Trang ban hang</span>
+                        </span>
+                        <span class="nav-group__chevron" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div class="nav-submenu" id="sales-submenu">
+                        <a class="nav-subitem" href="@Url.Action("Ban", "Admin")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 8.5 6.5 5h11L20 8.5V19H4V8.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                    <path d="M4 9h16M9 13h6M8 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Don tai quan</span>
+                        </a>
+
+                        <a class="nav-subitem" href="@Url.Action("Index", "DonHangs")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Don mang ve</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar__user">
+                <div class="sidebar-user">
+                    <div class="sidebar-user__avatar">@initials</div>
+                    <div class="sidebar-user__meta">
+                        <p>@adminName</p>
+                        <span>@adminAccount</span>
+                    </div>
+                </div>
+
+                <a class="logout-button" href="@Url.Action("Logout", "Admin")">
+                    <span class="logout-button__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Dang xuat</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="main-shell">
+            <header class="topbar topbar--products">
+                    <div class="topbar__meta products-hero">
+                    <div class="products-hero__content">
+                    <p class="topbar__eyebrow">Khu vực sản phẩm</p>
+                    <div class="topbar__heading">
+                        <h1>Danh mục sản phẩm</h1>
+                    </div>
+                </div>
+
+                    <div class="products-hero__stats" aria-label="Thong ke nhanh">
+                        <span class="products-hero__stat">@totalProducts.ToString("N0", culture) san pham</span>
+                        <span class="products-hero__stat is-blue">@totalCategories.ToString("N0", culture) danh muc</span>
+                        <span class="products-hero__stat is-green">@productsWithImage.ToString("N0", culture) co anh</span>
+                    </div>
+                    </div>
+
+                <div class="topbar__actions">
+                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 17H5.6a1 1 0 0 1-.8-1.6L6 14V10a6 6 0 1 1 12 0v4l1.2 1.4a1 1 0 0 1-.8 1.6H15ZM10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    <div class="account-menu">
+                        <button class="account-trigger" id="account-trigger" type="button" aria-expanded="false">
+                            <span class="account-trigger__avatar">@initials</span>
+                            <span class="account-trigger__copy">
+                                <strong>@adminName</strong>
+                                <small>@adminAccount</small>
+                            </span>
+                            <span class="account-trigger__chevron" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="account-dropdown" id="account-dropdown" hidden>
+                            <div class="account-dropdown__header">
+                                <strong>@adminName</strong>
+                                <span>@adminAccount</span>
+                            </div>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Admin")">Dashboard tong quan</a>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Products")">Danh sach san pham</a>
+                            <a class="account-dropdown__item is-danger" href="@Url.Action("Logout", "Admin")">Dang xuat</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-scroll">
+                <div class="page-stack">
+                    <section class="mini-stats-grid">
+                        <article class="card mini-stat">
+                            <p class="mini-stat__label">Tong san pham</p>
+                            <h2 class="mini-stat__value">@totalProducts.ToString("N0", culture)</h2>
+                        </article>
+                        <article class="card mini-stat">
+                            <p class="mini-stat__label">Danh muc dang co</p>
+                            <h2 class="mini-stat__value is-blue">@totalCategories.ToString("N0", culture)</h2>
+                        </article>
+                        <article class="card mini-stat">
+                            <p class="mini-stat__label">San pham co anh</p>
+                            <h2 class="mini-stat__value is-green">@productsWithImage.ToString("N0", culture)</h2>
+                        </article>
+                        <article class="card mini-stat">
+                            <p class="mini-stat__label">Gia trung binh</p>
+                            <h2 class="mini-stat__value is-purple">@FormatCurrency(averagePrice)</h2>
+                        </article>
+                    </section>
+
+                    <section class="card toolbar-card">
+                        <div class="toolbar-row">
+                            <div class="search-input toolbar-grow">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                                <input type="search" data-product-search placeholder="Tim kiem theo ten san pham..." />
+                            </div>
+
+                            <label class="select-shell">
+                                <select data-category-filter>
+                                    <option value="">Tat ca danh muc</option>
+                                    @foreach (var categoryName in filterCategoryOptions)
+                                    {
+                                        <option value="@NormalizeValue(categoryName)">@categoryName</option>
+                                    }
+                                </select>
+                            </label>
+
+                            <div class="toolbar-actions">
+                                <a class="button-primary toolbar-action-button" href="@Url.Action("Create", "Products")" data-open-create-modal>
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                    </svg>
+                                    Them san pham
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card table-card">
+                        <div class="table-toolbar table-toolbar--products">
+                            <div class="table-toolbar__summary">
+                                <div class="table-toolbar__headline">
+                                    <h2>Danh sach san pham</h2>
+                                </div>
+                                <div class="muted-note">
+                                    Hien thi <span data-visible-count>@totalProducts</span> / <span data-total-count>@totalProducts</span> san pham tu bang du lieu hien tai
+                                </div>
+                            </div>
+
+                            <div class="table-toolbar__stats">
+                                <span class="table-toolbar__pill">
+                                    <strong>@productsWithImage</strong>
+                                    Co anh
+                                </span>
+                                <span class="table-toolbar__pill">
+                                    <strong>@totalCategories</strong>
+                                    Danh muc
+                                </span>
+                                <span class="table-toolbar__pill is-green">
+                                    <strong>@readyProducts</strong>
+                                    San sang
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Danh mục</th>
+                                        <th class="is-right">Giá bán</th>
+                                        <th>Loại</th>
+                                        <th>Trạng thái</th>
+                                        <th class="is-right">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in products)
+                                    {
+                                        var status = ResolveStatus(item);
+                                        var categoryName = item.Cate?.TenLoaiSanPham ?? "Chua phan loai";
+                                        var typeLabel = ResolveTypeLabel(item);
+                                        var nameValue = NormalizeValue(item.TenSanPham);
+                                        var categoryValue = NormalizeValue(categoryName);
+                                        <tr class="data-row" data-product-row data-name="@nameValue" data-category="@categoryValue">
+                                            <td class="data-cell data-cell--product">
+                                                <div class="thumb-cell">
+                                                    @if (!string.IsNullOrWhiteSpace(item.PathPhoto))
+                                                    {
+                                                        <img class="product-thumb" src="@item.PathPhoto" alt="@item.TenSanPham" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="table-avatar">@((item.TenSanPham ?? "SP").Substring(0, 1).ToUpperInvariant())</span>
+                                                    }
+                                                    <div class="person-cell__meta">
+                                                        <div class="person-cell__heading">
+                                                            <strong>@(item.TenSanPham ?? "Sản phẩm chưa đặt tên")</strong>
+                                                            <span class="product-id-chip">ID #@item.ProductId</span>
+                                                        </div>
+                                                        <span>@(string.IsNullOrWhiteSpace(item.MoTa) ? "Chưa có mô tả cho sản phẩm này." : item.MoTa)</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="data-cell" data-label="Danh muc">
+                                                <div class="table-field">
+                                                    <span class="table-field__tag">@categoryName</span>
+                                                </div>
+                                            </td>
+                                            <td class="is-right data-cell" data-label="Gia ban">
+                                                <div class="price-stack">
+                                                    <span class="table-price">@FormatCurrency(item.GiaTien)</span>
+                                                    <span class="price-caption">Giá hiện tại</span>
+                                                </div>
+                                            </td>
+                                            <td class="data-cell" data-label="Loai">
+                                                <div class="table-field">
+                                                    <span class="table-field__value--soft">@typeLabel</span>
+                                                </div>
+                                            </td>
+                                            <td class="data-cell" data-label="Trang thai"><span class="status-badge @status.CssClass">@status.Label</span></td>
+                                            <td class="is-right data-cell" data-label="Thao tac">
+                                                <span class="inline-actions">
+                                                    <a class="icon-action" asp-action="Details" asp-route-id="@item.ProductId" title="Xem chi tiet">
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
+                                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                                                        </svg>
+                                                    </a>
+                                                    <a class="icon-action" asp-action="Edit" asp-route-id="@item.ProductId" title="Chinh sua">
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M4 20h4l10.5-10.5-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                                            <path d="m12.5 6.5 4 4" stroke="currentColor" stroke-width="2"></path>
+                                                        </svg>
+                                                    </a>
+                                                    <a class="icon-action icon-action--danger" asp-action="Delete" asp-route-id="@item.ProductId" title="Xoa">
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        </svg>
+                                                    </a>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr class="table-empty" data-empty-row hidden>
+                                        <td colspan="6">Khong tim thay san pham phu hop voi bo loc hien tai.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination-row">
+                            <span class="muted-note">Trang 1 / 1</span>
+                            <div class="pagination-actions">
+                                <span class="pagination-page is-active">1</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
         </div>
     </div>
-</div>
+
+    <div class="modal-shell @(createModalOpen ? "is-open" : string.Empty)" id="create-product-modal" data-open-on-load="@createModalOpen.ToString().ToLowerInvariant()" aria-hidden="@(!createModalOpen).ToString().ToLowerInvariant()">
+        <div class="modal-backdrop" data-close-create-modal></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-product-title">
+            <div class="modal-card__header">
+                <div>
+                    <p class="modal-card__eyebrow">Quick Create</p>
+                    <h2 id="create-product-title">Them san pham moi</h2>
+                    <span>Form nay submit truc tiep ve <code>/Products/Create</code> va giu nguyen logic upload, save va redirect.</span>
+                </div>
+                <button class="modal-close" type="button" aria-label="Dong popup" data-close-create-modal>
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form class="product-form" asp-action="Create" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="returnToIndexModal" value="true" />
+
+                <div class="validation-summary @(ViewData.ModelState.IsValid ? string.Empty : "is-visible")">
+                    @Html.ValidationSummary(true, null, new { @class = "validation-summary__list" })
+                </div>
+
+                <div class="product-form__grid">
+                    <div class="field-group">
+                        <label for="create-cate-id">Danh muc</label>
+                        <div class="field-control">
+                            <label class="select-shell">
+                                <select id="create-cate-id" name="CateId">
+                                    <option value="">Chon danh muc</option>
+                                    @foreach (var option in createCategoryOptions)
+                                    {
+                                        var isSelected = option.Selected || option.Value == createProduct.CateId?.ToString();
+                                        <option value="@option.Value" selected="@(isSelected ? "selected" : null)">@option.Text</option>
+                                    }
+                                </select>
+                            </label>
+                        </div>
+                        @Html.ValidationMessage("CateId", null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="field-group">
+                        <label for="create-product-name">Ten san pham</label>
+                        <div class="field-control">
+                            <input id="create-product-name" class="form-input" type="text" name="TenSanPham" value="@createProduct.TenSanPham" placeholder="Vi du: Tra dao cam sa" />
+                        </div>
+                        @Html.ValidationMessage("TenSanPham", null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="field-group field-group--full">
+                        <label for="create-product-description">Mo ta</label>
+                        <div class="field-control">
+                            <textarea id="create-product-description" class="form-textarea" name="MoTa" rows="4" placeholder="Mo ta ngan gon ve mon, thanh phan hoac diem nhan san pham.">@createProduct.MoTa</textarea>
+                        </div>
+                        @Html.ValidationMessage("MoTa", null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="field-group">
+                        <label for="create-product-price">Gia ban</label>
+                        <div class="field-control">
+                            <input id="create-product-price" class="form-input" type="number" step="1000" min="0" name="GiaTien" value="@createProduct.GiaTien?.ToString("0.##", CultureInfo.InvariantCulture)" placeholder="Nhap gia ban" />
+                        </div>
+                        @Html.ValidationMessage("GiaTien", null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="field-group">
+                        <label for="create-product-file">Anh san pham</label>
+                        <div class="field-control field-control--file">
+                            <input id="create-product-file" class="file-input" type="file" name="FileInterface" accept="image/*" data-file-input />
+                            <span class="file-input__text" data-file-input-label>Chua chon tep anh</span>
+                        </div>
+                        <p class="field-hint">Neu bo trong, san pham van duoc tao nhu trang <code>Create</code> cu.</p>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="button-outline" type="button" data-close-create-modal>Huy</button>
+                    <button class="button-primary" type="submit">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                        Luu san pham
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/assets/js/admin-products.js" asp-append-version="true"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

@@ -1,76 +1,427 @@
-﻿@{
-    Layout = "Header_Left_Layout";
+@model WebQuanLyNhaHang.ViewModel.AdminDashboardViewModel
+@{
+    Layout = null;
 }
-
-<!-- Sidebar chat end-->
-<div class="content-wrapper">
-    <!-- Container-fluid starts -->
-    <!-- Main content starts -->
-    <div class="container-fluid">
-        <div class="row">
-            <div class="main-header">
-                <h4>Thông Tin Chính</h4>
-            </div>
-        </div>
-        <!-- 4-blocks row start -->
-        <div class="row dashboard-header">
-            <div class="col-lg-3 col-md-6">
-                <div class="card dashboard-product">
-                    <span>Đơn Hàng Online</span>
-                    <h2 class="dashboard-total-products">4500</h2>
-                    <span class="label label-warning">Sales</span>Số sản phẩm bán ra trong ngày
-                    <div class="side-box">
-                        <i class="ti-signal text-warning-color"></i>
-                    </div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Admin</title>
+    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-app">
+        <aside class="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
                 </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card dashboard-product">
-                    <span>Đơn Hàng Tại Quán</span>
-                    <h2 class="dashboard-total-products">3700</h2>
-                    <span class="label label-warning">Sales</span>Số sản phẩm bán ra trong ngày
-                    <div class="side-box ">
-                        <i class="ti-gift text-primary-color"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card dashboard-product">
-                    <span>Doanh Thu</span>
-                    <h2 class="dashboard-total-products"><span>3970000</span>đ</h2>
-                    <span class="label label-success">Sales</span>Tại quán
-                    <div class="side-box">
-                        <i class="ti-direction-alt text-success-color"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card dashboard-product">
-                    <span>Doanh Thu</span>
-                    <h2 class="dashboard-total-products"><span>2078000</span>đ</h2>
-                    <span class="label label-danger">Sales</span>Online
-                    <div class="side-box">
-                        <i class="ti-rocket text-danger-color"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- 4-blocks row end -->
-        <!-- 1-3-block row start -->
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-header-text">Biểu Đồ Doanh Thu Các Năm</h5>
-                    </div>
-                    <div class="card-block">
-                         @await Component.InvokeAsync("Chart")
-                    </div>
-                </div>
+                <span>F&amp;B Admin</span>
             </div>
 
+            <nav class="sidebar__nav">
+                <a class="nav-item is-active" href="@Url.Action("Index", "Admin")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="4" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                        </svg>
+                    </span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "Products")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                            <path d="m12 12 8-4.5M12 12 4 7.5M12 12v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "DonHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="20" r="1.7" fill="currentColor"></circle>
+                            <circle cx="18" cy="20" r="1.7" fill="currentColor"></circle>
+                            <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.5L22 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "ChiTietHoaDons")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M7 4h10M7 8h10M7 12h6M5 4h.01M5 8h.01M5 12h.01M7 16h10M5 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span>Chi tiết đơn</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "KhachHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M20 21a4 4 0 0 0-2.4-3.65M6.4 17.35A4 4 0 0 0 4 21M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 11a3 3 0 1 0 0-6M6 11A3 3 0 1 0 6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Khách hàng</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "NhanViens")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M18.5 9.5 20 11l2.5-2.5M20 7.5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Nhân viên</span>
+                </a>
+
+                <div class="nav-group is-open" id="sales-group">
+                    <button class="nav-item nav-item--button is-active" id="sales-group-toggle" type="button" aria-expanded="true">
+                        <span class="nav-item__main">
+                            <span class="nav-item__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            <span>Trang bán hàng</span>
+                        </span>
+                        <span class="nav-group__chevron" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div class="nav-submenu" id="sales-submenu">
+                        <a class="nav-subitem" href="@Url.Action("Ban", "Admin")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 8.5 6.5 5h11L20 8.5V19H4V8.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                    <path d="M4 9h16M9 13h6M8 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Đơn tại quán</span>
+                        </a>
+
+                        <a class="nav-subitem" href="@Url.Action("Index", "DonHangs")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Đơn mang về</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar__user">
+                <div class="sidebar-user">
+                    <div class="sidebar-user__avatar">@Model.Initials</div>
+                    <div class="sidebar-user__meta">
+                        <p>@Model.AdminDisplayName</p>
+                        <span>@Model.AdminRoleLabel</span>
+                    </div>
+                </div>
+
+                <a class="logout-button" href="@Url.Action("Logout", "Admin")">
+                    <span class="logout-button__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="main-shell">
+            <header class="topbar">
+                <div class="topbar__meta">
+                    <p class="topbar__eyebrow">Operational Dashboard</p>
+                    <div class="topbar__heading">
+                        <h1>Bảng điều hành nhà hàng</h1>
+                        <p>@Model.SnapshotLabel</p>
+                    </div>
+                </div>
+
+                <div class="topbar__actions">
+                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 17H5.6a1 1 0 0 1-.8-1.6L6 14V10a6 6 0 1 1 12 0v4l1.2 1.4a1 1 0 0 1-.8 1.6H15ZM10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    <div class="account-menu">
+                        <button class="account-trigger" id="account-trigger" type="button" aria-expanded="false">
+                            <span class="account-trigger__avatar">@Model.Initials</span>
+                            <span class="account-trigger__copy">
+                                <strong>@Model.AdminDisplayName</strong>
+                                <small>@Model.AdminAccount</small>
+                            </span>
+                            <span class="account-trigger__chevron" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="account-dropdown" id="account-dropdown" hidden>
+                            <div class="account-dropdown__header">
+                                <strong>@Model.AdminDisplayName</strong>
+                                <span>@Model.AdminRoleLabel</span>
+                            </div>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Admin")">Dashboard tổng quan</a>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "NhanViens")">Quản lý nhân viên</a>
+                            <a class="account-dropdown__item is-danger" href="@Url.Action("Logout", "Admin")">Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-scroll">
+                <section class="stats-grid">
+                    <article class="card stat-card">
+                        <div class="stat-card__content">
+                            <div>
+                                <p class="stat-card__label">@Model.RevenueMetric.Label</p>
+                                <h2 class="stat-card__value">@Model.RevenueMetric.Value</h2>
+                                <div class="stat-card__trend @Model.RevenueMetric.TrendCssClass">
+                                    @if (Model.RevenueMetric.TrendCssClass != "is-neutral")
+                                    {
+                                        <span class="trend-arrow" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none">
+                                                <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </span>
+                                    }
+                                    <span>@Model.RevenueMetric.TrendText</span>
+                                    <small>@Model.RevenueMetric.ComparisonText</small>
+                                </div>
+                                <p class="stat-card__hint">@Model.RevenueMetric.HintText</p>
+                            </div>
+
+                            <div class="stat-card__icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 3v18M16 7.5c0-1.66-1.79-3-4-3s-4 1.34-4 3 1.79 3 4 3 4 1.34 4 3-1.79 3-4 3-4-1.34-4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card stat-card">
+                        <div class="stat-card__content">
+                            <div>
+                                <p class="stat-card__label">@Model.OrderMetric.Label</p>
+                                <h2 class="stat-card__value">@Model.OrderMetric.Value</h2>
+                                <div class="stat-card__trend @Model.OrderMetric.TrendCssClass">
+                                    @if (Model.OrderMetric.TrendCssClass != "is-neutral")
+                                    {
+                                        <span class="trend-arrow" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none">
+                                                <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </span>
+                                    }
+                                    <span>@Model.OrderMetric.TrendText</span>
+                                    <small>@Model.OrderMetric.ComparisonText</small>
+                                </div>
+                                <p class="stat-card__hint">@Model.OrderMetric.HintText</p>
+                            </div>
+
+                            <div class="stat-card__icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <circle cx="9" cy="20" r="1.7" fill="currentColor"></circle>
+                                    <circle cx="18" cy="20" r="1.7" fill="currentColor"></circle>
+                                    <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.5L22 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card stat-card">
+                        <div class="stat-card__content">
+                            <div>
+                                <p class="stat-card__label">@Model.CustomerMetric.Label</p>
+                                <h2 class="stat-card__value">@Model.CustomerMetric.Value</h2>
+                                <div class="stat-card__trend @Model.CustomerMetric.TrendCssClass">
+                                    <span>@Model.CustomerMetric.TrendText</span>
+                                    <small>@Model.CustomerMetric.ComparisonText</small>
+                                </div>
+                                <p class="stat-card__hint">@Model.CustomerMetric.HintText</p>
+                            </div>
+
+                            <div class="stat-card__icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M16 21a4 4 0 0 0-8 0M20 21a4 4 0 0 0-2.4-3.65M6.4 17.35A4 4 0 0 0 4 21M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 11a3 3 0 1 0 0-6M6 11A3 3 0 1 0 6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card stat-card">
+                        <div class="stat-card__content">
+                            <div>
+                                <p class="stat-card__label">@Model.ProductMetric.Label</p>
+                                <h2 class="stat-card__value">@Model.ProductMetric.Value</h2>
+                                <div class="stat-card__trend @Model.ProductMetric.TrendCssClass">
+                                    @if (Model.ProductMetric.TrendCssClass != "is-neutral")
+                                    {
+                                        <span class="trend-arrow" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none">
+                                                <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </span>
+                                    }
+                                    <span>@Model.ProductMetric.TrendText</span>
+                                    <small>@Model.ProductMetric.ComparisonText</small>
+                                </div>
+                                <p class="stat-card__hint">@Model.ProductMetric.HintText</p>
+                            </div>
+
+                            <div class="stat-card__icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                    <path d="m12 12 8-4.5M12 12 4 7.5M12 12v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="insight-grid">
+                    @foreach (var insight in Model.InsightCards)
+                    {
+                        <article class="card insight-card @insight.ToneCssClass">
+                            <p class="insight-card__label">@insight.Label</p>
+                            <h3 class="insight-card__value">@insight.Value</h3>
+                            <p class="insight-card__note">@insight.Note</p>
+                        </article>
+                    }
+                </section>
+
+                <section class="panels-grid">
+                    <article class="card panel-card">
+                        <div class="panel-card__header">
+                            <div>
+                                <h3>Doanh thu theo chu kỳ</h3>
+                                <p class="panel-card__subtitle">Dropdown thay đổi trực tiếp theo ngày, tháng hoặc năm gần nhất trong dữ liệu.</p>
+                            </div>
+                            <label class="select-shell">
+                                <select data-series-select="revenue" aria-label="Khoảng thời gian doanh thu">
+                                    <option value="daily">Theo ngày</option>
+                                    <option value="monthly">Theo tháng</option>
+                                    <option value="yearly" selected>Theo năm</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="panel-card__body">
+                            <div class="chart-shell" data-chart="revenue"></div>
+                            <div class="panel-summary" data-summary="revenue"></div>
+                        </div>
+                    </article>
+
+                    <article class="card panel-card">
+                        <div class="panel-card__header">
+                            <div>
+                                <h3>Số lượng đơn hàng</h3>
+                                <p class="panel-card__subtitle">Mỗi cột thể hiện số đơn chốt ở từng mốc thời gian cùng cửa sổ dữ liệu.</p>
+                            </div>
+                            <label class="select-shell">
+                                <select data-series-select="orders" aria-label="Khoảng thời gian đơn hàng">
+                                    <option value="daily">Theo ngày</option>
+                                    <option value="monthly">Theo tháng</option>
+                                    <option value="yearly" selected>Theo năm</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="panel-card__body">
+                            <div class="chart-shell" data-chart="orders"></div>
+                            <div class="panel-summary" data-summary="orders"></div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="panels-grid panels-grid--bottom">
+                    <article class="card panel-card">
+                        <div class="panel-card__header">
+                            <div>
+                                <h3>Sản phẩm bán chạy</h3>
+                                <p class="panel-card__subtitle">Top 5 món bán tốt nhất theo số lượng, kèm doanh thu và tỷ trọng trong kỳ.</p>
+                            </div>
+                            <label class="select-shell">
+                                <select data-series-select="products" aria-label="Khoảng thời gian sản phẩm">
+                                    <option value="daily">Theo ngày</option>
+                                    <option value="monthly">Theo tháng</option>
+                                    <option value="yearly" selected>Theo năm</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="panel-card__body panel-card__body--table">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="is-right">Đã bán</th>
+                                        <th class="is-right">Doanh thu</th>
+                                        <th class="is-right">Tỷ trọng</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-top-products></tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="card panel-card">
+                        <div class="panel-card__header">
+                            <div>
+                                <h3>So sánh doanh thu tại chỗ và mang về</h3>
+                                <p class="panel-card__subtitle">Tách hai luồng doanh thu chính để nhìn rõ tỷ trọng vận hành.</p>
+                            </div>
+                            <label class="select-shell">
+                                <select data-series-select="comparison" aria-label="Khoảng thời gian so sánh doanh thu">
+                                    <option value="daily">Theo ngày</option>
+                                    <option value="monthly">Theo tháng</option>
+                                    <option value="yearly" selected>Theo năm</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="panel-card__body">
+                            <div class="chart-shell" data-chart="comparison"></div>
+                            <div class="chart-legend">
+                                <span class="chart-legend__item">
+                                    <i class="chart-legend__line chart-legend__line--green"></i>
+                                    Tại chỗ
+                                </span>
+                                <span class="chart-legend__item">
+                                    <i class="chart-legend__line chart-legend__line--blue"></i>
+                                    Mang về
+                                </span>
+                            </div>
+                            <div class="panel-summary" data-summary="comparison"></div>
+                        </div>
+                    </article>
+                </section>
+            </main>
         </div>
     </div>
-</div>
 
-
+    <script id="dashboard-payload" type="application/json">@Html.Raw(Model.DashboardPayloadJson)</script>
+    <script src="~/assets/js/admin-dashboard.js" asp-append-version="true"></script>
+</body>
+</html>

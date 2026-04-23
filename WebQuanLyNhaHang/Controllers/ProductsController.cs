@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
+using WebQuanLyNhaHang.ViewModel;
 
 namespace WebQuanLyNhaHang.Controllers
 {
@@ -26,9 +27,7 @@ namespace WebQuanLyNhaHang.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            ViewData["CateId"] = new SelectList(_context.Categories, "CateId", "CateId");
-            var qlnhaHangBtlContext = _context.Products.Include(p => p.Cate);
-            return View(await qlnhaHangBtlContext.ToListAsync());
+            return View(await BuildIndexViewModelAsync());
         }
 
         // GET: Products/Details/5
@@ -60,7 +59,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,CateId,TenSanPham,MoTa,GiaTien,SoLuong")] Product product, IFormFile FileInterface)
+        public async Task<IActionResult> Create([Bind("ProductId,CateId,TenSanPham,MoTa,GiaTien,SoLuong")] Product product, IFormFile FileInterface, bool returnToIndexModal = false)
         {
             if (ModelState.IsValid)
             {
@@ -82,6 +81,12 @@ namespace WebQuanLyNhaHang.Controllers
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
+            }
+
+            if (returnToIndexModal)
+            {
+                var indexViewModel = await BuildIndexViewModelAsync(product, openCreateModal: true);
+                return View(nameof(Index), indexViewModel);
             }
 
             ViewData["CateId"] = new SelectList(_context.Categories, "CateId", "TenLoaiSanPham", product.CateId);
@@ -202,6 +207,31 @@ namespace WebQuanLyNhaHang.Controllers
         private bool ProductExists(int id)
         {
             return _context.Products.Any(e => e.ProductId == id);
+        }
+
+        private async Task<ProductsIndexViewModel> BuildIndexViewModelAsync(Product? createProduct = null, bool openCreateModal = false)
+        {
+            var products = await _context.Products
+                .Include(product => product.Cate)
+                .ToListAsync();
+
+            var categories = await _context.Categories
+                .OrderBy(category => category.TenLoaiSanPham)
+                .Select(category => new SelectListItem
+                {
+                    Value = category.CateId.ToString(),
+                    Text = category.TenLoaiSanPham ?? $"Danh muc {category.CateId}",
+                    Selected = createProduct != null && category.CateId == createProduct.CateId
+                })
+                .ToListAsync();
+
+            return new ProductsIndexViewModel
+            {
+                Products = products,
+                CreateProduct = createProduct ?? new Product(),
+                CategoryOptions = categories,
+                OpenCreateModal = openCreateModal
+            };
         }
     }
 }

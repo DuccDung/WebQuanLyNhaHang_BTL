@@ -2,7 +2,7 @@
 
 namespace WebQuanLyNhaHang.Models
 {
-    public class ProductConditions
+    public partial class ProductConditions
     {
         [Key]
         public int ProductConditionId { get; set; }

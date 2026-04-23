@@ -64,6 +64,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.GhiChu)
                 .HasMaxLength(50)
                 .HasColumnName("Ghi Chu");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -74,6 +75,7 @@ public partial class QlnhaHangBtlContext : DbContext
 
             entity.Property(e => e.CateId).HasColumnName("Cate_ID");
             entity.Property(e => e.MoTa).HasMaxLength(200);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenLoaiSanPham).HasMaxLength(100);
         });
 
@@ -90,6 +92,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.CthdId).HasColumnName("CTHD_ID");
             entity.Property(e => e.DhId).HasColumnName("DH_ID");
             entity.Property(e => e.ProductId).HasColumnName("Product_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.ThanhTien).HasColumnType("money");
             entity.Property(e => e.Ghichu).HasColumnName("Ghichu");
             entity.HasOne(d => d.Dh).WithMany(p => p.ChiTietHoaDons)
@@ -111,6 +114,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.CthdnId).HasColumnName("CTHDN_ID");
             entity.Property(e => e.HdnId).HasColumnName("HDN_ID");
             entity.Property(e => e.NlId).HasColumnName("NL_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.ThanhTien).HasColumnType("money");
 
             entity.HasOne(d => d.Hdn).WithMany(p => p.ChiTietHoaDonNhaps)
@@ -134,6 +138,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.GhiChu).HasMaxLength(200);
             entity.Property(e => e.NlId).HasColumnName("NL_ID");
             entity.Property(e => e.ProductId).HasColumnName("Product_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.SoLuong).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Nl).WithMany(p => p.CongThucs)
@@ -158,6 +163,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.KhId).HasColumnName("KH_ID");
             entity.Property(e => e.KmId).HasColumnName("KM_ID");
             entity.Property(e => e.NvId).HasColumnName("NV_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TongTien).HasColumnType("money");
 
             entity.HasOne(d => d.Ban).WithMany(p => p.DonHangs)
@@ -188,6 +194,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.NgayLapHoaDon).HasColumnType("datetime");
             entity.Property(e => e.NgayNhanHang).HasColumnType("datetime");
             entity.Property(e => e.NvId).HasColumnName("NV_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TongSoTien).HasColumnType("money");
 
             entity.HasOne(d => d.Ncc).WithMany(p => p.HoaDonNhaps)
@@ -211,6 +218,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.DiaChi).HasMaxLength(200);
             entity.Property(e => e.MatKhau).HasMaxLength(50);
             entity.Property(e => e.PathPhoto).HasMaxLength(100);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.SoDienThoai)
                 .HasMaxLength(15)
                 .IsUnicode(false);
@@ -226,6 +234,7 @@ public partial class QlnhaHangBtlContext : DbContext
 
             entity.Property(e => e.KmId).HasColumnName("KM_ID");
             entity.Property(e => e.GiamGia).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenKhuyenMai).HasMaxLength(100);
         });
 
@@ -238,6 +247,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.NcId).HasColumnName("NC_ID");
             entity.Property(e => e.CaLam).HasMaxLength(50);
             entity.Property(e => e.NgayCong1).HasColumnName("NgayCong");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<NguyenLieu>(entity =>
@@ -248,6 +258,7 @@ public partial class QlnhaHangBtlContext : DbContext
 
             entity.Property(e => e.NlId).HasColumnName("NL_ID");
             entity.Property(e => e.GiaTien).HasColumnType("money");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenNguyenLieu).HasMaxLength(100);
         });
 
@@ -264,6 +275,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.Phone)
                 .HasMaxLength(15)
                 .IsUnicode(false);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenNhaCungCap).HasMaxLength(100);
         });
 
@@ -278,6 +290,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.HeSoLuong).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.MatKhau).HasMaxLength(50);
             entity.Property(e => e.PathPhoto).HasMaxLength(100);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TaiKhoan).HasMaxLength(50);
             entity.Property(e => e.TenNhanVien).HasMaxLength(100);
         });
@@ -291,6 +304,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.NvncId).HasColumnName("NVNC_ID");
             entity.Property(e => e.NcId).HasColumnName("NC_ID");
             entity.Property(e => e.NvId).HasColumnName("NV_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
 
             entity.HasOne(d => d.Nc).WithMany(p => p.NvNcs)
                 .HasForeignKey(d => d.NcId)
@@ -311,6 +325,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.MoTa).HasMaxLength(200);
             entity.Property(e => e.NvId).HasColumnName("NV_ID");
             entity.Property(e => e.PqId).HasColumnName("PQ_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
 
             entity.HasOne(d => d.Nv).WithMany(p => p.NvPqs)
                 .HasForeignKey(d => d.NvId)
@@ -328,6 +343,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.ToTable("PhanQuyen");
 
             entity.Property(e => e.PqId).HasColumnName("PQ_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenQuyen).HasMaxLength(100);
         });
 
@@ -342,6 +358,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.GiaTien).HasColumnType("money");
             entity.Property(e => e.MoTa).HasMaxLength(200);
             entity.Property(e => e.PathPhoto).HasMaxLength(300);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenSanPham).HasMaxLength(100);
 
             entity.HasOne(d => d.Cate).WithMany(p => p.Products)
@@ -357,6 +374,7 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.ProductConditionId).HasColumnName("ProductCondition_ID");
             entity.Property(e => e.ProductId).HasColumnName("Product_ID");
             entity.Property(e => e.Condition).HasColumnName("Condition").HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
 
             entity.HasOne(e => e.Product)
                   .WithMany(p => p.ProductConditions)
@@ -373,6 +391,7 @@ public partial class QlnhaHangBtlContext : DbContext
 
             entity.Property(e => e.TId).HasColumnName("T_ID");
             entity.Property(e => e.NvId).HasColumnName("NV_ID");
+            entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TenThuong).HasMaxLength(100);
             entity.Property(e => e.TienThuong).HasColumnType("money");
 
