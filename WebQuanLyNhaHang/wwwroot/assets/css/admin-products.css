@@ -4,14 +4,13 @@
 }
 
 .topbar--products {
-  min-height: auto;
-  align-items: stretch;
-  gap: 10px;
-  padding: 8px 16px 4px;
-  border-bottom: 0;
-  background:
-    radial-gradient(circle at top left, rgba(251, 146, 60, 0.12), transparent 30%),
-    linear-gradient(180deg, #f8fafc 0%, #f8fafc 100%);
+  min-height: 72px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
 }
 
 .products-hero {
@@ -26,8 +25,8 @@
   border-radius: 22px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), #ffffff),
-    radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.05), transparent 32%);
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.06), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(148, 163, 184, 0.06), transparent 32%);
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
   overflow: hidden;
 }
@@ -37,25 +36,30 @@
   position: absolute;
   left: 14px;
   top: 50%;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   transform: translateY(-50%);
-  background: linear-gradient(135deg, #f97316, #fb7185);
-  box-shadow: 0 10px 18px rgba(249, 115, 22, 0.24);
+  border: 1px solid #dbeafe;
+  background:
+    linear-gradient(#2563eb, #2563eb) center 11px / 16px 2px no-repeat,
+    linear-gradient(#2563eb, #2563eb) center 18px / 16px 2px no-repeat,
+    linear-gradient(#60a5fa, #60a5fa) center 25px / 10px 2px no-repeat,
+    linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
 }
 
 .products-hero::after {
   content: "";
   position: absolute;
-  left: 24px;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  transform: translateY(-50%) rotate(45deg);
-  border: 2px solid rgba(255, 255, 255, 0.92);
-  box-sizing: border-box;
+  left: 44px;
+  top: calc(50% + 10px);
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.98);
 }
 
 .products-hero__content {
@@ -102,6 +106,16 @@
 }
 
 .topbar--products .topbar__eyebrow {
+  display: block;
+}
+
+.topbar--products .topbar__meta {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.topbar--products .topbar__meta > .topbar__eyebrow + .topbar__eyebrow {
   display: none;
 }
 
@@ -119,52 +133,52 @@
 }
 
 .topbar--products .topbar__actions {
-  align-self: stretch;
-  min-height: 60px;
+  align-self: center;
+  min-height: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  justify-content: center;
-  padding: 4px 8px;
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .topbar--products .icon-button,
 .topbar--products .account-trigger {
-  min-height: 36px;
+  min-height: 40px;
   border-radius: 12px;
 }
 
 .topbar--products .icon-button {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: transparent;
 }
 
 .topbar--products .account-trigger {
-  padding: 0 8px 0 5px;
-  border: 1px solid transparent;
+  padding: 0 10px;
+  border: 0;
 }
 
 .topbar--products .account-trigger__avatar {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
 }
 
 .topbar--products .account-trigger__copy {
-  gap: 2px;
+  gap: 0;
 }
 
 .topbar--products .account-trigger__copy strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .topbar--products .account-trigger__copy small {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .page-actions {
@@ -994,21 +1008,11 @@ body.modal-open {
 
 @media (max-width: 1080px) {
   .topbar--products {
-    flex-direction: column;
-  }
-
-  .products-hero {
-    width: 100%;
-    padding-right: 18px;
-  }
-
-  .products-hero__stats {
-    margin-left: 0;
-    justify-content: flex-start;
+    padding: 14px 20px 12px;
   }
 
   .topbar--products .topbar__actions {
-    align-self: flex-end;
+    align-self: center;
   }
 
   .mini-stats-grid {
@@ -1058,7 +1062,9 @@ body.modal-open {
 
   .data-table tbody {
     display: grid;
-    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px;
   }
 
   .table-empty,
@@ -1066,14 +1072,18 @@ body.modal-open {
     display: block;
   }
 
+  .table-empty {
+    grid-column: 1 / -1;
+  }
+
   .data-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 12px;
+    gap: 0 10px;
     border: 1px solid #e2e8f0;
-    border-radius: 22px;
+    border-radius: 20px;
     background: #ffffff;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
     overflow: hidden;
   }
 
@@ -1092,8 +1102,8 @@ body.modal-open {
   .data-table tbody td:last-child {
     min-width: 0;
     display: grid;
-    gap: 8px;
-    padding: 12px 18px;
+    gap: 6px;
+    padding: 10px 14px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -1102,29 +1112,32 @@ body.modal-open {
 
   .data-cell--product {
     grid-column: 1 / -1;
-    padding-top: 18px !important;
-    padding-bottom: 14px !important;
+    padding-top: 14px !important;
+    padding-bottom: 12px !important;
     border-bottom: 1px solid #f1f5f9 !important;
   }
 
   .data-cell:not(.data-cell--product)::before {
     content: attr(data-label);
     color: #94a3b8;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
   .data-cell[data-label="Thao tac"] {
     grid-column: 1 / -1;
-    padding-top: 8px !important;
-    padding-bottom: 18px !important;
+    padding-top: 4px !important;
+    padding-bottom: 12px !important;
     border-top: 1px solid #f8fafc !important;
   }
 
   .data-cell[data-label="Thao tac"] .inline-actions {
-    flex-wrap: wrap;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .data-table td:nth-child(2) .table-field,
@@ -1146,10 +1159,14 @@ body.modal-open {
 
   .thumb-cell {
     align-items: flex-start;
+    gap: 10px;
   }
 
   .person-cell__meta span {
     max-width: none;
+    font-size: 11px;
+    line-height: 1.35;
+    -webkit-line-clamp: 1;
   }
 }
 
@@ -1159,41 +1176,17 @@ body.modal-open {
   }
 
   .topbar--products {
-    padding: 14px 16px 12px;
-  }
-
-  .products-hero {
-    min-height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 16px;
-    padding-left: 16px;
-    border-radius: 22px;
-  }
-
-  .products-hero::before,
-  .products-hero::after {
-    display: none;
-  }
-
-  .products-hero__content,
-  .products-hero__stats {
-    width: 100%;
-  }
-
-  .products-hero__stats {
-    margin-left: 0;
-    justify-content: flex-start;
+    padding: 16px 20px;
   }
 
   .topbar--products .topbar__heading h1 {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .topbar--products .topbar__actions {
     min-height: auto;
-    align-self: stretch;
-    justify-content: space-between;
+    align-self: auto;
+    justify-content: flex-end;
   }
 
   .page-actions,
@@ -1261,7 +1254,7 @@ body.modal-open {
   }
 
   .table-wrap {
-    padding: 0;
+    padding: 0 8px 8px;
   }
 
   .table-toolbar__headline {
@@ -1286,9 +1279,11 @@ body.modal-open {
   }
 
   .data-row {
-    grid-template-columns: 1fr;
-    border-radius: 18px;
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto auto;
+    gap: 0 10px;
+    align-content: start;
+    min-height: 196px;
   }
 
   .data-table tbody {
@@ -1298,48 +1293,159 @@ body.modal-open {
   .data-table tbody td,
   .data-table tbody td:first-child,
   .data-table tbody td:last-child {
-    padding: 10px 14px;
+    gap: 5px;
+    padding: 9px 11px;
   }
 
   .data-cell--product {
-    padding-top: 14px !important;
-    padding-bottom: 12px !important;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #eef2f7 !important;
+  }
+
+  .data-cell:not(.data-cell--product):not([data-label="Thao tac"]) {
+    gap: 4px;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .data-cell:not(.data-cell--product)::before,
+  .price-caption {
+    display: none;
+  }
+
+  .data-cell[data-label="Danh muc"] {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .data-cell[data-label="Gia ban"] {
+    grid-column: 2;
+    grid-row: 2;
+    justify-items: end;
+    text-align: right;
+  }
+
+  .data-cell[data-label="Loai"] {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .data-cell[data-label="Trang thai"] {
+    grid-column: 2;
+    grid-row: 3;
+    justify-items: end;
+    text-align: right;
   }
 
   .data-cell[data-label="Thao tac"] {
-    grid-column: auto;
-    padding-top: 6px !important;
-    padding-bottom: 14px !important;
+    grid-column: 1 / -1;
+    grid-row: 4;
+    padding-top: 2px !important;
+    padding-bottom: 10px !important;
+    border-top: 1px solid #f1f5f9 !important;
   }
 
   .data-cell[data-label="Thao tac"] .inline-actions {
     width: 100%;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .icon-action {
-    flex: 1 1 0;
-    width: auto;
+    flex: none;
+    width: 100%;
     min-width: 0;
+    height: 38px;
+    border-radius: 12px;
   }
 
   .product-thumb,
   .table-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
   }
 
   .product-id-chip {
     display: none;
   }
 
+  .thumb-cell {
+    gap: 8px;
+  }
+
+  .person-cell__meta {
+    gap: 3px;
+  }
+
+  .person-cell__heading {
+    gap: 4px;
+  }
+
   .person-cell__meta strong {
-    font-size: 15px;
+    font-size: 14px;
+    line-height: 1.25;
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .person-cell__meta span {
-    font-size: 12px;
+    display: none;
+  }
+
+  .table-field {
+    justify-items: start;
+  }
+
+  .price-stack {
+    justify-items: end;
+    align-content: start;
+    gap: 0;
+  }
+
+  .table-field__tag,
+  .table-field__value--soft,
+  .status-badge {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .table-field__tag,
+  .table-field__value--soft,
+  .status-badge {
+    min-height: 28px;
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+
+  .status-badge {
+    gap: 6px;
+    justify-content: flex-start;
+    white-space: nowrap;
+  }
+
+  .status-badge::before {
+    width: 7px;
+    height: 7px;
+  }
+
+  .table-price {
+    font-size: 15px;
+    line-height: 1.2;
+    justify-content: flex-end;
+  }
+
+  .price-caption {
+    font-size: 9px;
+    line-height: 1.2;
   }
 
   .toolbar-actions {
@@ -1384,11 +1490,43 @@ body.modal-open {
     min-height: 32px;
   }
 
+  .data-table tbody {
+    gap: 8px;
+  }
+
+  .data-row {
+    border-radius: 16px;
+    min-height: 184px;
+  }
+
+  .data-table tbody td,
+  .data-table tbody td:first-child,
+  .data-table tbody td:last-child {
+    padding: 7px 8px;
+  }
+
+  .data-cell:not(.data-cell--product):not([data-label="Thao tac"]) {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
   .person-cell__meta strong {
-    font-size: 14px;
+    font-size: 13px;
+  }
+
+  .person-cell__meta span {
+    display: none;
   }
 
   .table-price {
-    font-size: 15px;
+    font-size: 14px;
+  }
+
+  .table-field__tag,
+  .table-field__value--soft,
+  .status-badge {
+    min-height: 26px;
+    padding-inline: 8px;
+    font-size: 9px;
   }
 }
