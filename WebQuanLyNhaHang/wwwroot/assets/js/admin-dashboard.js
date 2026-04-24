@@ -20,13 +20,18 @@
   const orderSummary = document.querySelector('[data-summary="orders"]');
   const comparisonSummary = document.querySelector('[data-summary="comparison"]');
   const topProductsBody = document.querySelector("[data-top-products]");
+  const mobileNavTrigger = document.getElementById("mobile-nav-trigger");
+  const mobileNavBackdrop = document.getElementById("mobile-nav-backdrop");
+  const dashboardSidebar = document.getElementById("dashboard-sidebar");
 
   setupAccountMenu();
+  setupMobileNav();
   setupSalesMenu();
   setupRevenuePanel();
   setupOrdersPanel();
   setupComparisonPanel();
   setupProductsPanel();
+  normalizePanelTitles();
 
   bindSelect('[data-series-select="revenue"]', (period) => {
     renderRevenue(period);
@@ -462,7 +467,7 @@
 
     const revenueTitle = document.querySelector(".panel-card--revenue .panel-card__header h3");
     if (revenueTitle) {
-      revenueTitle.textContent = "Doanh Thu Theo";
+      revenueTitle.textContent = "Doanh thu theo";
     }
   }
 
@@ -495,6 +500,76 @@
     if (productsTitle) {
       productsTitle.textContent = "Sản Phẩm Bán Chạy";
     }
+  }
+
+  function setupMobileNav() {
+    if (!mobileNavTrigger || !mobileNavBackdrop || !dashboardSidebar) {
+      return;
+    }
+
+    let hideBackdropTimer = 0;
+
+    const syncMobileNav = (isOpen) => {
+      mobileNavTrigger.setAttribute("aria-expanded", String(isOpen));
+
+      if (isOpen) {
+        window.clearTimeout(hideBackdropTimer);
+        mobileNavBackdrop.hidden = false;
+        window.requestAnimationFrame(() => {
+          document.body.classList.add("is-mobile-nav-open");
+        });
+        return;
+      }
+
+      document.body.classList.remove("is-mobile-nav-open");
+      hideBackdropTimer = window.setTimeout(() => {
+        if (!document.body.classList.contains("is-mobile-nav-open")) {
+          mobileNavBackdrop.hidden = true;
+        }
+      }, 260);
+    };
+
+    mobileNavTrigger.addEventListener("click", () => {
+      syncMobileNav(!document.body.classList.contains("is-mobile-nav-open"));
+    });
+
+    mobileNavBackdrop.addEventListener("click", () => {
+      syncMobileNav(false);
+    });
+
+    dashboardSidebar.addEventListener("click", (event) => {
+      if (event.target.closest("a")) {
+        syncMobileNav(false);
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 1080) {
+        syncMobileNav(false);
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        syncMobileNav(false);
+      }
+    });
+  }
+
+  function normalizePanelTitles() {
+    const panelTitles = [
+      [".panel-card--revenue .panel-card__header h3", "Doanh thu theo"],
+      [".panel-card--orders .panel-card__header h3", "Số lượng đơn hàng"],
+      [".panel-card--comparison .panel-card__header h3", "So sánh doanh thu tại chỗ và mang về"],
+      [".panel-card--products .panel-card__header h3", "Sản phẩm bán chạy"],
+    ];
+
+    panelTitles.forEach(([selector, title]) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.textContent = title;
+      }
+    });
   }
 
   function getNiceMax(values, steps) {
