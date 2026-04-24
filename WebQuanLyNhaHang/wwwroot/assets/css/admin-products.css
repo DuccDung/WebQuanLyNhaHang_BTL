@@ -1154,6 +1154,10 @@ body.modal-open {
 }
 
 @media (max-width: 720px) {
+  .page-stack {
+    gap: 10px;
+  }
+
   .topbar--products {
     padding: 14px 16px 12px;
   }
@@ -1200,6 +1204,66 @@ body.modal-open {
     align-items: stretch;
   }
 
+  .mini-stats-grid,
+  .table-toolbar,
+  .pagination-row {
+    display: none;
+  }
+
+  .toolbar-card,
+  .table-card {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .toolbar-card {
+    padding: 0;
+  }
+
+  .toolbar-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .toolbar-grow {
+    flex: none;
+  }
+
+  .toolbar-actions {
+    display: none;
+  }
+
+  .toolbar-row > .select-shell {
+    width: fit-content;
+    max-width: 180px;
+    justify-self: start;
+  }
+
+  .toolbar-row > .select-shell select {
+    min-width: 0;
+    height: 36px;
+    padding: 0 34px 0 12px;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 12px;
+  }
+
+  .search-input input {
+    min-height: 38px;
+    padding-left: 34px;
+    font-size: 13px;
+  }
+
+  .search-input svg {
+    left: 11px;
+  }
+
+  .table-wrap {
+    padding: 0;
+  }
+
   .table-toolbar__headline {
     flex-direction: column;
     align-items: flex-start;
@@ -1219,6 +1283,63 @@ body.modal-open {
 
   .person-cell__heading {
     flex-wrap: wrap;
+  }
+
+  .data-row {
+    grid-template-columns: 1fr;
+    border-radius: 18px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  }
+
+  .data-table tbody {
+    gap: 10px;
+  }
+
+  .data-table tbody td,
+  .data-table tbody td:first-child,
+  .data-table tbody td:last-child {
+    padding: 10px 14px;
+  }
+
+  .data-cell--product {
+    padding-top: 14px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .data-cell[data-label="Thao tac"] {
+    grid-column: auto;
+    padding-top: 6px !important;
+    padding-bottom: 14px !important;
+  }
+
+  .data-cell[data-label="Thao tac"] .inline-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .icon-action {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .product-thumb,
+  .table-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .product-id-chip {
+    display: none;
+  }
+
+  .person-cell__meta strong {
+    font-size: 15px;
+  }
+
+  .person-cell__meta span {
+    font-size: 12px;
   }
 
   .toolbar-actions {
@@ -1263,28 +1384,11 @@ body.modal-open {
     min-height: 32px;
   }
 
-  .data-row {
-    grid-template-columns: 1fr;
-  }
-
-  .data-cell[data-label="Thao tac"] {
-    grid-column: auto;
-  }
-
-  .data-cell[data-label="Thao tac"] .inline-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .icon-action {
-    flex: 1 1 0;
-  }
-
   .person-cell__meta strong {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .table-price {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
