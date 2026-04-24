@@ -260,7 +260,7 @@ svg {
   min-height: 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 24px;
   padding: 14px 24px;
   background: #ffffff;
@@ -268,8 +268,7 @@ svg {
 }
 
 .topbar__meta {
-  display: grid;
-  gap: 6px;
+  display: none;
 }
 
 .topbar__eyebrow {
@@ -300,6 +299,36 @@ svg {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+@media (min-width: 721px) {
+  .sidebar__brand,
+  .topbar {
+    height: 52px;
+    min-height: 52px;
+  }
+
+  .sidebar__brand {
+    gap: 10px;
+    padding-inline: 20px;
+    font-size: 16px;
+  }
+
+  .brand-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .brand-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .topbar {
+    gap: 16px;
+    padding: 6px 20px;
+  }
 }
 
 .icon-button,
@@ -912,8 +941,8 @@ svg {
   }
 
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
   }
 
   .account-trigger__copy {
