@@ -471,6 +471,7 @@ svg {
 
 .stats-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 .insight-grid {
@@ -484,6 +485,10 @@ svg {
   gap: 24px;
 }
 
+.panels-grid--bottom {
+  align-items: start;
+}
+
 .card {
   background: #ffffff;
   border: 1px solid var(--line);
@@ -492,41 +497,56 @@ svg {
 }
 
 .stat-card {
-  padding: 24px;
+  min-height: 125px;
+  padding: 18px 22px;
 }
 
 .stat-card__content {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
+  gap: 14px;
+  width: 100%;
+}
+
+.stat-card__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  align-content: start;
 }
 
 .stat-card__label {
-  margin: 0 0 8px;
-  font-size: 14px;
-  color: #475569;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #334155;
 }
 
 .stat-card__value {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .stat-card__trend {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 6px;
-  margin-top: 12px;
-  font-size: 14px;
+  margin-top: 0;
+  font-size: 13px;
+  line-height: 1.3;
 }
 
 .stat-card__trend small {
   color: #64748b;
-  font-size: 12px;
-  margin-left: 2px;
+  font-size: 13px;
+  margin-left: 0;
+  white-space: nowrap;
 }
 
 .stat-card__trend.is-up {
@@ -552,17 +572,18 @@ svg {
 }
 
 .stat-card__hint {
-  margin: 12px 0 0;
+  margin: 0;
   color: #64748b;
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.45;
 }
 
 .stat-card__icon {
   flex: 0 0 auto;
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  width: 50px;
+  height: 50px;
+  margin-top: 8px;
+  border-radius: 15px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -571,8 +592,8 @@ svg {
 }
 
 .stat-card__icon svg {
-  width: 28px;
-  height: 28px;
+  width: 23px;
+  height: 23px;
 }
 
 .insight-card {
@@ -657,6 +678,38 @@ svg {
   padding: 20px 24px 24px;
 }
 
+.panel-card__header--revenue,
+.panel-card__header--orders,
+.panel-card__header--comparison,
+.panel-card__header--products {
+  align-items: center;
+  gap: 12px;
+  padding: 22px 22px 4px;
+}
+
+.panel-card--revenue .panel-card__header h3,
+.panel-card--orders .panel-card__header h3,
+.panel-card--comparison .panel-card__header h3,
+.panel-card--products .panel-card__header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.panel-card--revenue .panel-card__subtitle,
+.panel-card--orders .panel-card__subtitle,
+.panel-card--comparison .panel-card__subtitle,
+.panel-card--products .panel-card__subtitle {
+  display: none;
+}
+
+.panel-card__body--revenue,
+.panel-card__body--orders,
+.panel-card__body--comparison,
+.panel-card__body--products {
+  padding: 2px 18px 18px;
+}
+
 .panel-card__body--table {
   padding-top: 18px;
 }
@@ -696,14 +749,69 @@ svg {
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
 }
 
+.select-shell--revenue::after,
+.select-shell--orders::after,
+.select-shell--comparison::after,
+.select-shell--products::after {
+  right: 18px;
+  width: 9px;
+  height: 9px;
+}
+
+.select-shell--revenue select,
+.select-shell--orders select,
+.select-shell--comparison select,
+.select-shell--products select {
+  min-width: 152px;
+  height: 40px;
+  padding: 0 38px 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.65);
+}
+
 .chart-shell {
   min-height: 330px;
+}
+
+.chart-shell--revenue,
+.chart-shell--orders,
+.chart-shell--comparison {
+  min-height: 296px;
 }
 
 .chart-shell svg {
   width: 100%;
   height: auto;
+  display: block;
   overflow: visible;
+}
+
+.panel-card--revenue .grid-line,
+.panel-card--orders .grid-line,
+.panel-card--comparison .grid-line {
+  stroke: #dbe6f4;
+  stroke-dasharray: 4 4;
+}
+
+.panel-card--revenue .axis-line,
+.panel-card--orders .axis-line,
+.panel-card--comparison .axis-line {
+  stroke: #aec0da;
+}
+
+.panel-card--revenue .axis-label,
+.panel-card--orders .axis-label,
+.panel-card--comparison .axis-label {
+  fill: #8ea2c0;
+  font-size: 12px;
+}
+
+.chart-area {
+  pointer-events: none;
 }
 
 .grid-line {
@@ -739,6 +847,15 @@ svg {
   stroke: var(--orange);
 }
 
+.panel-card--revenue .chart-line--orange {
+  stroke-width: 4;
+}
+
+.panel-card--comparison .chart-line--green,
+.panel-card--comparison .chart-line--blue {
+  stroke-width: 4;
+}
+
 .chart-line--green {
   stroke: #10b981;
 }
@@ -770,6 +887,14 @@ svg {
 
 .bar-track {
   fill: #f1f5f9;
+}
+
+.panel-card--orders .bar-fill {
+  fill: #ff7416;
+}
+
+.panel-card--orders .bar-track {
+  fill: transparent;
 }
 
 .panel-summary {
@@ -839,10 +964,57 @@ svg {
   text-align: right;
 }
 
+.is-center {
+  text-align: center;
+}
+
 .table-empty td {
   padding-block: 24px;
   color: #64748b;
   text-align: center;
+}
+
+.data-table--products {
+  table-layout: fixed;
+}
+
+.data-table--products th,
+.data-table--products td {
+  padding-block: 16px;
+}
+
+.data-table--products th {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.data-table--products th:first-child,
+.data-table--products td:first-child {
+  width: 52%;
+  text-align: left;
+}
+
+.data-table--products th:nth-child(2),
+.data-table--products td:nth-child(2) {
+  width: 18%;
+  text-align: center;
+}
+
+.data-table--products th:nth-child(3),
+.data-table--products td:nth-child(3) {
+  width: 30%;
+  text-align: center;
+}
+
+.data-table--products th:nth-child(4),
+.data-table--products td:nth-child(4) {
+  display: none;
+}
+
+.data-table--products td:first-child {
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .chart-legend {
@@ -873,6 +1045,31 @@ svg {
 }
 
 .chart-legend__line--blue {
+  color: #3b82f6;
+}
+
+.chart-legend--comparison {
+  justify-content: center;
+  gap: 24px;
+  margin-top: 12px;
+  padding-left: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chart-legend--comparison .chart-legend__line {
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.chart-legend__item--green {
+  color: #10b981;
+}
+
+.chart-legend__item--blue {
   color: #3b82f6;
 }
 
@@ -947,6 +1144,28 @@ svg {
 
   .account-trigger__copy {
     display: none;
+  }
+
+  .stat-card {
+    min-height: auto;
+    padding: 18px 20px;
+  }
+
+  .stat-card__content {
+    gap: 14px;
+  }
+
+  .stat-card__trend {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .stat-card__trend small {
+    font-size: 13px;
+  }
+
+  .stat-card__icon {
+    margin-top: 8px;
   }
 
   .panel-card__header {

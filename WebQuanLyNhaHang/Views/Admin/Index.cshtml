@@ -8,6 +8,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Admin</title>
+    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
 </head>
 <body>
@@ -194,7 +196,7 @@
                 <section class="stats-grid">
                     <article class="card stat-card">
                         <div class="stat-card__content">
-                            <div>
+                            <div class="stat-card__copy">
                                 <p class="stat-card__label">@Model.RevenueMetric.Label</p>
                                 <h2 class="stat-card__value">@Model.RevenueMetric.Value</h2>
                                 <div class="stat-card__trend @Model.RevenueMetric.TrendCssClass">
@@ -209,7 +211,6 @@
                                     <span>@Model.RevenueMetric.TrendText</span>
                                     <small>@Model.RevenueMetric.ComparisonText</small>
                                 </div>
-                                <p class="stat-card__hint">@Model.RevenueMetric.HintText</p>
                             </div>
 
                             <div class="stat-card__icon">
@@ -222,7 +223,7 @@
 
                     <article class="card stat-card">
                         <div class="stat-card__content">
-                            <div>
+                            <div class="stat-card__copy">
                                 <p class="stat-card__label">@Model.OrderMetric.Label</p>
                                 <h2 class="stat-card__value">@Model.OrderMetric.Value</h2>
                                 <div class="stat-card__trend @Model.OrderMetric.TrendCssClass">
@@ -237,7 +238,6 @@
                                     <span>@Model.OrderMetric.TrendText</span>
                                     <small>@Model.OrderMetric.ComparisonText</small>
                                 </div>
-                                <p class="stat-card__hint">@Model.OrderMetric.HintText</p>
                             </div>
 
                             <div class="stat-card__icon">
@@ -252,14 +252,13 @@
 
                     <article class="card stat-card">
                         <div class="stat-card__content">
-                            <div>
+                            <div class="stat-card__copy">
                                 <p class="stat-card__label">@Model.CustomerMetric.Label</p>
                                 <h2 class="stat-card__value">@Model.CustomerMetric.Value</h2>
                                 <div class="stat-card__trend @Model.CustomerMetric.TrendCssClass">
                                     <span>@Model.CustomerMetric.TrendText</span>
                                     <small>@Model.CustomerMetric.ComparisonText</small>
                                 </div>
-                                <p class="stat-card__hint">@Model.CustomerMetric.HintText</p>
                             </div>
 
                             <div class="stat-card__icon">
@@ -272,7 +271,7 @@
 
                     <article class="card stat-card">
                         <div class="stat-card__content">
-                            <div>
+                            <div class="stat-card__copy">
                                 <p class="stat-card__label">@Model.ProductMetric.Label</p>
                                 <h2 class="stat-card__value">@Model.ProductMetric.Value</h2>
                                 <div class="stat-card__trend @Model.ProductMetric.TrendCssClass">
@@ -287,7 +286,6 @@
                                     <span>@Model.ProductMetric.TrendText</span>
                                     <small>@Model.ProductMetric.ComparisonText</small>
                                 </div>
-                                <p class="stat-card__hint">@Model.ProductMetric.HintText</p>
                             </div>
 
                             <div class="stat-card__icon">
@@ -300,25 +298,14 @@
                     </article>
                 </section>
 
-                <section class="insight-grid">
-                    @foreach (var insight in Model.InsightCards)
-                    {
-                        <article class="card insight-card @insight.ToneCssClass">
-                            <p class="insight-card__label">@insight.Label</p>
-                            <h3 class="insight-card__value">@insight.Value</h3>
-                            <p class="insight-card__note">@insight.Note</p>
-                        </article>
-                    }
-                </section>
-
                 <section class="panels-grid">
-                    <article class="card panel-card">
-                        <div class="panel-card__header">
+                    <article class="card panel-card panel-card--revenue">
+                        <div class="panel-card__header panel-card__header--revenue">
                             <div>
                                 <h3>Doanh thu theo chu kỳ</h3>
                                 <p class="panel-card__subtitle">Dropdown thay đổi trực tiếp theo ngày, tháng hoặc năm gần nhất trong dữ liệu.</p>
                             </div>
-                            <label class="select-shell">
+                            <label class="select-shell select-shell--revenue">
                                 <select data-series-select="revenue" aria-label="Khoảng thời gian doanh thu">
                                     <option value="daily">Theo ngày</option>
                                     <option value="monthly">Theo tháng</option>
@@ -327,19 +314,18 @@
                             </label>
                         </div>
 
-                        <div class="panel-card__body">
-                            <div class="chart-shell" data-chart="revenue"></div>
-                            <div class="panel-summary" data-summary="revenue"></div>
+                        <div class="panel-card__body panel-card__body--revenue">
+                            <div class="chart-shell chart-shell--revenue" data-chart="revenue"></div>
                         </div>
                     </article>
 
-                    <article class="card panel-card">
-                        <div class="panel-card__header">
+                    <article class="card panel-card panel-card--orders">
+                        <div class="panel-card__header panel-card__header--orders">
                             <div>
                                 <h3>Số lượng đơn hàng</h3>
                                 <p class="panel-card__subtitle">Mỗi cột thể hiện số đơn chốt ở từng mốc thời gian cùng cửa sổ dữ liệu.</p>
                             </div>
-                            <label class="select-shell">
+                            <label class="select-shell select-shell--orders">
                                 <select data-series-select="orders" aria-label="Khoảng thời gian đơn hàng">
                                     <option value="daily">Theo ngày</option>
                                     <option value="monthly">Theo tháng</option>
@@ -348,21 +334,20 @@
                             </label>
                         </div>
 
-                        <div class="panel-card__body">
-                            <div class="chart-shell" data-chart="orders"></div>
-                            <div class="panel-summary" data-summary="orders"></div>
+                        <div class="panel-card__body panel-card__body--orders">
+                            <div class="chart-shell chart-shell--orders" data-chart="orders"></div>
                         </div>
                     </article>
                 </section>
 
                 <section class="panels-grid panels-grid--bottom">
-                    <article class="card panel-card">
-                        <div class="panel-card__header">
+                    <article class="card panel-card panel-card--products">
+                        <div class="panel-card__header panel-card__header--products">
                             <div>
                                 <h3>Sản phẩm bán chạy</h3>
                                 <p class="panel-card__subtitle">Top 5 món bán tốt nhất theo số lượng, kèm doanh thu và tỷ trọng trong kỳ.</p>
                             </div>
-                            <label class="select-shell">
+                            <label class="select-shell select-shell--products">
                                 <select data-series-select="products" aria-label="Khoảng thời gian sản phẩm">
                                     <option value="daily">Theo ngày</option>
                                     <option value="monthly">Theo tháng</option>
@@ -371,8 +356,8 @@
                             </label>
                         </div>
 
-                        <div class="panel-card__body panel-card__body--table">
-                            <table class="data-table">
+                        <div class="panel-card__body panel-card__body--table panel-card__body--products">
+                            <table class="data-table data-table--products">
                                 <thead>
                                     <tr>
                                         <th>Sản phẩm</th>
@@ -386,13 +371,13 @@
                         </div>
                     </article>
 
-                    <article class="card panel-card">
-                        <div class="panel-card__header">
+                    <article class="card panel-card panel-card--comparison">
+                        <div class="panel-card__header panel-card__header--comparison">
                             <div>
                                 <h3>So sánh doanh thu tại chỗ và mang về</h3>
                                 <p class="panel-card__subtitle">Tách hai luồng doanh thu chính để nhìn rõ tỷ trọng vận hành.</p>
                             </div>
-                            <label class="select-shell">
+                            <label class="select-shell select-shell--comparison">
                                 <select data-series-select="comparison" aria-label="Khoảng thời gian so sánh doanh thu">
                                     <option value="daily">Theo ngày</option>
                                     <option value="monthly">Theo tháng</option>
@@ -401,19 +386,18 @@
                             </label>
                         </div>
 
-                        <div class="panel-card__body">
-                            <div class="chart-shell" data-chart="comparison"></div>
-                            <div class="chart-legend">
-                                <span class="chart-legend__item">
+                        <div class="panel-card__body panel-card__body--comparison">
+                            <div class="chart-shell chart-shell--comparison" data-chart="comparison"></div>
+                            <div class="chart-legend chart-legend--comparison">
+                                <span class="chart-legend__item chart-legend__item--green">
                                     <i class="chart-legend__line chart-legend__line--green"></i>
                                     Tại chỗ
                                 </span>
-                                <span class="chart-legend__item">
+                                <span class="chart-legend__item chart-legend__item--blue">
                                     <i class="chart-legend__line chart-legend__line--blue"></i>
                                     Mang về
                                 </span>
                             </div>
-                            <div class="panel-summary" data-summary="comparison"></div>
                         </div>
                     </article>
                 </section>

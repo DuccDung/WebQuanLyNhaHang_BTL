@@ -137,29 +137,29 @@ namespace WebQuanLyNhaHang.Controllers
                 Initials = BuildInitials(HttpContext.Session.GetString("NhanVienName") ?? "Admin"),
                 SnapshotLabel = payload.SnapshotLabel,
                 RevenueMetric = BuildCurrencyMetric(
-                    "Doanh thu thang",
+                    "T\u1ed5ng Doanh Thu",
                     currentRevenue,
                     previousRevenue,
-                    "so voi thang truoc",
-                    "Tong hop tu chi tiet hoa don va doanh thu thuc te."),
+                    "vs th\u00e1ng tr\u01b0\u1edbc",
+                    string.Empty),
                 OrderMetric = BuildCountMetric(
-                    "Don hang thang",
+                    "\u0110\u01a1n H\u00e0ng",
                     currentOrderCount,
                     previousOrderCount,
-                    "so voi thang truoc",
-                    "Gom don tai cho va mang ve trong cung ky."),
+                    "vs th\u00e1ng tr\u01b0\u1edbc",
+                    string.Empty),
                 CustomerMetric = BuildNeutralMetric(
-                    "Khach hang he thong",
+                    "Kh\u00e1ch H\u00e0ng",
                     FormatCount(customerCount),
-                    $"{FormatCount(activeCustomersCurrent)} dang mua",
-                    "trong thang du lieu moi nhat",
-                    "Tong ho so khach hang dang co tren he thong."),
+                    FormatCount(activeCustomersCurrent),
+                    "\u0111ang mua",
+                    string.Empty),
                 ProductMetric = BuildCountMetric(
-                    "San pham da ban",
+                    "S\u1ea3n Ph\u1ea9m B\u00e1n",
                     currentProductSold,
                     previousProductSold,
-                    "so voi thang truoc",
-                    "Tong so luong mon da xuat trong thang."),
+                    "vs th\u00e1ng tr\u01b0\u1edbc",
+                    string.Empty),
                 InsightCards = new List<DashboardInsightCard>
                 {
                     new()
@@ -522,7 +522,7 @@ namespace WebQuanLyNhaHang.Controllers
             return new DashboardMetricCard
             {
                 Label = label,
-                Value = FormatCurrency(currentValue),
+                Value = FormatCardCurrency(currentValue),
                 TrendText = FormatSignedPercent(currentValue, previousValue),
                 ComparisonText = comparisonText,
                 TrendCssClass = GetTrendCssClass(currentValue, previousValue),
@@ -540,7 +540,7 @@ namespace WebQuanLyNhaHang.Controllers
             return new DashboardMetricCard
             {
                 Label = label,
-                Value = FormatCount(currentValue),
+                Value = FormatCardCount(currentValue),
                 TrendText = FormatSignedPercent(currentValue, previousValue),
                 ComparisonText = comparisonText,
                 TrendCssClass = GetTrendCssClass(currentValue, previousValue),
@@ -603,7 +603,17 @@ namespace WebQuanLyNhaHang.Controllers
             return $"{value.ToString("N0", VietnameseCulture)}đ";
         }
 
+        private static string FormatCardCurrency(decimal value)
+        {
+            return value.ToString("N0", VietnameseCulture);
+        }
+
         private static string FormatCount(int value)
+        {
+            return value.ToString("N0", VietnameseCulture);
+        }
+
+        private static string FormatCardCount(int value)
         {
             return value.ToString("N0", VietnameseCulture);
         }

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="adminFaviconGradient" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F97316" />
+      <stop offset="1" stop-color="#EC4899" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#adminFaviconGradient)" />
+  <path
+    d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3"
+    transform="translate(12 8) scale(1.7)"
+    stroke="#fff"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round" />
+</svg>
