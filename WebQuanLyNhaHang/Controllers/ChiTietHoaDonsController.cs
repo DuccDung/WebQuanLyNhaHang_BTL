@@ -25,7 +25,7 @@ namespace WebQuanLyNhaHang.Controllers
         [HttpPost]
         public JsonResult Decrease(int Soluong, int ProductId, int DhId)
         {
-            var CTHD = _context.ChiTietHoaDons.Where(e => e.ProductId == ProductId && e.DhId == DhId).FirstOrDefault();
+            var CTHD = _context.ChiTietHoaDons.Where(e => e.ProductId == ProductId && e.DhId == DhId && !e.Remove && !e.Dh.Remove).FirstOrDefault();
 
             if (CTHD == null)
             {
@@ -41,7 +41,7 @@ namespace WebQuanLyNhaHang.Controllers
         [HttpPost]
         public JsonResult Increase(int Soluong, int ProductId, int DhId)
         {
-            var CTHD = _context.ChiTietHoaDons.Where(e => e.ProductId == ProductId && e.DhId == DhId).FirstOrDefault();
+            var CTHD = _context.ChiTietHoaDons.Where(e => e.ProductId == ProductId && e.DhId == DhId && !e.Remove && !e.Dh.Remove).FirstOrDefault();
 
             if (CTHD == null)
             {
@@ -60,7 +60,7 @@ namespace WebQuanLyNhaHang.Controllers
             try
             {
                 var CTHD = _context.ChiTietHoaDons
-                    .Where(e => e.ProductId == ProductId && e.DhId == DhId)
+                    .Where(e => e.ProductId == ProductId && e.DhId == DhId && !e.Remove && !e.Dh.Remove)
                     .FirstOrDefault();
 
                 if (CTHD == null)
@@ -68,7 +68,7 @@ namespace WebQuanLyNhaHang.Controllers
                     return Json(new { error = "Record not found" });
                 }
 
-                _context.ChiTietHoaDons.Remove(CTHD);
+                CTHD.Remove = true;
                 _context.SaveChanges();
                 //dùng phương thức của signalR để nhận biết sự thay đổi của database
                  _hubContext.Clients.All.SendAsync("DatabaseUpdated");
@@ -86,7 +86,7 @@ namespace WebQuanLyNhaHang.Controllers
         // GET: ChiTietHoaDons
         public async Task<IActionResult> Index()
         {
-            var qlnhaHangBtlContext = _context.ChiTietHoaDons.Include(c => c.Dh).Include(c => c.Product);
+            var qlnhaHangBtlContext = _context.ChiTietHoaDons.Where(c => !c.Remove && !c.Dh.Remove).Include(c => c.Dh).Include(c => c.Product);
             return View(await qlnhaHangBtlContext.ToListAsync());
         }
 
@@ -101,7 +101,7 @@ namespace WebQuanLyNhaHang.Controllers
             var chiTietHoaDon = await _context.ChiTietHoaDons
                 .Include(c => c.Dh)
                 .Include(c => c.Product)
-                .FirstOrDefaultAsync(m => m.CthdId == id);
+                .FirstOrDefaultAsync(m => m.CthdId == id && !m.Remove && !m.Dh.Remove);
             if (chiTietHoaDon == null)
             {
                 return NotFound();
@@ -113,8 +113,8 @@ namespace WebQuanLyNhaHang.Controllers
         // GET: ChiTietHoaDons/Create
         public IActionResult Create()
         {
-            ViewData["DhId"] = new SelectList(_context.DonHangs, "DhId", "DhId");
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "ProductId");
+            ViewData["DhId"] = new SelectList(_context.DonHangs.Where(item => !item.Remove), "DhId", "DhId");
+            ViewData["ProductId"] = new SelectList(_context.Products.Where(item => !item.Remove), "ProductId", "ProductId");
             return View();
         }
 
@@ -131,8 +131,8 @@ namespace WebQuanLyNhaHang.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DhId"] = new SelectList(_context.DonHangs, "DhId", "DhId", chiTietHoaDon.DhId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "ProductId", chiTietHoaDon.ProductId);
+            ViewData["DhId"] = new SelectList(_context.DonHangs.Where(item => !item.Remove), "DhId", "DhId", chiTietHoaDon.DhId);
+            ViewData["ProductId"] = new SelectList(_context.Products.Where(item => !item.Remove), "ProductId", "ProductId", chiTietHoaDon.ProductId);
             return View(chiTietHoaDon);
         }
 
@@ -146,13 +146,13 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound();
             }
 
-            var chiTietHoaDon = await _context.ChiTietHoaDons.FindAsync(id);
+            var chiTietHoaDon = await _context.ChiTietHoaDons.FirstOrDefaultAsync(item => item.CthdId == id && !item.Remove && !item.Dh.Remove);
             if (chiTietHoaDon == null)
             {
                 return NotFound();
             }
-            ViewData["DhId"] = new SelectList(_context.DonHangs, "DhId", "DhId", chiTietHoaDon.DhId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "ProductId", chiTietHoaDon.ProductId);
+            ViewData["DhId"] = new SelectList(_context.DonHangs.Where(item => !item.Remove), "DhId", "DhId", chiTietHoaDon.DhId);
+            ViewData["ProductId"] = new SelectList(_context.Products.Where(item => !item.Remove), "ProductId", "ProductId", chiTietHoaDon.ProductId);
             return View(chiTietHoaDon);
         }
 
@@ -188,8 +188,8 @@ namespace WebQuanLyNhaHang.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DhId"] = new SelectList(_context.DonHangs, "DhId", "DhId", chiTietHoaDon.DhId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "ProductId", "ProductId", chiTietHoaDon.ProductId);
+            ViewData["DhId"] = new SelectList(_context.DonHangs.Where(item => !item.Remove), "DhId", "DhId", chiTietHoaDon.DhId);
+            ViewData["ProductId"] = new SelectList(_context.Products.Where(item => !item.Remove), "ProductId", "ProductId", chiTietHoaDon.ProductId);
             return View(chiTietHoaDon);
         }
 
@@ -204,7 +204,7 @@ namespace WebQuanLyNhaHang.Controllers
             var chiTietHoaDon = await _context.ChiTietHoaDons
                 .Include(c => c.Dh)
                 .Include(c => c.Product)
-                .FirstOrDefaultAsync(m => m.CthdId == id);
+                .FirstOrDefaultAsync(m => m.CthdId == id && !m.Remove && !m.Dh.Remove);
             if (chiTietHoaDon == null)
             {
                 return NotFound();
@@ -221,7 +221,7 @@ namespace WebQuanLyNhaHang.Controllers
             var chiTietHoaDon = await _context.ChiTietHoaDons.FindAsync(id);
             if (chiTietHoaDon != null)
             {
-                _context.ChiTietHoaDons.Remove(chiTietHoaDon);
+                chiTietHoaDon.Remove = true;
             }
 
             await _context.SaveChangesAsync();
@@ -230,7 +230,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         private bool ChiTietHoaDonExists(int id)
         {
-            return _context.ChiTietHoaDons.Any(e => e.CthdId == id);
+            return _context.ChiTietHoaDons.Any(e => e.CthdId == id && !e.Remove && !e.Dh.Remove);
         }
     }
 }

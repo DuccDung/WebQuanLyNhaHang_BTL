@@ -5,6 +5,7 @@
 
   setupMobileNav();
   setupCreateModal();
+  setupActionModals();
   setupAccountMenu();
   setupSalesMenu();
   setupProductFilters();
@@ -13,8 +14,8 @@
     const modal = document.getElementById("create-product-modal");
     const openTrigger = document.querySelector("[data-open-create-modal]");
     const closeTriggers = Array.from(document.querySelectorAll("[data-close-create-modal]"));
-    const fileInput = document.querySelector("[data-file-input]");
-    const fileInputLabel = document.querySelector("[data-file-input-label]");
+    const fileInput = modal.querySelector("[data-file-input]");
+    const fileInputLabel = modal.querySelector("[data-file-input-label]");
 
     if (!modal) {
       return;
@@ -23,7 +24,7 @@
     const setModalState = (isOpen) => {
       modal.classList.toggle("is-open", isOpen);
       modal.setAttribute("aria-hidden", String(!isOpen));
-      document.body.classList.toggle("modal-open", isOpen);
+      syncBodyModalState();
     };
 
     if (openTrigger) {
@@ -57,6 +58,71 @@
 
     const openOnLoad = modal.getAttribute("data-open-on-load") === "true";
     setModalState(openOnLoad);
+  }
+
+  function setupActionModals() {
+    const openTriggers = Array.from(document.querySelectorAll("[data-open-modal]"));
+    const closeTriggers = Array.from(document.querySelectorAll("[data-close-modal]"));
+
+    const openModal = (modal) => {
+      if (!modal) {
+        return;
+      }
+
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+      syncBodyModalState();
+
+      const firstInput = modal.querySelector("input:not([type='hidden']), textarea, select, button");
+      if (firstInput) {
+        window.setTimeout(() => firstInput.focus({ preventScroll: true }), 80);
+      }
+    };
+
+    const closeModal = (modal) => {
+      if (!modal) {
+        return;
+      }
+
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      syncBodyModalState();
+    };
+
+    openTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", (event) => {
+        event.preventDefault();
+        openModal(document.getElementById(trigger.getAttribute("data-open-modal")));
+      });
+    });
+
+    closeTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        closeModal(trigger.closest(".modal-shell"));
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      const activeModal = document.querySelector(".modal-shell.is-open");
+      closeModal(activeModal);
+    });
+
+    document.querySelectorAll(".product-action-modal [data-file-input]").forEach((input) => {
+      const label = input.closest(".field-control--file")?.querySelector("[data-file-input-label]");
+      if (!label) {
+        return;
+      }
+
+      input.addEventListener("change", () => {
+        label.textContent = input.files && input.files.length
+          ? input.files[0].name
+          : "Chua chon tep anh";
+      });
+    });
   }
 
   function setupAccountMenu() {
@@ -218,5 +284,9 @@
 
   function formatCount(value) {
     return new Intl.NumberFormat("vi-VN").format(Number(value || 0));
+  }
+
+  function syncBodyModalState() {
+    document.body.classList.toggle("modal-open", Boolean(document.querySelector(".modal-shell.is-open")));
   }
 })();

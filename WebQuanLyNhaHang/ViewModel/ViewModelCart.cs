@@ -15,7 +15,7 @@ namespace WebQuanLyNhaHang.ViewModel
             var result = from CTHD in _context.ChiTietHoaDons
                          join product in _context.Products
                          on CTHD.ProductId equals product.ProductId
-                         where CTHD.DhId == DhId
+                         where CTHD.DhId == DhId && !CTHD.Remove && !CTHD.Dh.Remove
                          select new CTDH_Product
                          {
                              ProductId = product.ProductId,
@@ -39,7 +39,7 @@ namespace WebQuanLyNhaHang.ViewModel
 
         public DonHang TongtienById(int? DhId)
         {
-            var result = _context.DonHangs.Find(DhId);
+            var result = _context.DonHangs.FirstOrDefault(item => item.DhId == DhId && !item.Remove);
             if (result == null) {
                 throw new Exception("Lỗi Không tìm thấy đơn hàng bởi DhId tại ViewModelCart");
             }

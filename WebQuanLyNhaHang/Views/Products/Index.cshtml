@@ -413,23 +413,23 @@
                                             <td class="data-cell" data-label="Trang thai"><span class="status-badge @status.CssClass">@status.Label</span></td>
                                             <td class="is-right data-cell" data-label="Thao tac">
                                                 <span class="inline-actions">
-                                                    <a class="icon-action" asp-action="Details" asp-route-id="@item.ProductId" title="Xem chi tiet">
+                                                    <button class="icon-action" type="button" title="Xem chi tiet" aria-label="Xem chi tiet @item.TenSanPham" data-open-modal="product-preview-@item.ProductId">
                                                         <svg viewBox="0 0 24 24" fill="none">
                                                             <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
                                                             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
                                                         </svg>
-                                                    </a>
-                                                    <a class="icon-action" asp-action="Edit" asp-route-id="@item.ProductId" title="Chinh sua">
+                                                    </button>
+                                                    <button class="icon-action" type="button" title="Chinh sua" aria-label="Chinh sua @item.TenSanPham" data-open-modal="product-edit-@item.ProductId">
                                                         <svg viewBox="0 0 24 24" fill="none">
                                                             <path d="M4 20h4l10.5-10.5-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
                                                             <path d="m12.5 6.5 4 4" stroke="currentColor" stroke-width="2"></path>
                                                         </svg>
-                                                    </a>
-                                                    <a class="icon-action icon-action--danger" asp-action="Delete" asp-route-id="@item.ProductId" title="Xoa">
+                                                    </button>
+                                                    <button class="icon-action icon-action--danger" type="button" title="Xoa" aria-label="Xoa @item.TenSanPham" data-open-modal="product-delete-@item.ProductId">
                                                         <svg viewBox="0 0 24 24" fill="none">
                                                             <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                                         </svg>
-                                                    </a>
+                                                    </button>
                                                 </span>
                                             </td>
                                         </tr>
@@ -453,8 +453,162 @@
         </div>
     </div>
 
+    @foreach (var item in products)
+    {
+        var status = ResolveStatus(item);
+        var categoryName = item.Cate?.TenLoaiSanPham ?? "Chua phan loai";
+        var typeLabel = ResolveTypeLabel(item);
+
+        <div class="modal-shell product-action-modal" id="product-preview-@item.ProductId" aria-hidden="true">
+            <div class="modal-backdrop" data-close-modal></div>
+            <div class="modal-card modal-card--preview" role="dialog" aria-modal="true" aria-labelledby="product-preview-title-@item.ProductId">
+                <div class="modal-card__header modal-card__header--compact">
+                    <div>
+                        <p class="modal-card__eyebrow">Preview</p>
+                        <h2 id="product-preview-title-@item.ProductId">@item.TenSanPham</h2>
+                        <span>Xem nhanh thong tin san pham theo giao dien gan voi phan nguoi dung.</span>
+                    </div>
+                    <button class="modal-close" type="button" aria-label="Dong popup" data-close-modal>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="product-preview">
+                    <div class="product-preview__media">
+                        @if (!string.IsNullOrWhiteSpace(item.PathPhoto))
+                        {
+                            <img src="@item.PathPhoto" alt="@item.TenSanPham" />
+                        }
+                        else
+                        {
+                            <span>@((item.TenSanPham ?? "SP").Substring(0, 1).ToUpperInvariant())</span>
+                        }
+                    </div>
+                    <div class="product-preview__content">
+                        <div class="product-preview__chips">
+                            <span>@categoryName</span>
+                            <span>@typeLabel</span>
+                            <span class="@status.CssClass">@status.Label</span>
+                        </div>
+                        <h3>@(item.TenSanPham ?? "San pham chua dat ten")</h3>
+                        <p>@(string.IsNullOrWhiteSpace(item.MoTa) ? "Chua co mo ta cho san pham nay." : item.MoTa)</p>
+                        <div class="product-preview__footer">
+                            <strong>@FormatCurrency(item.GiaTien)</strong>
+                            <span>ID #@item.ProductId</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-shell product-action-modal" id="product-edit-@item.ProductId" aria-hidden="true">
+            <div class="modal-backdrop" data-close-modal></div>
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-edit-title-@item.ProductId">
+                <div class="modal-card__header">
+                    <div>
+                        <p class="modal-card__eyebrow">Edit</p>
+                        <h2 id="product-edit-title-@item.ProductId">Chinh sua san pham</h2>
+                        <span>Cap nhat thong tin, gia ban, danh muc va anh hien thi cua san pham.</span>
+                    </div>
+                    <button class="modal-close" type="button" aria-label="Dong popup" data-close-modal>
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form class="product-form" asp-action="Edit" asp-route-id="@item.ProductId" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="ProductId" value="@item.ProductId" />
+
+                    <div class="product-form__grid">
+                        <div class="field-group">
+                            <label for="edit-cate-id-@item.ProductId">Danh muc</label>
+                            <div class="field-control">
+                                <label class="select-shell">
+                                    <select id="edit-cate-id-@item.ProductId" name="CateId">
+                                        <option value="">Chon danh muc</option>
+                                        @foreach (var option in createCategoryOptions)
+                                        {
+                                            var isSelected = option.Value == item.CateId?.ToString();
+                                            <option value="@option.Value" selected="@(isSelected ? "selected" : null)">@option.Text</option>
+                                        }
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="edit-product-name-@item.ProductId">Ten san pham</label>
+                            <div class="field-control">
+                                <input id="edit-product-name-@item.ProductId" class="form-input" type="text" name="TenSanPham" value="@item.TenSanPham" />
+                            </div>
+                        </div>
+
+                        <div class="field-group field-group--full">
+                            <label for="edit-product-description-@item.ProductId">Mo ta</label>
+                            <div class="field-control">
+                                <textarea id="edit-product-description-@item.ProductId" class="form-textarea" name="MoTa" rows="4">@item.MoTa</textarea>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="edit-product-price-@item.ProductId">Gia ban</label>
+                            <div class="field-control">
+                                <input id="edit-product-price-@item.ProductId" class="form-input" type="number" step="1000" min="0" name="GiaTien" value="@item.GiaTien?.ToString("0.##", CultureInfo.InvariantCulture)" />
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="edit-product-file-@item.ProductId">Anh san pham</label>
+                            <div class="field-control field-control--file">
+                                <input id="edit-product-file-@item.ProductId" class="file-input" type="file" name="FileInterface" accept="image/*" data-file-input />
+                                <span class="file-input__text" data-file-input-label>@(string.IsNullOrWhiteSpace(item.PathPhoto) ? "Chua chon tep anh" : "Dang dung anh hien tai")</span>
+                            </div>
+                            <p class="field-hint">Bo trong neu muon giu anh hien tai.</p>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="button-outline" type="button" data-close-modal>Huy</button>
+                        <button class="button-primary" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 12.5 10 17 19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            Luu thay doi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-shell product-action-modal" id="product-delete-@item.ProductId" aria-hidden="true">
+            <div class="modal-backdrop" data-close-modal></div>
+            <div class="modal-card modal-card--confirm" role="dialog" aria-modal="true" aria-labelledby="product-delete-title-@item.ProductId">
+                <div class="delete-confirm">
+                    <div class="delete-confirm__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <h2 id="product-delete-title-@item.ProductId">Xoa san pham nay?</h2>
+                    <p>San pham <strong>@item.TenSanPham</strong> se duoc xoa mem bang cach cap nhat <code>Remove = true</code>. Du lieu lien quan van duoc giu trong database.</p>
+
+                    <form asp-action="Delete" asp-route-id="@item.ProductId" method="post">
+                        <input type="hidden" name="id" value="@item.ProductId" />
+                        <div class="modal-actions modal-actions--center">
+                            <button class="button-outline" type="button" data-close-modal>Huy</button>
+                            <button class="button-danger" type="submit">Xac nhan xoa</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="modal-shell @(createModalOpen ? "is-open" : string.Empty)" id="create-product-modal" data-open-on-load="@createModalOpen.ToString().ToLowerInvariant()" aria-hidden="@(!createModalOpen).ToString().ToLowerInvariant()">
-        <div class="modal-backdrop" data-close-create-modal></div>
+        <div class="modal-backdrop" data-close-create-modal data-close-modal></div>
         <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-product-title">
             <div class="modal-card__header">
                 <div>

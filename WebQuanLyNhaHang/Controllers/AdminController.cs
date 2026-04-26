@@ -23,6 +23,7 @@ namespace WebQuanLyNhaHang.Controllers
         {
             var orders = await _context.DonHangs
                 .AsNoTracking()
+                .Where(order => !order.Remove)
                 .Select(order => new DashboardOrderSnapshot(
                     order.DhId,
                     order.GioVao ?? order.GioRa,
@@ -33,6 +34,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             var lineItems = await _context.ChiTietHoaDons
                 .AsNoTracking()
+                .Where(item => !item.Remove && !item.Dh.Remove)
                 .Select(item => new DashboardLineSnapshot(
                     item.DhId,
                     item.Dh.GioVao ?? item.Dh.GioRa,
@@ -46,8 +48,8 @@ namespace WebQuanLyNhaHang.Controllers
 
             var customerCount = await _context.KhachHangs.AsNoTracking().CountAsync();
             var employeeCount = await _context.NhanViens.AsNoTracking().CountAsync();
-            var productCount = await _context.Products.AsNoTracking().CountAsync();
-            var tableCount = await _context.Bans.AsNoTracking().CountAsync();
+            var productCount = await _context.Products.AsNoTracking().CountAsync(item => !item.Remove);
+            var tableCount = await _context.Bans.AsNoTracking().CountAsync(item => !item.Remove);
 
             var lineRevenueByOrder = lineItems
                 .GroupBy(item => item.OrderId)
@@ -269,7 +271,7 @@ namespace WebQuanLyNhaHang.Controllers
         [AdminSessionAuthorize]
         public IActionResult ProcessPayment(int BanId)
         {
-            var donHangList = _context.DonHangs.Where(e => e.BanId == BanId).ToList();
+            var donHangList = _context.DonHangs.Where(e => e.BanId == BanId && !e.Remove).ToList();
 
             foreach (var donHang in donHangList)
             {

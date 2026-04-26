@@ -18,7 +18,7 @@ namespace WebQuanLyNhaHang.ViewModel
                          on dh.DhId equals cthd.DhId
                          join product in _qlnhaHangBtlContext.Products
                          on cthd.ProductId equals product.ProductId
-                         where ban.BanId == BanID
+                         where ban.BanId == BanID && !ban.Remove && !dh.Remove && !cthd.Remove
                          select new CTDH_Product
                          {
                            DhId = dh.DhId,

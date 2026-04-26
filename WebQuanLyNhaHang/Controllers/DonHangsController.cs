@@ -28,7 +28,7 @@ namespace WebQuanLyNhaHang.Controllers
         // GET: DonHangs
         public async Task<IActionResult> Index()
         {
-            var qlnhaHangBtlContext = _context.DonHangs.Include(d => d.Ban).Include(d => d.Kh).Include(d => d.Km).Include(d => d.Nv);
+            var qlnhaHangBtlContext = _context.DonHangs.Where(d => !d.Remove).Include(d => d.Ban).Include(d => d.Kh).Include(d => d.Km).Include(d => d.Nv);
             return View(await qlnhaHangBtlContext.ToListAsync());
         }
 
@@ -45,7 +45,7 @@ namespace WebQuanLyNhaHang.Controllers
                 .Include(d => d.Kh)
                 .Include(d => d.Km)
                 .Include(d => d.Nv)
-                .FirstOrDefaultAsync(m => m.DhId == id);
+                .FirstOrDefaultAsync(m => m.DhId == id && !m.Remove);
             if (donHang == null)
             {
                 return NotFound();
@@ -57,10 +57,10 @@ namespace WebQuanLyNhaHang.Controllers
         // GET: DonHangs/Create
         public IActionResult Create()
         {
-            ViewData["BanId"] = new SelectList(_context.Bans, "BanId", "BanId");
-            ViewData["KhId"] = new SelectList(_context.KhachHangs, "KhId", "KhId");
-            ViewData["KmId"] = new SelectList(_context.KhuyenMais, "KmId", "KmId");
-            ViewData["NvId"] = new SelectList(_context.NhanViens, "NvId", "NvId");
+            ViewData["BanId"] = new SelectList(_context.Bans.Where(item => !item.Remove), "BanId", "BanId");
+            ViewData["KhId"] = new SelectList(_context.KhachHangs.Where(item => !item.Remove), "KhId", "KhId");
+            ViewData["KmId"] = new SelectList(_context.KhuyenMais.Where(item => !item.Remove), "KmId", "KmId");
+            ViewData["NvId"] = new SelectList(_context.NhanViens.Where(item => !item.Remove), "NvId", "NvId");
             return View();
         }
 
@@ -75,10 +75,10 @@ namespace WebQuanLyNhaHang.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["BanId"] = new SelectList(_context.Bans, "BanId", "BanId", donHang.BanId);
-            ViewData["KhId"] = new SelectList(_context.KhachHangs, "KhId", "KhId", donHang.KhId);
-            ViewData["KmId"] = new SelectList(_context.KhuyenMais, "KmId", "KmId", donHang.KmId);
-            ViewData["NvId"] = new SelectList(_context.NhanViens, "NvId", "NvId", donHang.NvId);
+            ViewData["BanId"] = new SelectList(_context.Bans.Where(item => !item.Remove), "BanId", "BanId", donHang.BanId);
+            ViewData["KhId"] = new SelectList(_context.KhachHangs.Where(item => !item.Remove), "KhId", "KhId", donHang.KhId);
+            ViewData["KmId"] = new SelectList(_context.KhuyenMais.Where(item => !item.Remove), "KmId", "KmId", donHang.KmId);
+            ViewData["NvId"] = new SelectList(_context.NhanViens.Where(item => !item.Remove), "NvId", "NvId", donHang.NvId);
             return View(donHang);
         }
 
@@ -90,15 +90,15 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound();
             }
 
-            var donHang = await _context.DonHangs.FindAsync(id);
+            var donHang = await _context.DonHangs.FirstOrDefaultAsync(item => item.DhId == id && !item.Remove);
             if (donHang == null)
             {
                 return NotFound();
             }
-            ViewData["BanId"] = new SelectList(_context.Bans, "BanId", "BanId", donHang.BanId);
-            ViewData["KhId"] = new SelectList(_context.KhachHangs, "KhId", "KhId", donHang.KhId);
-            ViewData["KmId"] = new SelectList(_context.KhuyenMais, "KmId", "KmId", donHang.KmId);
-            ViewData["NvId"] = new SelectList(_context.NhanViens, "NvId", "NvId", donHang.NvId);
+            ViewData["BanId"] = new SelectList(_context.Bans.Where(item => !item.Remove), "BanId", "BanId", donHang.BanId);
+            ViewData["KhId"] = new SelectList(_context.KhachHangs.Where(item => !item.Remove), "KhId", "KhId", donHang.KhId);
+            ViewData["KmId"] = new SelectList(_context.KhuyenMais.Where(item => !item.Remove), "KmId", "KmId", donHang.KmId);
+            ViewData["NvId"] = new SelectList(_context.NhanViens.Where(item => !item.Remove), "NvId", "NvId", donHang.NvId);
             return View(donHang);
         }
 
@@ -132,10 +132,10 @@ namespace WebQuanLyNhaHang.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["BanId"] = new SelectList(_context.Bans, "BanId", "BanId", donHang.BanId);
-            ViewData["KhId"] = new SelectList(_context.KhachHangs, "KhId", "KhId", donHang.KhId);
-            ViewData["KmId"] = new SelectList(_context.KhuyenMais, "KmId", "KmId", donHang.KmId);
-            ViewData["NvId"] = new SelectList(_context.NhanViens, "NvId", "NvId", donHang.NvId);
+            ViewData["BanId"] = new SelectList(_context.Bans.Where(item => !item.Remove), "BanId", "BanId", donHang.BanId);
+            ViewData["KhId"] = new SelectList(_context.KhachHangs.Where(item => !item.Remove), "KhId", "KhId", donHang.KhId);
+            ViewData["KmId"] = new SelectList(_context.KhuyenMais.Where(item => !item.Remove), "KmId", "KmId", donHang.KmId);
+            ViewData["NvId"] = new SelectList(_context.NhanViens.Where(item => !item.Remove), "NvId", "NvId", donHang.NvId);
             return View(donHang);
         }
 
@@ -152,7 +152,7 @@ namespace WebQuanLyNhaHang.Controllers
                 .Include(d => d.Kh)
                 .Include(d => d.Km)
                 .Include(d => d.Nv)
-                .FirstOrDefaultAsync(m => m.DhId == id);
+                .FirstOrDefaultAsync(m => m.DhId == id && !m.Remove);
             if (donHang == null)
             {
                 return NotFound();
@@ -169,7 +169,7 @@ namespace WebQuanLyNhaHang.Controllers
             var donHang = await _context.DonHangs.FindAsync(id);
             if (donHang != null)
             {
-                _context.DonHangs.Remove(donHang);
+                donHang.Remove = true;
             }
 
             await _context.SaveChangesAsync();
@@ -178,7 +178,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         private bool DonHangExists(int id)
         {
-            return _context.DonHangs.Any(e => e.DhId == id);
+            return _context.DonHangs.Any(e => e.DhId == id && !e.Remove);
         }
     }
 }

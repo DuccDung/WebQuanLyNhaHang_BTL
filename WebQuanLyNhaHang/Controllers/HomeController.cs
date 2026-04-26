@@ -81,11 +81,11 @@ namespace WebQuanLyNhaHang.Controllers
             ViewModelProductDetail viewModelProductDetail = new ViewModelProductDetail(_qlnhaHangBtlContext);
             var product = viewModelProductDetail.FindProductDetaiById(ProductID); // Dữ Liệu product đưa vào View
             // 
-            var DH = _qlnhaHangBtlContext.DonHangs.Where(e => e.DhId == DhId).FirstOrDefault(); // lấy ra đơn hàng Của bàn đag quét
+            var DH = _qlnhaHangBtlContext.DonHangs.Where(e => e.DhId == DhId && !e.Remove).FirstOrDefault(); // lấy ra đơn hàng Của bàn đag quét
             if(DH != null)
             {
                 var CTDH = _qlnhaHangBtlContext.ChiTietHoaDons
-             .Where(e => e.ProductId == ProductID && e.DhId == DH.DhId).FirstOrDefault();
+             .Where(e => e.ProductId == ProductID && e.DhId == DH.DhId && !e.Remove).FirstOrDefault();
                 // chi tiết đơn hàng của sản phẩm
                 if (CTDH == null)
                 {  // trường hợp chưa có Chi tiết đơn hàng thì mặc định cho nó về 1
@@ -107,7 +107,7 @@ namespace WebQuanLyNhaHang.Controllers
         {
             int? banId = HttpContext.Session.GetInt32("BanId"); // lấy dữ liệu ID bàn từ Sesion
             int? DhId = HttpContext.Session.GetInt32("DhId");
-            var DH = _qlnhaHangBtlContext.DonHangs.Where(e => e.DhId == DhId).FirstOrDefault(); // lấy ra đơn hàng Từ cái bàn đó
+            var DH = _qlnhaHangBtlContext.DonHangs.Where(e => e.DhId == DhId && !e.Remove).FirstOrDefault(); // lấy ra đơn hàng Từ cái bàn đó
         
             if(DH != null) // TH: Bàn đã Có đơn hàngn (thì ta tạo Thêm chi tiết hóa đơn)
             {
@@ -139,7 +139,11 @@ namespace WebQuanLyNhaHang.Controllers
             int? banId = HttpContext.Session.GetInt32("BanId"); // lấy dữ liệu ID bàn từ Sesion
             int? DhId = HttpContext.Session.GetInt32("DhId");
 
-            var DH = _qlnhaHangBtlContext.DonHangs.Find(DhId);
+            var DH = _qlnhaHangBtlContext.DonHangs.FirstOrDefault(e => e.DhId == DhId && !e.Remove);
+            if (DH == null)
+            {
+                throw new Exception("Lỗi Không tìm thấy đơn hàng khi xác nhận đặt món");
+            }
             DH.BanId = banId; 
             _qlnhaHangBtlContext.SaveChanges();
             //dùng phương thức của signalR để nhận biết sự thay đổi của database khi client đặt đơn hàng
@@ -159,7 +163,7 @@ namespace WebQuanLyNhaHang.Controllers
             var CTHD = _qlnhaHangBtlContext.ChiTietHoaDons.Find(id);  // tìm chi tiết hóa đơn
             if (CTHD != null)
             {
-                _qlnhaHangBtlContext.ChiTietHoaDons.Remove(CTHD); // xóa chi tiết hóa đơn
+                CTHD.Remove = true; // xóa mềm chi tiết hóa đơn
                 _qlnhaHangBtlContext.SaveChanges();
 
                 //dùng phương thức của signalR để nhận biết sự thay đổi của database

@@ -14,7 +14,7 @@ namespace WebQuanLyNhaHang.ViewModel
         {
             // Sử dụng DhId từ donHang để tìm trong ChiTietHoaDons
             var slchiTietHoaDon = _context.ChiTietHoaDons
-                .Count(p => p.DhId == DhId);
+                .Count(p => p.DhId == DhId && !p.Remove && !p.Dh.Remove);
 
             // Kiểm tra nếu chi tiết hóa đơn tồn tại
             return slchiTietHoaDon; //
@@ -23,7 +23,7 @@ namespace WebQuanLyNhaHang.ViewModel
         {
             // Sử dụng DhId từ donHang để tìm trong ChiTietHoaDons
             var slchiTietHoaDon = _context.ChiTietHoaDons
-                .Count(p => p.DhId == DhId && p.ProductId == ProductId);
+                .Count(p => p.DhId == DhId && p.ProductId == ProductId && !p.Remove && !p.Dh.Remove);
 
             // Kiểm tra nếu chi tiết hóa đơn tồn tại
             return slchiTietHoaDon; //
@@ -32,7 +32,7 @@ namespace WebQuanLyNhaHang.ViewModel
             // Liệt kê ra category trong header menu
             public List<Category> Categories()
         {
-            var result = _context.Categories.ToList();
+            var result = _context.Categories.Where(category => !category.Remove).ToList();
             return result;
         }
 
@@ -44,7 +44,7 @@ namespace WebQuanLyNhaHang.ViewModel
             var result = from cate in _context.Categories
                          join product in _context.Products
                          on cate.CateId equals product.CateId
-                         where product.CateId == cateId
+                         where product.CateId == cateId && !product.Remove && !cate.Remove
                          select new CategoryProduct
                          {
                              CateId = cate.CateId,
@@ -69,6 +69,7 @@ namespace WebQuanLyNhaHang.ViewModel
             var result = _context.Products
              .AsEnumerable() // Chuyển sang LINQ to Objects để dùng hàm tùy chỉnh
              .Where(x =>
+                !x.Remove &&
                 StringUtils.ConvertToLowerAndRemoveDiacritics(x.TenSanPham)
                 .Contains(searchKey))
              .Select(x => new CategoryProduct

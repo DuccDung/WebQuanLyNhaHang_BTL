@@ -10,7 +10,7 @@ namespace WebQuanLyNhaHang.ViewModel
             _qlnhaHangBtlContext = qlnhaHangBtlContext;
         }
         public Product FindProductDetaiById(int ProductId) {   // Nhận Giá trị ProductID 
-            var result = _qlnhaHangBtlContext.Products.Find(ProductId);
+            var result = _qlnhaHangBtlContext.Products.FirstOrDefault(product => product.ProductId == ProductId && !product.Remove);
             if (result == null) {
                 throw new Exception($"No Products found with Id {ProductId}");
             }
@@ -19,7 +19,7 @@ namespace WebQuanLyNhaHang.ViewModel
 
         public List<ProductConditions> FindProductConditionDetaiById(int ProductId)
         {   // Nhận Giá trị ProductID 
-            var result = _qlnhaHangBtlContext.ProductConditions.Where(l => l.ProductId == ProductId);
+            var result = _qlnhaHangBtlContext.ProductConditions.Where(l => l.ProductId == ProductId && !l.Remove);
             if (result == null)
             {
                 throw new Exception($"No Products found with Id {ProductId}");

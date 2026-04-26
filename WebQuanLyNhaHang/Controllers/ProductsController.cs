@@ -40,7 +40,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Cate)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+                .FirstOrDefaultAsync(m => m.ProductId == id && !m.Remove);
             if (product == null)
             {
                 return NotFound();
@@ -101,7 +101,7 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products.FirstOrDefaultAsync(item => item.ProductId == id && !item.Remove);
             if (product == null)
             {
                 return NotFound();
@@ -121,7 +121,7 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound();
             }
 
-            var existingProduct = await _context.Products.FindAsync(id);
+            var existingProduct = await _context.Products.FirstOrDefaultAsync(item => item.ProductId == id && !item.Remove);
             if (existingProduct == null)
             {
                 return NotFound();
@@ -180,7 +180,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Cate)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+                .FirstOrDefaultAsync(m => m.ProductId == id && !m.Remove);
             if (product == null)
             {
                 return NotFound();
@@ -197,7 +197,7 @@ namespace WebQuanLyNhaHang.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                _context.Products.Remove(product);
+                product.Remove = true;
             }
 
             await _context.SaveChangesAsync();
@@ -213,9 +213,11 @@ namespace WebQuanLyNhaHang.Controllers
         {
             var products = await _context.Products
                 .Include(product => product.Cate)
+                .Where(product => !product.Remove)
                 .ToListAsync();
 
             var categories = await _context.Categories
+                .Where(category => !category.Remove)
                 .OrderBy(category => category.TenLoaiSanPham)
                 .Select(category => new SelectListItem
                 {
