@@ -1,0 +1,320 @@
+html,
+body {
+    scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.table-board-wrapper::-webkit-scrollbar,
+.dashboard-scroll::-webkit-scrollbar,
+#component-FormBuy .container-buy::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.nicescroll-rails,
+.slimScrollBar,
+.slimScrollRail {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+.table-board-wrapper {
+    min-height: calc(100vh - 56px);
+    padding: 26px 30px 40px;
+    background: #f6f8fb;
+}
+
+.tables-page {
+    min-height: 100%;
+}
+
+.table-board {
+    width: 100%;
+}
+
+.table-board__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(210px, 1fr));
+    gap: 20px;
+}
+
+.restaurant-table-card {
+    display: flex;
+    min-height: 248px;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #dce4ef;
+    border-radius: 16px;
+    background: #fff;
+    padding: 24px 20px 26px;
+    color: #344256;
+    text-align: center;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, background .2s ease;
+}
+
+.restaurant-table-card:hover,
+.restaurant-table-card:focus-visible {
+    border-color: #ffb37a;
+    box-shadow: 0 14px 30px rgba(20, 31, 50, .12);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.restaurant-table-card.is-reserved {
+    border-color: #9bcaff;
+    background: #edf6ff;
+}
+
+.restaurant-table-card.is-busy:hover,
+.restaurant-table-card.is-busy:focus-visible {
+    border-color: #ff8a3d;
+}
+
+.restaurant-table-card__title {
+    color: #2f3b4f;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.status-pill {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    margin-top: 20px;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.status-pill--empty {
+    background: #d9fbe8;
+    color: #079246;
+}
+
+.status-pill--busy {
+    background: #ff5a00;
+    color: #fff;
+}
+
+.status-pill--reserved {
+    background: #d7e9ff;
+    color: #0966ff;
+}
+
+.restaurant-table-card__seats {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 17px;
+    color: #4b5f7a;
+    font-size: 18px;
+    font-weight: 650;
+    line-height: 1;
+}
+
+.restaurant-table-card__seats svg,
+.restaurant-table-card__meta-line svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.restaurant-table-card__divider {
+    width: 100%;
+    height: 1px;
+    margin-top: 20px;
+    background: #dbe3ed;
+}
+
+.restaurant-table-card__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    margin-top: 12px;
+}
+
+.restaurant-table-card__meta-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #5c6f8c;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.restaurant-table-card__meta-line.is-blue {
+    color: #0966ff;
+    font-weight: 700;
+}
+
+.restaurant-table-card__meta-line.is-money {
+    color: #ff4b00;
+    font-weight: 700;
+}
+
+.restaurant-table-card__money-symbol {
+    display: inline-flex;
+    width: 20px;
+    justify-content: center;
+    color: #ff4b00;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.table-loading-overlay[hidden] {
+    display: none !important;
+}
+
+.table-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    background: rgba(15, 23, 42, .36);
+    backdrop-filter: blur(6px);
+}
+
+.table-loading-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 90, 0, .2);
+    border-radius: 16px;
+    background: #fff;
+    padding: 16px 20px;
+    color: #1f2a44;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, .18);
+}
+
+.table-loading-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #ffe0cc;
+    border-top-color: #ff5a00;
+    border-radius: 999px;
+    animation: table-spin .75s linear infinite;
+}
+
+#component-FormBuy .overlay {
+    background: rgba(15, 23, 42, .45);
+    backdrop-filter: blur(8px);
+}
+
+#component-FormBuy .container-buy {
+    width: min(92vw, 860px);
+    max-height: 86vh;
+    overflow: auto;
+    border: 1px solid #e1e7ef;
+    border-radius: 22px;
+    padding: 26px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
+}
+
+#component-FormBuy .container-buy h1 {
+    margin: 0 0 18px;
+    color: #111827;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+#component-FormBuy .container-buy table {
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+#component-FormBuy .container-buy th,
+#component-FormBuy .container-buy td {
+    border-color: #e2e8f0;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+#component-FormBuy .container-buy th {
+    background: #f8fafc;
+    font-weight: 700;
+}
+
+#component-FormBuy .container-buy .btn {
+    border-radius: 12px;
+    padding: 11px 18px;
+    font-weight: 700;
+}
+
+#component-FormBuy .container-buy .btn:first-child {
+    background: #ff5a00;
+    color: #fff;
+}
+
+#component-FormBuy .container-buy .btn:last-child {
+    border: 1px solid #d8e1ed;
+    background: #fff;
+    color: #344256;
+}
+
+@keyframes table-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1400px) {
+    .table-board__grid {
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .table-board-wrapper {
+        padding: 22px 18px 32px;
+    }
+
+    .table-board__grid {
+        grid-template-columns: repeat(2, minmax(190px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .table-board-wrapper {
+        padding: 16px 12px 28px;
+    }
+
+    .table-board__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .restaurant-table-card {
+        min-height: 220px;
+        padding: 22px 18px;
+    }
+
+    .restaurant-table-card__title {
+        font-size: 20px;
+    }
+
+    .restaurant-table-card__seats {
+        font-size: 16px;
+    }
+}

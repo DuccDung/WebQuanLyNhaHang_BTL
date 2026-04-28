@@ -254,7 +254,14 @@ namespace WebQuanLyNhaHang.Controllers
         [AdminSessionAuthorize]
         public IActionResult Ban()
         {
-            ViewModelBan viewModelBan = new ViewModelBan(_context);
+            var adminName = HttpContext.Session.GetString("NhanVienName") ?? "Admin";
+            ViewModelBan viewModelBan = new ViewModelBan(_context)
+            {
+                AdminDisplayName = adminName,
+                AdminAccount = HttpContext.Session.GetString("NhanVienTaiKhoan") ?? "admin",
+                AdminRoleLabel = "Quản trị vận hành",
+                Initials = BuildInitials(adminName)
+            };
             return View(viewModelBan);
         }
 
@@ -264,6 +271,7 @@ namespace WebQuanLyNhaHang.Controllers
         {
             ViewModelGetFormBuy viewModel = new ViewModelGetFormBuy(_context);
             var donhangs = viewModel.CTDH_Product(id);
+            ViewBag.BanId = id;
             return PartialView("GetFormBuy", donhangs);
         }
 

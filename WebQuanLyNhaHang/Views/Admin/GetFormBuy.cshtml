@@ -139,7 +139,7 @@
                     <th>Tổng Tiền Từng Sản Phẩm</th>
                 </tr>
             </thead>
-            <tbody data-banid="@Model.FirstOrDefault()?.BanId">
+            <tbody data-banid="@(Model.FirstOrDefault()?.BanId ?? (int?)ViewBag.BanId)">
                 @foreach (var item in Model)
                 {
                     <tr>

@@ -1,63 +1,481 @@
-﻿@model IEnumerable<WebQuanLyNhaHang.Models.NhanVien>
-
+@model WebQuanLyNhaHang.ViewModel.EmployeesIndexViewModel
+@using System.Globalization
 @{
-    Layout = "Header_Left_Layout";
-    ViewData["Title"] = "Quản Lý Nhân Viên";
+    Layout = null;
+    var culture = CultureInfo.GetCultureInfo("vi-VN");
+
+    string FormatCurrency(decimal value) => $"{value.ToString("N0", culture)}đ";
+    string FormatDate(DateOnly? value) => value.HasValue
+        ? value.Value.ToString("dd/MM/yyyy", culture)
+        : "Chưa cập nhật";
 }
-<div class="content-wrapper">
-    <!-- 1-3-block row end -->
-    <div class="main-header">
-        <h4>Nhân Viên</h4>
-    </div>
-    <!-- 2-1 block start -->
-    <div class="row">
-        <div class="col-xl-12 col-lg-12">
-            <div class="card">
-                <div class="card-block">
-                    <div class="table-responsive">
-                        <table class="table m-b-0 photo-table">
-                            <thead>
-                                <tr class="text-uppercase">
-                                    <th>Ảnh</th>
-                                    <th>Tên Nhân Viên</th>
-                                    <th>Ngày Sinh</th>
-                                    <th>Địa Chỉ</th>
-                                    <th>Hệ Số Lương</th>
-                                    <th>Tên Tài Khoản</th>
-                                    <th>Mật Khẩu</th>
-                                    <th>Chỉnh Sửa</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                               
-                                @foreach(var item in Model)
-                                {
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nhân viên</title>
+    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/admin-employees.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-app">
+        <aside class="sidebar" id="dashboard-sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+                <span>F&amp;B Admin</span>
+            </div>
+
+            <nav class="sidebar__nav">
+                <a class="nav-item" href="@Url.Action("Index", "Admin")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="4" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                        </svg>
+                    </span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "Products")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                            <path d="m12 12 8-4.5M12 12 4 7.5M12 12v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "DonHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="20" r="1.7" fill="currentColor"></circle>
+                            <circle cx="18" cy="20" r="1.7" fill="currentColor"></circle>
+                            <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.5L22 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "KhachHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M20 21a4 4 0 0 0-2.4-3.65M6.4 17.35A4 4 0 0 0 4 21M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 11a3 3 0 1 0 0-6M6 11A3 3 0 1 0 6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Khách hàng</span>
+                </a>
+
+                <a class="nav-item is-active" href="@Url.Action("Index", "NhanViens")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M18.5 9.5 20 11l2.5-2.5M20 7.5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Nhân viên</span>
+                </a>
+
+                <div class="nav-group" id="sales-group">
+                    <button class="nav-item nav-item--button" id="sales-group-toggle" type="button" aria-expanded="false">
+                        <span class="nav-item__main">
+                            <span class="nav-item__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            <span>Trang bán hàng</span>
+                        </span>
+                        <span class="nav-group__chevron" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div class="nav-submenu" id="sales-submenu" hidden>
+                        <a class="nav-subitem" href="@Url.Action("Ban", "Admin")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 8.5 6.5 5h11L20 8.5V19H4V8.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                    <path d="M4 9h16M9 13h6M8 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Đơn tại quán</span>
+                        </a>
+
+                        <a class="nav-subitem" href="@Url.Action("Index", "DonHangs")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Đơn mang về</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar__user">
+                <div class="sidebar-user">
+                    <div class="sidebar-user__avatar">@Model.Initials</div>
+                    <div class="sidebar-user__meta">
+                        <p>@Model.AdminDisplayName</p>
+                        <span>@Model.AdminRoleLabel</span>
+                    </div>
+                </div>
+
+                <a class="logout-button" href="@Url.Action("Logout", "Admin")">
+                    <span class="logout-button__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <button class="mobile-nav-backdrop" id="mobile-nav-backdrop" type="button" aria-label="Đóng menu" hidden></button>
+
+        <div class="main-shell">
+            <header class="topbar topbar--employees">
+                <button class="icon-button mobile-nav-trigger" id="mobile-nav-trigger" type="button" aria-label="Mở menu" aria-controls="dashboard-sidebar" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+
+                <div class="topbar__actions">
+                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 17H5.6a1 1 0 0 1-.8-1.6L6 14V10a6 6 0 1 1 12 0v4l1.2 1.4a1 1 0 0 1-.8 1.6H15ZM10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    <div class="account-menu">
+                        <button class="account-trigger" id="account-trigger" type="button" aria-expanded="false">
+                            <span class="account-trigger__avatar">@Model.Initials</span>
+                            <span class="account-trigger__copy">
+                                <strong>@Model.AdminDisplayName</strong>
+                                <small>@Model.AdminAccount</small>
+                            </span>
+                            <span class="account-trigger__chevron" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="account-dropdown" id="account-dropdown" hidden>
+                            <div class="account-dropdown__header">
+                                <strong>@Model.AdminDisplayName</strong>
+                                <span>@Model.AdminAccount</span>
+                            </div>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Admin")">Dashboard tổng quan</a>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Products")">Danh sách sản phẩm</a>
+                            <a class="account-dropdown__item is-danger" href="@Url.Action("Logout", "Admin")">Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-scroll">
+                <div class="employees-page">
+                    <section class="employee-stats-grid" aria-label="Thống kê nhân viên">
+                        <article class="employee-stat-card">
+                            <p>Tổng Nhân Viên</p>
+                            <strong>@Model.TotalEmployees.ToString("N0", culture)</strong>
+                        </article>
+                        <article class="employee-stat-card">
+                            <p>Quản Lý</p>
+                            <strong class="is-manager">@Model.ManagerEmployees.ToString("N0", culture)</strong>
+                        </article>
+                        <article class="employee-stat-card">
+                            <p>Nhân Viên Bếp</p>
+                            <strong class="is-kitchen">@Model.KitchenEmployees.ToString("N0", culture)</strong>
+                        </article>
+                        <article class="employee-stat-card">
+                            <p>Phục Vụ</p>
+                            <strong class="is-service">@Model.ServiceEmployees.ToString("N0", culture)</strong>
+                        </article>
+                    </section>
+
+                    <section class="employee-filter-card" aria-label="Bộ lọc nhân viên">
+                        <label class="employee-search">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                            <input type="search" data-employee-search placeholder="Tìm kiếm nhân viên..." />
+                        </label>
+
+                        <label class="employee-select">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M16 21a4 4 0 0 0-8 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <select data-employee-role-filter aria-label="Lọc theo chức vụ">
+                                <option value="">Tất Cả</option>
+                                <option value="manager">Quản Lý</option>
+                                <option value="kitchen">Nhân Viên Bếp</option>
+                                <option value="service">Phục Vụ</option>
+                                <option value="staff">Nhân Viên</option>
+                            </select>
+                        </label>
+                    </section>
+
+                    <section class="employee-table-card">
+                        <div class="employee-table-toolbar">
+                            <button class="employee-export-button" type="button" data-export-employees>
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 3v12M8 11l4 4 4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                                Xuất CSV
+                            </button>
+
+                            <div class="employee-column-menu">
+                                <button class="employee-column-button" type="button" data-column-menu-trigger aria-expanded="false">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M4 7h16M7 12h10M10 17h4M6 5v4M18 15v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                    </svg>
+                                    Cột hiển thị
+                                </button>
+                                <div class="employee-column-dropdown" data-column-menu hidden>
+                                    <label><input type="checkbox" data-column-toggle="contact" checked /> Liên hệ</label>
+                                    <label><input type="checkbox" data-column-toggle="date" checked /> Ngày vào làm</label>
+                                    <label><input type="checkbox" data-column-toggle="salary" checked /> Lương</label>
+                                    <label><input type="checkbox" data-column-toggle="account" checked /> Tài khoản</label>
+                                    <label><input type="checkbox" data-column-toggle="password" checked /> Mật khẩu</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="employee-table-wrap">
+                            <table class="employee-table" data-employees-table>
+                                <thead>
                                     <tr>
-                                        <th>
-                                            <img class="img-fluid img-circle" style="width: 50px;
-    height: 50px;" src="@item.PathPhoto" alt="User">
-                                        </th>
-                                        <td>
-                                            @item.TenNhanVien
-                                        </td>
-                                        <td>@String.Format("{0: dd/MM/yyyy}", item.NgaySinh)</td>
-                                        <td>@item.DiaChi</td>
-                                        <td>@item.HeSoLuong</td>
-                                        <td>@item.TaiKhoan</td>
-                                        <td>@item.MatKhau</td>
-                                        <td>
-                                            <a asp-controller="NhanViens" asp-action="Details" asp-route-id="@item.NvId" class="btn btn-flat flat-info txt-info waves-effect waves-light">
-                                                Info
-                                            </a>
-                                        </td>
+                                        <th data-column="employee">Nhân Viên</th>
+                                        <th data-column="role">Chức Vụ</th>
+                                        <th data-column="contact">Liên Hệ</th>
+                                        <th data-column="date">Ngày Vào Làm</th>
+                                        <th class="is-right" data-column="salary">Lương</th>
+                                        <th data-column="account">Tên Tài Khoản</th>
+                                        <th data-column="password">Mật Khẩu</th>
+                                        <th data-column="status">Trạng Thái</th>
+                                        <th class="is-right" data-column="actions">Hành Động</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
-                        <a asp-controller="NhanViens" asp-action="Create" class="btn btn-success waves-effect waves-light">Thêm Nhân Viên</a>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Employees)
+                                    {
+                                        <tr data-employee-row data-employee-id="@item.EmployeeId" data-search="@item.SearchText" data-role="@item.RoleKey">
+                                            <td data-column="employee" data-label="Nhân Viên">
+                                                <div class="employee-profile">
+                                                    <span class="employee-avatar" data-employee-initial>@item.Initial</span>
+                                                    <span class="employee-profile__copy">
+                                                        <strong data-employee-name>@item.EmployeeName</strong>
+                                                        <small data-employee-address>@item.Address</small>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td data-column="role" data-label="Chức Vụ">
+                                                <span class="role-pill @item.RoleCssClass" data-employee-role>@item.RoleLabel</span>
+                                            </td>
+                                            <td data-column="contact" data-label="Liên Hệ">
+                                                <div class="employee-contact">
+                                                    <span>
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6.4 6.4l1.2-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        </svg>
+                                                        <span data-employee-phone>@item.Phone</span>
+                                                    </span>
+                                                    <span>
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+                                                            <path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        </svg>
+                                                        <span data-employee-email>@item.Email</span>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td data-column="date" data-label="Ngày Vào Làm" class="employee-date">@FormatDate(item.StartDate)</td>
+                                            <td data-column="salary" data-label="Lương" class="is-right">
+                                                <strong class="employee-salary">@FormatCurrency(item.Salary)</strong>
+                                            </td>
+                                            <td data-column="account" data-label="Tên Tài Khoản">@item.Account</td>
+                                            <td data-column="password" data-label="Mật Khẩu">
+                                                <span class="employee-password">@item.PasswordMask</span>
+                                            </td>
+                                            <td data-column="status" data-label="Trạng Thái">
+                                                <span class="employee-status @item.StatusCssClass">@item.StatusLabel</span>
+                                            </td>
+                                            <td data-column="actions" class="is-right" data-label="Hành Động">
+                                                <div class="employee-actions">
+                                                    <button class="employee-icon-action is-view" type="button" data-employee-action="view" data-employee-detail-url="@Url.Action("DetailsData", "NhanViens", new { id = item.EmployeeId })" aria-label="Xem chi tiết">
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
+                                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                                                        </svg>
+                                                    </button>
+                                                    <button class="employee-icon-action is-edit" type="button" data-employee-action="edit" data-employee-detail-url="@Url.Action("DetailsData", "NhanViens", new { id = item.EmployeeId })" data-employee-update-url="@Url.Action("UpdateFromModal", "NhanViens")" aria-label="Chỉnh sửa">
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <button class="employee-icon-action is-delete" type="button" data-employee-action="delete" data-employee-detail-url="@Url.Action("DetailsData", "NhanViens", new { id = item.EmployeeId })" data-employee-delete-url="@Url.Action("DeleteFromModal", "NhanViens", new { id = item.EmployeeId })" aria-label="Xóa">
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M3 6h18M8 6V4h8v2M10 11v6M14 11v6M6 6l1 15h10l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr class="employee-empty-row" data-empty-row hidden>
+                                        <td colspan="9">Không tìm thấy nhân viên phù hợp với bộ lọc hiện tại.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="employee-modal" id="employee-modal" hidden aria-hidden="true">
+        <button class="employee-modal__backdrop" type="button" data-employee-modal-close aria-label="Đóng modal"></button>
+
+        <section class="employee-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title">
+            <button class="employee-modal__close" type="button" data-employee-modal-close aria-label="Đóng">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+            </button>
+
+            <header class="employee-modal__header">
+                <span class="employee-modal__avatar" data-modal-initial>NV</span>
+                <div>
+                    <span class="employee-modal__eyebrow" data-modal-mode>Chi tiết nhân viên</span>
+                    <h2 id="employee-modal-title" data-modal-title>Thông tin nhân viên</h2>
+                    <p data-modal-subtitle>Đang tải dữ liệu nhân viên...</p>
+                </div>
+            </header>
+
+            <div class="employee-modal__loading" data-modal-loading>
+                <span class="employee-modal__spinner"></span>
+                <span>Đang tải thông tin...</span>
+            </div>
+
+            <div class="employee-modal__error" data-modal-error hidden></div>
+
+            <div class="employee-modal__view" data-modal-view hidden>
+                <div class="employee-detail-grid">
+                    <article>
+                        <span>Chức vụ</span>
+                        <strong data-view-role>Nhân viên</strong>
+                    </article>
+                    <article>
+                        <span>Trạng thái</span>
+                        <strong data-view-status>Đang làm</strong>
+                    </article>
+                    <article>
+                        <span>Ngày vào làm</span>
+                        <strong data-view-date>Chưa cập nhật</strong>
+                    </article>
+                    <article>
+                        <span>Lương</span>
+                        <strong data-view-salary>0đ</strong>
+                    </article>
+                </div>
+
+                <div class="employee-detail-list">
+                    <div>
+                        <span>Liên hệ</span>
+                        <strong data-view-phone>Chưa có SĐT</strong>
+                        <small data-view-email>Chưa có email</small>
+                    </div>
+                    <div>
+                        <span>Địa chỉ</span>
+                        <strong data-view-address>Chưa cập nhật địa chỉ</strong>
+                    </div>
+                    <div>
+                        <span>Tài khoản</span>
+                        <strong data-view-account>admin</strong>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <form class="employee-modal__form" data-modal-edit hidden>
+                <input type="hidden" name="EmployeeId" data-edit-id />
+
+                <div class="employee-form-grid">
+                    <label>
+                        <span>Tên nhân viên</span>
+                        <input type="text" name="EmployeeName" data-edit-name required />
+                    </label>
+                    <label>
+                        <span>Ngày vào làm</span>
+                        <input type="date" name="StartDate" data-edit-date />
+                    </label>
+                    <label>
+                        <span>Chức vụ</span>
+                        <select name="RoleId" data-edit-role></select>
+                    </label>
+                    <label>
+                        <span>Hệ số lương</span>
+                        <input type="number" name="SalaryCoefficient" data-edit-salary min="0" step="0.1" />
+                    </label>
+                    <label>
+                        <span>Tài khoản</span>
+                        <input type="text" name="Account" data-edit-account required />
+                    </label>
+                    <label>
+                        <span>Mật khẩu</span>
+                        <input type="text" name="Password" data-edit-password />
+                    </label>
+                    <label class="is-full">
+                        <span>Địa chỉ</span>
+                        <input type="text" name="Address" data-edit-address />
+                    </label>
+                </div>
+
+                <div class="employee-modal__actions">
+                    <button class="employee-modal__secondary" type="button" data-employee-modal-close>Hủy</button>
+                    <button class="employee-modal__primary" type="submit" data-edit-submit>Lưu thay đổi</button>
+                </div>
+            </form>
+
+            <div class="employee-modal__delete" data-modal-delete hidden>
+                <div class="employee-delete-warning">
+                    <span class="employee-delete-warning__icon">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 6h18M8 6V4h8v2M10 11v6M14 11v6M6 6l1 15h10l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <h3>Xóa nhân viên này?</h3>
+                    <p>Nhân viên sẽ được ẩn khỏi danh sách bằng cách xóa mềm. Dữ liệu liên quan vẫn được giữ trong hệ thống.</p>
+                </div>
+
+                <div class="employee-modal__actions">
+                    <button class="employee-modal__secondary" type="button" data-employee-modal-close>Hủy</button>
+                    <button class="employee-modal__danger" type="button" data-delete-submit>Xác nhận xóa</button>
+                </div>
+            </div>
+        </section>
     </div>
-</div>
+
+    <script src="~/assets/js/admin-employees.js" asp-append-version="true"></script>
+</body>
+</html>

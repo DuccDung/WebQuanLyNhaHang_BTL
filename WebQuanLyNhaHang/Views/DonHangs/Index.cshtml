@@ -1,71 +1,401 @@
-﻿@model IEnumerable<WebQuanLyNhaHang.Models.DonHang>
-
+@model WebQuanLyNhaHang.ViewModel.OrdersIndexViewModel
+@using System.Globalization
 @{
-    ViewData["Title"] = "Index";
-}
+    Layout = null;
+    var culture = CultureInfo.GetCultureInfo("vi-VN");
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.GioVao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.GioRa)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TongTien)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Ban)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Kh)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Km)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Nv)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.GioVao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.GioRa)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TongTien)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Ban.BanId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Kh.KhId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Km.KmId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nv.NvId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.DhId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.DhId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.DhId">Delete</a>
-            </td>
-        </tr>
+    string FormatCurrency(decimal value) => $"{value.ToString("N0", culture)}đ";
+    string FormatDateTime(DateTime? value) => value.HasValue
+        ? value.Value.ToString("dd/MM/yyyy HH:mm", culture)
+        : "Chưa có thời gian";
 }
-    </tbody>
-</table>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đơn hàng</title>
+    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/admin-orders.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-app">
+        <aside class="sidebar" id="dashboard-sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+                <span>F&amp;B Admin</span>
+            </div>
+
+            <nav class="sidebar__nav">
+                <a class="nav-item" href="@Url.Action("Index", "Admin")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="4" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="4" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                            <rect x="14" y="14" width="6" height="6" rx="1.2" stroke="currentColor" stroke-width="2"></rect>
+                        </svg>
+                    </span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "Products")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                            <path d="m12 12 8-4.5M12 12 4 7.5M12 12v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a class="nav-item is-active" href="@Url.Action("Index", "DonHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="20" r="1.7" fill="currentColor"></circle>
+                            <circle cx="18" cy="20" r="1.7" fill="currentColor"></circle>
+                            <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.5L22 7H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "KhachHangs")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M20 21a4 4 0 0 0-2.4-3.65M6.4 17.35A4 4 0 0 0 4 21M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 11a3 3 0 1 0 0-6M6 11A3 3 0 1 0 6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Khách hàng</span>
+                </a>
+
+                <a class="nav-item" href="@Url.Action("Index", "NhanViens")">
+                    <span class="nav-item__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21a4 4 0 0 0-8 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M18.5 9.5 20 11l2.5-2.5M20 7.5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Nhân viên</span>
+                </a>
+
+                <div class="nav-group is-open" id="sales-group">
+                    <button class="nav-item nav-item--button is-active" id="sales-group-toggle" type="button" aria-expanded="true">
+                        <span class="nav-item__main">
+                            <span class="nav-item__icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M7 3v8M10 3v8M5 3h7M16 3v18M19 3v18M16 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                            <span>Trang bán hàng</span>
+                        </span>
+                        <span class="nav-group__chevron" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div class="nav-submenu" id="sales-submenu">
+                        <a class="nav-subitem" href="@Url.Action("Ban", "Admin")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 8.5 6.5 5h11L20 8.5V19H4V8.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                    <path d="M4 9h16M9 13h6M8 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Đơn tại quán</span>
+                        </a>
+
+                        <a class="nav-subitem is-active" href="@Url.Action("Index", "DonHangs")">
+                            <span class="nav-item__icon nav-item__icon--small" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+                                    <path d="M3 12h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Đơn mang về</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar__user">
+                <div class="sidebar-user">
+                    <div class="sidebar-user__avatar">@Model.Initials</div>
+                    <div class="sidebar-user__meta">
+                        <p>@Model.AdminDisplayName</p>
+                        <span>@Model.AdminRoleLabel</span>
+                    </div>
+                </div>
+
+                <a class="logout-button" href="@Url.Action("Logout", "Admin")">
+                    <span class="logout-button__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <button class="mobile-nav-backdrop" id="mobile-nav-backdrop" type="button" aria-label="Đóng menu" hidden></button>
+
+        <div class="main-shell">
+            <header class="topbar topbar--orders">
+                <button class="icon-button mobile-nav-trigger" id="mobile-nav-trigger" type="button" aria-label="Mở menu" aria-controls="dashboard-sidebar" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+
+                <div class="topbar__meta">
+                    <p class="topbar__eyebrow">Quản lý đơn hàng</p>
+                    <div class="topbar__heading">
+                        <h1>Danh sách đơn hàng</h1>
+                        <p>Theo dõi trạng thái xử lý, thanh toán và lịch sử đơn trong hệ thống.</p>
+                    </div>
+                </div>
+
+                <div class="topbar__actions">
+                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 17H5.6a1 1 0 0 1-.8-1.6L6 14V10a6 6 0 1 1 12 0v4l1.2 1.4a1 1 0 0 1-.8 1.6H15ZM10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    <div class="account-menu">
+                        <button class="account-trigger" id="account-trigger" type="button" aria-expanded="false">
+                            <span class="account-trigger__avatar">@Model.Initials</span>
+                            <span class="account-trigger__copy">
+                                <strong>@Model.AdminDisplayName</strong>
+                                <small>@Model.AdminAccount</small>
+                            </span>
+                            <span class="account-trigger__chevron" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="account-dropdown" id="account-dropdown" hidden>
+                            <div class="account-dropdown__header">
+                                <strong>@Model.AdminDisplayName</strong>
+                                <span>@Model.AdminAccount</span>
+                            </div>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Admin")">Dashboard tổng quan</a>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Products")">Danh sách sản phẩm</a>
+                            <a class="account-dropdown__item is-danger" href="@Url.Action("Logout", "Admin")">Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-scroll">
+                <div class="orders-page">
+                    <section class="order-stats-grid" aria-label="Thống kê đơn hàng">
+                        <article class="order-stat-card">
+                            <p>Tổng Đơn Hàng</p>
+                            <strong>@Model.TotalOrders.ToString("N0", culture)</strong>
+                        </article>
+                        <article class="order-stat-card">
+                            <p>Chờ Xử Lý</p>
+                            <strong class="is-pending">@Model.PendingOrders.ToString("N0", culture)</strong>
+                        </article>
+                        <article class="order-stat-card">
+                            <p>Đang Chế Biến</p>
+                            <strong class="is-processing">@Model.ProcessingOrders.ToString("N0", culture)</strong>
+                        </article>
+                        <article class="order-stat-card">
+                            <p>Hoàn Thành</p>
+                            <strong class="is-completed">@Model.CompletedOrders.ToString("N0", culture)</strong>
+                        </article>
+                    </section>
+
+                    <section class="order-filter-card" aria-label="Bộ lọc đơn hàng">
+                        <div class="order-search">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                                <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                            <input type="search" data-order-search placeholder="Tìm kiếm theo mã đơn, khách hàng..." />
+                        </div>
+
+                        <label class="order-select">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                            <select data-order-status-filter aria-label="Lọc theo trạng thái">
+                                <option value="">Tất Cả</option>
+                                <option value="pending">Chờ Xử Lý</option>
+                                <option value="processing">Đang Chế Biến</option>
+                                <option value="completed">Hoàn Thành</option>
+                            </select>
+                        </label>
+
+                        <label class="order-date-filter">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="2"></rect>
+                                <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            </svg>
+                            <span>Chọn Ngày</span>
+                            <input type="date" data-order-date-filter aria-label="Lọc theo ngày" />
+                        </label>
+
+                        <button class="order-export-button" type="button" data-export-orders>
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3v12M8 11l4 4 4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            Xuất Excel
+                        </button>
+                    </section>
+
+                    <section class="order-table-card">
+                        <div class="order-table-wrap">
+                            <table class="order-table" data-orders-table>
+                                <thead>
+                                    <tr>
+                                        <th>Mã ĐH</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Bàn</th>
+                                        <th>Thời Gian</th>
+                                        <th class="is-right">Tổng Tiền</th>
+                                        <th>Thanh Toán</th>
+                                        <th>Trạng Thái</th>
+                                        <th class="is-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Orders)
+                                    {
+                                        <tr data-order-row data-search="@item.SearchText" data-status="@item.StatusKey" data-date="@item.DateValue">
+                                            <td data-label="Mã ĐH">
+                                                <strong class="order-code">@item.OrderCode</strong>
+                                            </td>
+                                            <td data-label="Khách Hàng">
+                                                <div class="order-customer">
+                                                    <strong>@item.CustomerName</strong>
+                                                    <span>@item.CustomerPhone</span>
+                                                </div>
+                                            </td>
+                                            <td data-label="Bàn">@item.TableLabel</td>
+                                            <td data-label="Thời Gian" class="order-time">@FormatDateTime(item.OrderTime)</td>
+                                            <td data-label="Tổng Tiền" class="is-right order-total">@FormatCurrency(item.TotalAmount)</td>
+                                            <td data-label="Thanh Toán">
+                                                <span class="payment-pill">@item.PaymentLabel</span>
+                                            </td>
+                                            <td data-label="Trạng Thái">
+                                                <span class="order-status @item.StatusCssClass">@item.StatusLabel</span>
+                                            </td>
+                                            <td class="is-right" data-label="Chi Tiết">
+                                                <button class="order-detail-button" type="button" data-order-detail-url="@Url.Action("DetailsData", "DonHangs", new { id = item.OrderId })">
+                                                    <svg viewBox="0 0 24 24" fill="none">
+                                                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
+                                                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                                                    </svg>
+                                                    Chi Tiết
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr class="order-empty-row" data-empty-row hidden>
+                                        <td colspan="8">Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="order-detail-modal" id="order-detail-modal" hidden aria-hidden="true">
+        <button class="order-detail-modal__backdrop" type="button" data-order-modal-close aria-label="Đóng chi tiết đơn hàng"></button>
+
+        <section class="order-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="order-detail-title">
+            <button class="order-detail-close" type="button" data-order-modal-close aria-label="Đóng">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+            </button>
+
+            <header class="order-detail-header">
+                <span class="order-detail-status" data-detail-status>Đang tải</span>
+                <h2 id="order-detail-title" data-detail-code>Chi tiết đơn hàng</h2>
+                <p data-detail-created-time>Đang tải thông tin đơn hàng...</p>
+            </header>
+
+            <div class="order-detail-loading" data-detail-loading>
+                <span class="order-detail-spinner"></span>
+                <span>Đang tải chi tiết đơn hàng...</span>
+            </div>
+
+            <div class="order-detail-error" data-detail-error hidden>
+                Không tải được chi tiết đơn hàng. Vui lòng thử lại.
+            </div>
+
+            <div class="order-detail-content" data-detail-content hidden>
+                <div class="order-detail-summary">
+                    <article>
+                        <span>Khách hàng</span>
+                        <strong data-detail-customer>Khách lẻ</strong>
+                        <small data-detail-phone>Chưa có SĐT</small>
+                    </article>
+                    <article>
+                        <span>Bàn</span>
+                        <strong data-detail-table>Mang về</strong>
+                        <small data-detail-address>Chưa có địa chỉ</small>
+                    </article>
+                    <article>
+                        <span>Thanh toán</span>
+                        <strong data-detail-payment>Chưa thanh toán</strong>
+                        <small data-detail-promotion>Không áp dụng</small>
+                    </article>
+                    <article>
+                        <span>Nhân viên</span>
+                        <strong data-detail-employee>Chưa phân công</strong>
+                        <small data-detail-time-range>Chưa có thời gian</small>
+                    </article>
+                </div>
+
+                <div class="order-detail-items">
+                    <div class="order-detail-items__head">
+                        <h3>Sản phẩm trong đơn</h3>
+                        <span data-detail-item-count>0 món</span>
+                    </div>
+
+                    <div class="order-detail-items__table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody data-detail-items></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="order-detail-total">
+                    <span>Tổng tiền</span>
+                    <strong data-detail-total>0đ</strong>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="~/assets/js/admin-orders.js" asp-append-version="true"></script>
+</body>
+</html>
