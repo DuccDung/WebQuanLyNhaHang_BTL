@@ -1,28 +1,40 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore;
 using WebQuanLyNhaHang.Models;
-using WebQuanLyNhaHang.ViewModel;
 
 namespace WebQuanLyNhaHang.Views.Shared.Components.AccLogginViewComponent
 {
     public class AccLogginViewComponent : ViewComponent
     {
-        QlnhaHangBtlContext _qlnhaHangBtlContext;
+        private readonly QlnhaHangBtlContext _qlnhaHangBtlContext;
+
         public AccLogginViewComponent(QlnhaHangBtlContext qlnhaHangBtlContext)
         {
             _qlnhaHangBtlContext = qlnhaHangBtlContext;
         }
-        public async Task<IViewComponentResult> InvokeAsync()  
+
+        public async Task<IViewComponentResult> InvokeAsync()
         {
             int? NvID = HttpContext.Session.GetInt32("NhanVienId");
 
-            var nv = _qlnhaHangBtlContext.NhanViens.Find(NvID);
+            if (!NvID.HasValue)
+            {
+                return Content(string.Empty);
+            }
+
+            var nv = await _qlnhaHangBtlContext.NhanViens
+                .AsNoTracking()
+                .FirstOrDefaultAsync(employee => employee.NvId == NvID.Value && !employee.Remove);
+
             if (nv == null)
             {
-                new Exception("Lỗi Loggin không tìm thấy Id Của Nhân Viên");
+                HttpContext.Session.Remove("NhanVienId");
+                HttpContext.Session.Remove("NhanVienName");
+                HttpContext.Session.Remove("NhanVienTaiKhoan");
+                return Content(string.Empty);
             }
-            return View("Acc" , nv);  // gọi tới View
+
+            return View("Acc", nv);
         }
     }
 }

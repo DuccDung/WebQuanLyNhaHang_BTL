@@ -46,8 +46,8 @@ namespace WebQuanLyNhaHang.Controllers
                     item.Product != null ? item.Product.TenSanPham ?? "Mon chua dat ten" : "Mon chua dat ten"))
                 .ToListAsync();
 
-            var customerCount = await _context.KhachHangs.AsNoTracking().CountAsync();
-            var employeeCount = await _context.NhanViens.AsNoTracking().CountAsync();
+            var customerCount = await _context.KhachHangs.AsNoTracking().CountAsync(customer => !customer.Remove);
+            var employeeCount = await _context.NhanViens.AsNoTracking().CountAsync(employee => !employee.Remove);
             var productCount = await _context.Products.AsNoTracking().CountAsync(item => !item.Remove);
             var tableCount = await _context.Bans.AsNoTracking().CountAsync(item => !item.Remove);
 
@@ -206,9 +206,16 @@ namespace WebQuanLyNhaHang.Controllers
 
         public IActionResult Login()
         {
-            if (HttpContext.Session.GetInt32("NhanVienId").HasValue)
+            var employeeId = HttpContext.Session.GetInt32("NhanVienId");
+
+            if (employeeId.HasValue && _context.NhanViens.Any(employee => employee.NvId == employeeId.Value && !employee.Remove))
             {
                 return RedirectToAction(nameof(Index));
+            }
+
+            if (employeeId.HasValue)
+            {
+                ClearAdminSession();
             }
 
             return View();
@@ -227,7 +234,9 @@ namespace WebQuanLyNhaHang.Controllers
                 return View();
             }
 
-            var nhanVien = _context.NhanViens.FirstOrDefault(e => e.TaiKhoan == name && e.MatKhau == password);
+            var nhanVien = _context.NhanViens
+                .AsNoTracking()
+                .FirstOrDefault(e => !e.Remove && e.TaiKhoan == name && e.MatKhau == password);
             if (nhanVien == null)
             {
                 ViewBag.Error = "Tài khoản hoặc mật khẩu không đúng.";
@@ -244,9 +253,7 @@ namespace WebQuanLyNhaHang.Controllers
         [AdminSessionAuthorize]
         public IActionResult Logout()
         {
-            HttpContext.Session.Remove("NhanVienId");
-            HttpContext.Session.Remove("NhanVienName");
-            HttpContext.Session.Remove("NhanVienTaiKhoan");
+            ClearAdminSession();
 
             return RedirectToAction(nameof(Login));
         }
@@ -574,6 +581,13 @@ namespace WebQuanLyNhaHang.Controllers
                 TrendCssClass = "is-neutral",
                 HintText = hintText
             };
+        }
+
+        private void ClearAdminSession()
+        {
+            HttpContext.Session.Remove("NhanVienId");
+            HttpContext.Session.Remove("NhanVienName");
+            HttpContext.Session.Remove("NhanVienTaiKhoan");
         }
 
         private static string BuildInitials(string fullName)

@@ -120,10 +120,11 @@ namespace WebQuanLyNhaHang.Controllers
             var status = ResolveOrderStatus(donHang, lineItems.Count);
             var orderTime = donHang.GioVao ?? donHang.GioRa;
             var totalAmount = donHang.TongTien ?? donHang.ChiTietHoaDons.Where(item => !item.Remove).Sum(item => item.ThanhTien ?? 0m);
-            var customerName = string.IsNullOrWhiteSpace(donHang.Kh?.TenKhachHang)
+            var hasActiveCustomer = donHang.Kh != null && !donHang.Kh.Remove;
+            var customerName = !hasActiveCustomer || string.IsNullOrWhiteSpace(donHang.Kh?.TenKhachHang)
                 ? "Khách lẻ"
                 : donHang.Kh!.TenKhachHang!.Trim();
-            var customerPhone = string.IsNullOrWhiteSpace(donHang.Kh?.SoDienThoai)
+            var customerPhone = !hasActiveCustomer || string.IsNullOrWhiteSpace(donHang.Kh?.SoDienThoai)
                 ? "Chưa có SĐT"
                 : donHang.Kh!.SoDienThoai!.Trim();
             var tableLabel = donHang.BanId.HasValue ? $"Bàn {donHang.BanId.Value}" : "Mang về";
@@ -142,7 +143,9 @@ namespace WebQuanLyNhaHang.Controllers
                 paymentLabel = totalAmount > 0m ? "Tiền mặt" : "Chưa thanh toán",
                 statusLabel = status.Label,
                 statusCssClass = status.CssClass,
-                employeeName = string.IsNullOrWhiteSpace(donHang.Nv?.TenNhanVien) ? "Chưa phân công" : donHang.Nv!.TenNhanVien!.Trim(),
+                employeeName = donHang.Nv == null || donHang.Nv.Remove || string.IsNullOrWhiteSpace(donHang.Nv.TenNhanVien)
+                    ? "Chưa phân công"
+                    : donHang.Nv.TenNhanVien!.Trim(),
                 promotionName = string.IsNullOrWhiteSpace(donHang.Km?.TenKhuyenMai) ? "Không áp dụng" : donHang.Km!.TenKhuyenMai!.Trim(),
                 items = lineItems
             });
@@ -280,10 +283,11 @@ namespace WebQuanLyNhaHang.Controllers
             var lineItemCount = order.ChiTietHoaDons?.Count(item => !item.Remove) ?? 0;
             var status = ResolveOrderStatus(order, lineItemCount);
             var orderTime = order.GioVao ?? order.GioRa;
-            var customerName = string.IsNullOrWhiteSpace(order.Kh?.TenKhachHang)
+            var hasActiveCustomer = order.Kh != null && !order.Kh.Remove;
+            var customerName = !hasActiveCustomer || string.IsNullOrWhiteSpace(order.Kh?.TenKhachHang)
                 ? "Khách lẻ"
                 : order.Kh!.TenKhachHang!.Trim();
-            var customerPhone = string.IsNullOrWhiteSpace(order.Kh?.SoDienThoai)
+            var customerPhone = !hasActiveCustomer || string.IsNullOrWhiteSpace(order.Kh?.SoDienThoai)
                 ? "Chưa có SĐT"
                 : order.Kh!.SoDienThoai!.Trim();
             var tableLabel = order.BanId.HasValue

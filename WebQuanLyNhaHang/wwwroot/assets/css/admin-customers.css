@@ -622,6 +622,12 @@ body.is-customer-detail-open {
   text-align: center;
 }
 
+.customer-detail-loading[hidden],
+.customer-detail-error[hidden],
+.customer-detail-content[hidden] {
+  display: none !important;
+}
+
 .customer-detail-loading p,
 .customer-detail-error p {
   margin: 0;

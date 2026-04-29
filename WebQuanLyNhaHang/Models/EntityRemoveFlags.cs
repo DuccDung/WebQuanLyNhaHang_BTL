@@ -35,11 +35,6 @@ public partial class HoaDonNhap
     public bool Remove { get; set; }
 }
 
-public partial class KhachHang
-{
-    public bool Remove { get; set; }
-}
-
 public partial class KhuyenMai
 {
     public bool Remove { get; set; }
@@ -56,11 +51,6 @@ public partial class NguyenLieu
 }
 
 public partial class NhaCungCap
-{
-    public bool Remove { get; set; }
-}
-
-public partial class NhanVien
 {
     public bool Remove { get; set; }
 }

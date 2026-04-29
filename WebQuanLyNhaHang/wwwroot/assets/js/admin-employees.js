@@ -277,10 +277,17 @@
         const response = await fetch(activeUpdateUrl, {
           method: "POST",
           body: new FormData(editForm),
-          headers: { "Accept": "application/json" }
+          headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          }
         });
 
         const payload = await parseJsonResponse(response);
+
+        if (payload.redirectUrl) {
+          throw new Error(payload.message || "Phien dang nhap da het han. Vui long dang nhap lai.");
+        }
 
         if (!response.ok) {
           throw new Error(payload.message || "Không lưu được thay đổi.");
@@ -311,10 +318,17 @@
       try {
         const response = await fetch(activeDeleteUrl, {
           method: "POST",
-          headers: { "Accept": "application/json" }
+          headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          }
         });
 
         const payload = await parseJsonResponse(response);
+
+        if (payload.redirectUrl) {
+          throw new Error(payload.message || "Phien dang nhap da het han. Vui long dang nhap lai.");
+        }
 
         if (!response.ok) {
           throw new Error(payload.message || "Không xóa được nhân viên.");
@@ -350,10 +364,17 @@
     async function loadEmployeeDetail(url, mode) {
       try {
         const response = await fetch(url, {
-          headers: { "Accept": "application/json" }
+          headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          }
         });
 
         const data = await parseJsonResponse(response);
+
+        if (data.redirectUrl) {
+          throw new Error(data.message || "Phien dang nhap da het han. Vui long dang nhap lai.");
+        }
 
         if (!response.ok) {
           throw new Error(data.message || "Không tải được thông tin nhân viên.");
@@ -438,6 +459,8 @@
     }
 
     function renderDelete(data) {
+      setText(".employee-delete-warning h3", `Xác nhận xóa ${data.employeeName || "nhân viên này"}?`);
+      setText(".employee-delete-warning p", `Tài khoản ${data.account || "này"} sẽ được xóa mềm và ẩn khỏi danh sách. Các đơn hàng, lịch sử và dữ liệu liên quan vẫn được giữ lại.`);
       setText("[data-modal-subtitle]", `Bạn đang thao tác với tài khoản ${data.account || "chưa có tài khoản"}.`);
     }
 
@@ -583,8 +606,35 @@
     }
 
     async function parseJsonResponse(response) {
+      const contentType = response.headers.get("content-type") || "";
       const text = await response.text();
-      return text ? JSON.parse(text) : {};
+
+      if (!text) {
+        return {};
+      }
+
+      if (contentType.toLowerCase().includes("application/json")) {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { message: "Phản hồi từ server không hợp lệ. Vui lòng thử lại." };
+        }
+      }
+
+      if (response.redirected || response.url.includes("/Admin/Login")) {
+        return {
+          message: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+          redirectUrl: response.url || "/Admin/Login"
+        };
+      }
+
+      const normalizedText = text.trim().toLowerCase();
+
+      if (normalizedText.startsWith("<!doctype") || normalizedText.startsWith("<html")) {
+        return { message: "Server đang trả về trang HTML thay vì dữ liệu thao tác. Vui lòng tải lại trang rồi thử lại." };
+      }
+
+      return { message: text.trim() || "Không thể đọc phản hồi từ server." };
     }
   }
 

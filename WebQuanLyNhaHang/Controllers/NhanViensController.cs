@@ -80,6 +80,7 @@ namespace WebQuanLyNhaHang.Controllers
         {
             if (ModelState.IsValid)
             {
+                nhanVien.Remove = false;
                 _context.Add(nhanVien);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -178,29 +179,39 @@ namespace WebQuanLyNhaHang.Controllers
             });
         }
 
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
             var employee = await _context.NhanViens
-                .Include(item => item.NvPqs.Where(role => !role.Remove))
+                .AsNoTracking()
                 .FirstOrDefaultAsync(item => item.NvId == id && !item.Remove);
 
-            if (employee != null)
-            {
-                employee.Remove = true;
+            return employee == null ? NotFound() : View(employee);
+        }
 
-                foreach (var role in employee.NvPqs)
-                {
-                    role.Remove = true;
-                }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var employee = await SoftDeleteEmployeeAsync(id);
 
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToAction(nameof(Index));
+            return employee == null ? NotFound() : RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteFromModal(int id)
+        {
+            var employee = await SoftDeleteEmployeeAsync(id);
+
+            if (employee == null)
+            {
+                return NotFound(new { message = "Không tìm thấy nhân viên." });
+            }
+
+            return Json(new { success = true, message = "Đã xóa mềm nhân viên." });
+        }
+
+        private async Task<NhanVien?> SoftDeleteEmployeeAsync(int id)
         {
             var employee = await _context.NhanViens
                 .Include(item => item.NvPqs.Where(role => !role.Remove))
@@ -208,7 +219,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             if (employee == null)
             {
-                return NotFound(new { message = "Không tìm thấy nhân viên." });
+                return null;
             }
 
             employee.Remove = true;
@@ -220,7 +231,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Đã xóa mềm nhân viên." });
+            return employee;
         }
 
         private bool NhanVienExists(int id)

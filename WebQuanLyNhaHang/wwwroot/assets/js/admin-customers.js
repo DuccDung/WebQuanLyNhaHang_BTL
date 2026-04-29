@@ -197,10 +197,11 @@
           method: "POST",
           body: new FormData(form),
           headers: {
+            "Accept": "application/json",
             "X-Requested-With": "XMLHttpRequest"
           }
         });
-        const data = await response.json().catch(() => null);
+        const data = await parseJsonResponse(response);
 
         if (!response.ok || !data || data.success === false) {
           showAlert(resolveErrors(data));
@@ -326,16 +327,26 @@
     async function loadCustomerDetail(url) {
       try {
         const response = await fetch(url, {
-          headers: { "Accept": "application/json" }
+          headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          }
         });
 
-        if (!response.ok) {
-          throw new Error("Không tải được chi tiết khách hàng.");
+        const data = await parseJsonResponse(response);
+
+        if (data.redirectUrl) {
+          throw new Error(data.message || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         }
 
-        renderCustomerDetail(await response.json());
+        if (!response.ok) {
+          throw new Error(data.message || "Không tải được chi tiết khách hàng.");
+        }
+
+        renderCustomerDetail(data);
         setModalState("content");
       } catch (err) {
+        setDetailError(err.message || "Không tải được thông tin khách hàng. Vui lòng thử lại sau ít phút.");
         setModalState("error");
       }
     }
@@ -407,6 +418,25 @@
 
       if (target) {
         target.textContent = value;
+      }
+    }
+
+    function setDetailError(message) {
+      if (!error) {
+        return;
+      }
+
+      const title = error.querySelector("strong") || error.querySelector("h3");
+      const copy = error.querySelector("span") || error.querySelector("p");
+
+      if (title) {
+        title.textContent = "Không tải được thông tin khách hàng";
+      }
+
+      if (copy) {
+        copy.textContent = message;
+      } else {
+        error.textContent = message;
       }
     }
   }
@@ -520,7 +550,43 @@
       return errors;
     }
 
+    if (data && data.message) {
+      return [data.message];
+    }
+
     return ["Thông tin chưa hợp lệ. Vui lòng kiểm tra lại các trường bắt buộc."];
+  }
+
+  async function parseJsonResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+    const text = await response.text();
+
+    if (!text) {
+      return {};
+    }
+
+    if (contentType.toLowerCase().includes("application/json")) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { message: "Phản hồi từ server không hợp lệ. Vui lòng thử lại." };
+      }
+    }
+
+    if (response.redirected || response.url.includes("/Admin/Login")) {
+      return {
+        message: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+        redirectUrl: response.url || "/Admin/Login"
+      };
+    }
+
+    const normalizedText = text.trim().toLowerCase();
+
+    if (normalizedText.startsWith("<!doctype") || normalizedText.startsWith("<html")) {
+      return { message: "Server đang trả về trang HTML thay vì dữ liệu khách hàng. Vui lòng tải lại trang rồi thử lại." };
+    }
+
+    return { message: text.trim() || "Không thể đọc phản hồi từ server." };
   }
 
   function phoneIcon() {

@@ -47,7 +47,7 @@ namespace WebQuanLyNhaHang.Controllers
             }
 
             var khachHang = await _context.KhachHangs
-                .FirstOrDefaultAsync(m => m.KhId == id);
+                .FirstOrDefaultAsync(m => m.KhId == id && !m.Remove);
             if (khachHang == null)
             {
                 return NotFound();
@@ -59,6 +59,8 @@ namespace WebQuanLyNhaHang.Controllers
         [HttpGet]
         public async Task<IActionResult> DetailsData(int id)
         {
+            try
+            {
             var khachHang = await _context.KhachHangs
                 .AsNoTracking()
                 .Include(customer => customer.DonHangs.Where(order => !order.Remove))
@@ -112,6 +114,11 @@ namespace WebQuanLyNhaHang.Controllers
                 tierCssClass = row.TierCssClass,
                 recentOrders
             });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Không tải được thông tin khách hàng. Vui lòng thử lại sau ít phút." });
+            }
         }
 
         // GET: KhachHangs/Create
@@ -127,6 +134,7 @@ namespace WebQuanLyNhaHang.Controllers
         {
             if (ModelState.IsValid)
             {
+                khachHang.Remove = false;
                 _context.Add(khachHang);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -219,7 +227,8 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound();
             }
 
-            var khachHang = await _context.KhachHangs.FindAsync(id);
+            var khachHang = await _context.KhachHangs
+                .FirstOrDefaultAsync(customer => customer.KhId == id && !customer.Remove);
             if (khachHang == null)
             {
                 return NotFound();
@@ -241,7 +250,21 @@ namespace WebQuanLyNhaHang.Controllers
             {
                 try
                 {
-                    _context.Update(khachHang);
+                    var existingCustomer = await _context.KhachHangs
+                        .FirstOrDefaultAsync(customer => customer.KhId == id && !customer.Remove);
+
+                    if (existingCustomer == null)
+                    {
+                        return NotFound();
+                    }
+
+                    existingCustomer.TenKhachHang = khachHang.TenKhachHang?.Trim();
+                    existingCustomer.DiaChi = khachHang.DiaChi?.Trim();
+                    existingCustomer.SoDienThoai = khachHang.SoDienThoai?.Trim();
+                    existingCustomer.TaiKhoan = khachHang.TaiKhoan?.Trim() ?? string.Empty;
+                    existingCustomer.MatKhau = khachHang.MatKhau?.Trim() ?? string.Empty;
+                    existingCustomer.PathPhoto = khachHang.PathPhoto?.Trim();
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -269,7 +292,7 @@ namespace WebQuanLyNhaHang.Controllers
             }
 
             var khachHang = await _context.KhachHangs
-                .FirstOrDefaultAsync(m => m.KhId == id);
+                .FirstOrDefaultAsync(m => m.KhId == id && !m.Remove);
             if (khachHang == null)
             {
                 return NotFound();
@@ -283,10 +306,11 @@ namespace WebQuanLyNhaHang.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var khachHang = await _context.KhachHangs.FindAsync(id);
+            var khachHang = await _context.KhachHangs
+                .FirstOrDefaultAsync(customer => customer.KhId == id && !customer.Remove);
             if (khachHang != null)
             {
-                _context.KhachHangs.Remove(khachHang);
+                khachHang.Remove = true;
             }
 
             await _context.SaveChangesAsync();
@@ -295,7 +319,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         private bool KhachHangExists(int id)
         {
-            return _context.KhachHangs.Any(e => e.KhId == id);
+            return _context.KhachHangs.Any(e => e.KhId == id && !e.Remove);
         }
 
         private async Task<List<CustomerIndexRowViewModel>> BuildCustomerRowsAsync()

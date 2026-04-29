@@ -218,7 +218,11 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.DiaChi).HasMaxLength(200);
             entity.Property(e => e.MatKhau).HasMaxLength(50);
             entity.Property(e => e.PathPhoto).HasMaxLength(100);
-            entity.Property(e => e.Remove).HasDefaultValue(false);
+            entity.Property(e => e.Remove)
+                .HasColumnName("Remove")
+                .HasColumnType("bit")
+                .IsRequired()
+                .HasDefaultValueSql("((0))");
             entity.Property(e => e.SoDienThoai)
                 .HasMaxLength(15)
                 .IsUnicode(false);
@@ -290,7 +294,11 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.HeSoLuong).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.MatKhau).HasMaxLength(50);
             entity.Property(e => e.PathPhoto).HasMaxLength(100);
-            entity.Property(e => e.Remove).HasDefaultValue(false);
+            entity.Property(e => e.Remove)
+                .HasColumnName("Remove")
+                .HasColumnType("bit")
+                .IsRequired()
+                .HasDefaultValueSql("((0))");
             entity.Property(e => e.TaiKhoan).HasMaxLength(50);
             entity.Property(e => e.TenNhanVien).HasMaxLength(100);
         });

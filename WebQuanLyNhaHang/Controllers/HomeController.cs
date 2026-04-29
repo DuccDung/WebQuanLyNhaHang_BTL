@@ -190,7 +190,9 @@ namespace WebQuanLyNhaHang.Controllers
         // ================================= trang Login =====================================================================
         [HttpPost]
         public IActionResult CustomerRegister(string username,string Email ,string password) {
-            var KhachHang = _qlnhaHangBtlContext.KhachHangs.Where(e => e.TaiKhoan == username).FirstOrDefault();
+            var KhachHang = _qlnhaHangBtlContext.KhachHangs
+                .Where(e => e.TaiKhoan == Email && !e.Remove)
+                .FirstOrDefault();
             if(KhachHang != null)
             {
                 TempData["error"] = "Tên Tài Khoản Tài Đã Được Sử Dụng Vui Lòng Đăng Kí Lại!";
@@ -202,7 +204,8 @@ namespace WebQuanLyNhaHang.Controllers
                 {
                  TenKhachHang = username,   
                  TaiKhoan = Email,
-                 MatKhau = password
+                 MatKhau = password,
+                 Remove = false
                 });
                 TempData["success"] = "Tài Khoản Đăng Kí Thành Công!";
                 _qlnhaHangBtlContext.SaveChanges();
@@ -214,7 +217,7 @@ namespace WebQuanLyNhaHang.Controllers
         public IActionResult CustomerLogin(string email, string password)
         {
             var khachHang = _qlnhaHangBtlContext.KhachHangs
-       .FirstOrDefault(e => e.TaiKhoan == email && e.MatKhau == password);
+       .FirstOrDefault(e => e.TaiKhoan == email && e.MatKhau == password && !e.Remove);
 
             if (khachHang != null)
             {

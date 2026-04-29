@@ -19,5 +19,7 @@ public partial class KhachHang
 
     public string? PathPhoto { get; set; }
 
+    public bool Remove { get; set; }
+
     public virtual ICollection<DonHang> DonHangs { get; set; } = new List<DonHang>();
 }
