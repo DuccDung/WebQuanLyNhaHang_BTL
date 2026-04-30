@@ -1,3 +1,5 @@
+@using System.Text.Encodings.Web
+@using System.Text.Json
 @model WebQuanLyNhaHang.ViewModel.TrangChuMenuPageViewModel
 @{
     Layout = "_CloudyCafeLayout";
@@ -14,6 +16,44 @@
             ? path
             : $"/{path}";
     }
+
+    var allProducts = Model.ProductsByCategory.Values
+        .SelectMany(products => products)
+        .GroupBy(product => product.ProductId)
+        .Select(group => group.First())
+        .ToList();
+
+    var productModalData = allProducts.Select(product =>
+    {
+        var conditions = product.ProductConditions
+            .Where(condition => !condition.Remove && !string.IsNullOrWhiteSpace(condition.Condition))
+            .Select(condition => condition.Condition!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(condition => condition.Equals("Đá", StringComparison.OrdinalIgnoreCase) ? 0 :
+                condition.Equals("Nóng", StringComparison.OrdinalIgnoreCase) ? 1 : 2)
+            .ToList();
+
+        if (conditions.Count == 0)
+        {
+            conditions.AddRange(new[] { "Đá", "Nóng" });
+        }
+
+        return new
+        {
+            id = product.ProductId,
+            name = product.TenSanPham ?? "Sản phẩm",
+            description = product.MoTa ?? "Thức uống được chuẩn bị theo lựa chọn của bạn.",
+            price = product.GiaTien ?? 0,
+            image = ProductImage(product.PathPhoto),
+            conditions
+        };
+    });
+
+    var productModalJson = JsonSerializer.Serialize(productModalData, new JsonSerializerOptions
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    });
+    ViewData["ProductModalJson"] = productModalJson;
 }
 
 <div class="container page-pad">
@@ -78,23 +118,23 @@
                             @for (var index = 0; index < products.Count; index++)
                             {
                                 var product = products[index];
-                                <article class="product-card" id="product-@product.ProductId">
+                                <article class="product-card js-product-card" id="product-@product.ProductId" data-product-id="@product.ProductId" role="button" tabindex="0" aria-label="Xem @product.TenSanPham">
                                     @if (index == 0)
                                     {
                                         <span class="new-badge">New</span>
                                     }
-                                    <a class="product-image" href="/TrangChu/Menu#product-@product.ProductId">
+                                    <div class="product-image">
                                         <img src="@ProductImage(product.PathPhoto)" alt="@product.TenSanPham" loading="lazy">
-                                    </a>
+                                    </div>
                                     <div class="product-body">
                                         <h3 class="product-name">
-                                            <a href="/TrangChu/Menu#product-@product.ProductId">@product.TenSanPham</a>
+                                            <button class="product-name-button js-open-product-modal" type="button" data-product-id="@product.ProductId">@product.TenSanPham</button>
                                         </h3>
                                         <div class="product-bottom">
                                             <span class="price">@String.Format("{0:N0}", product.GiaTien)đ</span>
-                                            <a class="btn square" href="/TrangChu/Menu#product-@product.ProductId" aria-label="Xem @product.TenSanPham">
+                                            <button class="btn square js-open-product-modal" type="button" data-product-id="@product.ProductId" aria-label="Đặt @product.TenSanPham">
                                                 <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 </article>

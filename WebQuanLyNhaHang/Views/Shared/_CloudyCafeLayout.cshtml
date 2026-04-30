@@ -1,6 +1,8 @@
 @{
     var activeNav = ViewData["ActiveNav"] as string ?? string.Empty;
     var pageTitle = ViewData["Title"] as string ?? "Cloudy Café";
+    var productModalJson = ViewData["ProductModalJson"] as string;
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 
     string Active(string key)
     {
@@ -133,5 +135,116 @@
             </div>
         </footer>
     </div>
+    @if (!string.IsNullOrWhiteSpace(productModalJson))
+    {
+        <div class="modal-backdrop product-order-backdrop" id="product-order-backdrop" hidden>
+            <section class="modal product-order-modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+                <button class="modal-close" type="button" data-product-modal-close aria-label="Đóng">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+                <div class="modal-grid product-order-grid">
+                    <div class="modal-image product-order-image">
+                        <img id="product-modal-image" src="" alt="">
+                    </div>
+                    <form class="modal-content product-order-content" id="product-order-form" asp-controller="Home" asp-action="CreateProductDetail" method="post">
+                        <input type="hidden" name="productid" id="product-modal-id">
+                        <input type="hidden" name="soluong" id="product-modal-quantity-input" value="1">
+                        <input type="hidden" name="condition" id="product-modal-condition">
+                        <input type="hidden" name="ghichu" id="product-modal-note">
+                        <input type="hidden" name="returnUrl" value="@returnUrl">
+
+                        <h2 id="product-modal-title">Sản phẩm</h2>
+                        <div class="product-modal-price" id="product-modal-price">0đ</div>
+                        <p class="product-modal-description" id="product-modal-description"></p>
+
+                        <div class="product-modal-quantity">
+                            <span>Số lượng</span>
+                            <div class="product-quantity-control" aria-label="Số lượng">
+                                <button type="button" data-quantity-action="decrease" aria-label="Giảm số lượng">−</button>
+                                <strong id="product-modal-quantity">1</strong>
+                                <button type="button" data-quantity-action="increase" aria-label="Tăng số lượng">+</button>
+                            </div>
+                        </div>
+
+                        <div class="option-section">
+                            <div class="product-option-head">
+                                <span>Chọn loại</span>
+                                <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+                            </div>
+                            <div class="option-grid product-option-grid" id="product-condition-options"></div>
+                        </div>
+
+                        <div class="option-section">
+                            <div class="product-option-head">
+                                <span>Chọn size</span>
+                                <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+                            </div>
+                            <div class="option-grid product-option-grid">
+                                <button type="button" class="option-choice product-option-choice active" data-option-group="size" data-option-label="Size M" data-option-price="0">Size M</button>
+                                <button type="button" class="option-choice product-option-choice" data-option-group="size" data-option-label="Size L" data-option-price="10000">Size L <small>+10,000đ</small></button>
+                            </div>
+                        </div>
+
+                        <div class="option-section">
+                            <div class="product-option-head">
+                                <span>Chọn đường</span>
+                                <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+                            </div>
+                            <div class="option-grid product-option-grid three">
+                                <button type="button" class="option-choice product-option-choice active" data-option-group="sugar" data-option-label="100% đường" data-option-price="0">100% đường</button>
+                                <button type="button" class="option-choice product-option-choice" data-option-group="sugar" data-option-label="Ít đường" data-option-price="0">Ít đường</button>
+                                <button type="button" class="option-choice product-option-choice" data-option-group="sugar" data-option-label="Không đường" data-option-price="0">Không đường</button>
+                            </div>
+                        </div>
+
+                        <div class="option-section">
+                            <div class="product-option-head">
+                                <span>Chọn đá</span>
+                                <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+                            </div>
+                            <div class="option-grid product-option-grid">
+                                <button type="button" class="option-choice product-option-choice active" data-option-group="ice" data-option-label="100% đá" data-option-price="0">100% đá</button>
+                                <button type="button" class="option-choice product-option-choice" data-option-group="ice" data-option-label="Ít đá" data-option-price="0">Ít đá</button>
+                                <button type="button" class="option-choice product-option-choice" data-option-group="ice" data-option-label="Không đá" data-option-price="0">Không đá</button>
+                                <button type="button" class="option-choice product-option-choice" data-option-group="ice" data-option-label="Làm nóng" data-option-price="0">Làm nóng</button>
+                            </div>
+                        </div>
+
+                        <div class="option-section">
+                            <div class="product-option-head">
+                                <span>Topping <em>(Tùy chọn)</em></span>
+                                <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+                            </div>
+                            <div class="topping-list product-topping-list">
+                                <label class="topping-item product-topping-item">
+                                    <span><input type="checkbox" data-topping-label="Sữa tươi" data-topping-price="5000"> Sữa tươi</span>
+                                    <strong>+5,000đ</strong>
+                                </label>
+                                <label class="topping-item product-topping-item">
+                                    <span><input type="checkbox" data-topping-label="Sữa yến mạch" data-topping-price="5000"> Sữa yến mạch</span>
+                                    <strong>+5,000đ</strong>
+                                </label>
+                                <label class="topping-item product-topping-item">
+                                    <span><input type="checkbox" data-topping-label="Sữa đặc" data-topping-price="5000"> Sữa đặc</span>
+                                    <strong>+5,000đ</strong>
+                                </label>
+                                <label class="topping-item product-topping-item">
+                                    <span><input type="checkbox" data-topping-label="Foam dừa" data-topping-price="10000"> Foam dừa</span>
+                                    <strong>+10,000đ</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn full product-submit-button" type="submit">
+                            <span>Thêm vào giỏ hàng</span>
+                            <strong id="product-modal-total">0đ</strong>
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+        <script type="application/json" id="cloudy-product-data">@Html.Raw(productModalJson)</script>
+        <script src="~/cloudycafe/js/product-modal.js" asp-append-version="true"></script>
+    }
 </body>
 </html>
