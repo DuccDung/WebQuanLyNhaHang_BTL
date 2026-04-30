@@ -12,27 +12,38 @@ namespace WebQuanLyNhaHang.Views.Shared.Components.MenuAddSub
         {
             _qlnhaHangBtlContext = qlnhaHangBtlContext;
         }
-        public async Task<IViewComponentResult> InvokeAsync(int ProductId, int DhId)
+        public Task<IViewComponentResult> InvokeAsync(int ProductId, int? DhId)
         {
-            
-            ViewModelMenu viewModelMenu = new ViewModelMenu(_qlnhaHangBtlContext);
-            
-            if (viewModelMenu.CountProductDetail(DhId, ProductId) != 0)
+            if (!DhId.HasValue)
             {
-                var CTHD = _qlnhaHangBtlContext.ChiTietHoaDons.Where(e => e.ProductId == ProductId && e.DhId == DhId).FirstOrDefault();
+                return Task.FromResult<IViewComponentResult>(View("TotalZezor", ProductId));
+            }
+
+            ViewModelMenu viewModelMenu = new ViewModelMenu(_qlnhaHangBtlContext);
+
+            if (viewModelMenu.CountProductDetail(DhId.Value, ProductId) != 0)
+            {
+                var CTHD = _qlnhaHangBtlContext.ChiTietHoaDons
+                    .Where(e => e.ProductId == ProductId && e.DhId == DhId.Value && !e.Remove)
+                    .FirstOrDefault();
+                if (CTHD == null)
+                {
+                    return Task.FromResult<IViewComponentResult>(View("TotalZezor", ProductId));
+                }
+
                 int? soluong = CTHD.SoLuong;
                 var model = new QuantitySelector
             {
                 Soluong = soluong,
                 ProductId = ProductId,
-                DhId = DhId
+                DhId = DhId.Value
             };
-            
-                return View("QuantitySelector", model);  // số lượng lớn hơn = 1 thì gọi tới + -
+
+                return Task.FromResult<IViewComponentResult>(View("QuantitySelector", model));  // số lượng lớn hơn = 1 thì gọi tới + -
             }
             else
             {
-                return View("TotalZezor", ProductId); // nếu số lượng bằng 0 thì trở về dấu cộng
+                return Task.FromResult<IViewComponentResult>(View("TotalZezor", ProductId)); // nếu số lượng bằng 0 thì trở về dấu cộng
             }
 
         }

@@ -12,18 +12,28 @@ namespace WebQuanLyNhaHang.ViewModel
         
         public int CountProductDetail(int? DhId) // đếm số lượng món trong đơn hàng
         {
+            if (!DhId.HasValue)
+            {
+                return 0;
+            }
+
             // Sử dụng DhId từ donHang để tìm trong ChiTietHoaDons
             var slchiTietHoaDon = _context.ChiTietHoaDons
-                .Count(p => p.DhId == DhId && !p.Remove && !p.Dh.Remove);
+                .Count(p => p.DhId == DhId.Value && !p.Remove && p.Dh != null && !p.Dh.Remove);
 
             // Kiểm tra nếu chi tiết hóa đơn tồn tại
             return slchiTietHoaDon; //
         }
         public int CountProductDetail(int? DhId, int ProductId) // chức năng lọc productdetail này để phục vụ tăng giảm số lượng trang menu
         {
+            if (!DhId.HasValue)
+            {
+                return 0;
+            }
+
             // Sử dụng DhId từ donHang để tìm trong ChiTietHoaDons
             var slchiTietHoaDon = _context.ChiTietHoaDons
-                .Count(p => p.DhId == DhId && p.ProductId == ProductId && !p.Remove && !p.Dh.Remove);
+                .Count(p => p.DhId == DhId.Value && p.ProductId == ProductId && !p.Remove && p.Dh != null && !p.Dh.Remove);
 
             // Kiểm tra nếu chi tiết hóa đơn tồn tại
             return slchiTietHoaDon; //

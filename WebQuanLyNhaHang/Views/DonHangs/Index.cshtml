@@ -238,6 +238,10 @@
                                 <option value="pending">Chờ Xử Lý</option>
                                 <option value="processing">Đang Chế Biến</option>
                                 <option value="completed">Hoàn Thành</option>
+                                <option value="preparing">Dang chuan bi</option>
+                                <option value="shipping">Dang giao</option>
+                                <option value="delivered">Da giao</option>
+                                <option value="cancelled">Da huy</option>
                             </select>
                         </label>
 
@@ -296,7 +300,7 @@
                                                 <span class="order-status @item.StatusCssClass">@item.StatusLabel</span>
                                             </td>
                                             <td class="is-right" data-label="Chi Tiết">
-                                                <button class="order-detail-button" type="button" data-order-detail-url="@Url.Action("DetailsData", "DonHangs", new { id = item.OrderId })">
+                                                <button class="order-detail-button" type="button" data-order-detail-url="@Url.Action("DetailsDataV2", "DonHangs", new { id = item.OrderId })">
                                                     <svg viewBox="0 0 24 24" fill="none">
                                                         <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
                                                         <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
@@ -344,6 +348,8 @@
             </div>
 
             <div class="order-detail-content" data-detail-content hidden>
+                <div class="order-detail-status-actions" data-detail-status-actions hidden></div>
+
                 <div class="order-detail-summary">
                     <article>
                         <span>Khách hàng</span>

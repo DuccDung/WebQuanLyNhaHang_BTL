@@ -1,0 +1,134 @@
+@model WebQuanLyNhaHang.Models.KhachHang
+@{
+    Layout = "_CloudyCafeLayout";
+    ViewData["Title"] = "Thông tin tài khoản";
+
+    string PhotoUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        var value = path.Trim();
+        if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return value;
+        }
+
+        if (value.StartsWith("~/", StringComparison.OrdinalIgnoreCase))
+        {
+            return Url.Content(value);
+        }
+
+        return value.StartsWith("/")
+            ? value
+            : Url.Content($"~/{value}");
+    }
+
+    var displayName = string.IsNullOrWhiteSpace(Model.TenKhachHang) ? "Tài khoản của tôi" : Model.TenKhachHang.Trim();
+    var initial = displayName.Trim()[0].ToString().ToUpper();
+    var photoUrl = PhotoUrl(Model.PathPhoto);
+}
+
+<div class="profile-bg">
+    <div class="container profile-shell">
+        <a class="back-link" asp-controller="TrangChu" asp-action="Index">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m12 19-7-7 7-7"></path>
+                <path d="M19 12H5"></path>
+            </svg>
+            Quay về trang chủ
+        </a>
+
+        @if (TempData["success"] != null)
+        {
+            <div class="notice auth-message auth-message--success">@TempData["success"]</div>
+        }
+
+        <section class="profile-hero-card">
+            <div class="profile-cover"></div>
+            <div class="profile-main">
+                <div class="profile-avatar">
+                    @if (!string.IsNullOrWhiteSpace(photoUrl))
+                    {
+                        <img src="@photoUrl" alt="@displayName">
+                    }
+                    else
+                    {
+                        @initial
+                    }
+                </div>
+                <h1>@displayName</h1>
+                <p>@Model.TaiKhoan</p>
+            </div>
+        </section>
+
+        <section class="card card-pad profile-block">
+            <div class="card-head">
+                <h2>Thông tin tài khoản</h2>
+                <p>Cập nhật thông tin cá nhân và ảnh đại diện của bạn.</p>
+            </div>
+
+            <form class="form-grid account-form" asp-controller="Home" asp-action="Account" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="notice auth-message auth-message--error"></div>
+                }
+
+                <div class="account-form-grid">
+                    <label>
+                        <span class="form-label">Họ tên</span>
+                        <input class="input" asp-for="TenKhachHang" autocomplete="name" required>
+                        <span asp-validation-for="TenKhachHang" class="field-validation"></span>
+                    </label>
+
+                    <label>
+                        <span class="form-label">Email đăng nhập</span>
+                        <input class="input" asp-for="TaiKhoan" type="email" autocomplete="email" required>
+                        <span asp-validation-for="TaiKhoan" class="field-validation"></span>
+                    </label>
+
+                    <label>
+                        <span class="form-label">Số điện thoại</span>
+                        <input class="input" asp-for="SoDienThoai" autocomplete="tel">
+                    </label>
+
+                    <label>
+                        <span class="form-label">Mật khẩu mới</span>
+                        <input class="input" name="MatKhau" type="password" autocomplete="new-password" placeholder="Để trống nếu không đổi">
+                    </label>
+                </div>
+
+                <label>
+                    <span class="form-label">Địa chỉ</span>
+                    <textarea class="textarea" asp-for="DiaChi" rows="3"></textarea>
+                </label>
+
+                <div class="account-photo-grid">
+                    <label>
+                        <span class="form-label">Đường dẫn ảnh đại diện</span>
+                        <input class="input" asp-for="PathPhoto" placeholder="/uploads/customers/avatar.png">
+                    </label>
+
+                    <label>
+                        <span class="form-label">Hoặc tải ảnh mới</span>
+                        <input class="input" name="PhotoFile" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+                    </label>
+                </div>
+
+                <div class="account-actions">
+                    <a class="btn outline" asp-controller="TrangChu" asp-action="Index">Hủy</a>
+                    <button class="btn" type="submit">Lưu thay đổi</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

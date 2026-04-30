@@ -66,6 +66,28 @@ namespace WebQuanLyNhaHang.ViewModel
                 .Any(item => item.DhId == DhId.Value && !item.Remove && !item.Dh.Remove);
         }
 
+        public OnlineCheckoutForm BuildCheckoutForm(int? DhId, int? customerId)
+        {
+            var order = DhId.HasValue
+                ? _context.DonHangs.FirstOrDefault(item => item.DhId == DhId.Value && !item.Remove)
+                : null;
+            var metadata = order == null ? null : OnlineOrderMetadata.TryParse(order.GhiChu);
+            var customer = customerId.HasValue
+                ? _context.KhachHangs.FirstOrDefault(item => item.KhId == customerId.Value && !item.Remove)
+                : null;
+
+            return new OnlineCheckoutForm
+            {
+                HoTen = metadata?.RecipientName ?? customer?.TenKhachHang,
+                SoDienThoai = metadata?.Phone ?? customer?.SoDienThoai,
+                TinhThanh = metadata?.City,
+                QuanHuyen = metadata?.District,
+                PhuongXa = metadata?.Ward,
+                DiaChi = metadata?.AddressLine ?? customer?.DiaChi,
+                GhiChu = metadata?.Note
+            };
+        }
+
         private static DonHang EmptyCartOrder()
         {
             return new DonHang

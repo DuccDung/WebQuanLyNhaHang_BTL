@@ -160,11 +160,14 @@ public partial class QlnhaHangBtlContext : DbContext
             entity.Property(e => e.BanId).HasColumnName("Ban_ID");
             entity.Property(e => e.GioRa).HasColumnType("datetime");
             entity.Property(e => e.GioVao).HasColumnType("datetime");
+            entity.Property(e => e.GhiChu).HasMaxLength(500);
             entity.Property(e => e.KhId).HasColumnName("KH_ID");
             entity.Property(e => e.KmId).HasColumnName("KM_ID");
             entity.Property(e => e.NvId).HasColumnName("NV_ID");
             entity.Property(e => e.Remove).HasDefaultValue(false);
             entity.Property(e => e.TongTien).HasColumnType("money");
+            entity.Property(e => e.TrangThai);
+            entity.Property(e => e.VanChuyen);
 
             entity.HasOne(d => d.Ban).WithMany(p => p.DonHangs)
                 .HasForeignKey(d => d.BanId)

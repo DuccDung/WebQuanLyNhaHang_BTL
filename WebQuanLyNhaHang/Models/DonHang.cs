@@ -21,6 +21,12 @@ public partial class DonHang
 
     public int? NvId { get; set; }
 
+    public string? GhiChu { get; set; }
+
+    public bool? TrangThai { get; set; }
+
+    public bool? VanChuyen { get; set; }
+
     public virtual Ban? Ban { get; set; }
 
     public virtual ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; } = new List<ChiTietHoaDon>();

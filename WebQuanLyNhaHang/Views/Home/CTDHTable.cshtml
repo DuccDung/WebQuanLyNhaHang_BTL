@@ -1,4 +1,4 @@
-﻿@model WebQuanLyNhaHang.ViewModel.ViewModelCart
+@model WebQuanLyNhaHang.ViewModel.ViewModelCart
 @{
     int? DhId = Context.Session.GetInt32("DhId");
     int? BanId = Context.Session.GetInt32("BanId");
@@ -13,7 +13,7 @@
         <div class="cart-empty">
             <h2>Giỏ hàng đang trống</h2>
             <p>Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
-            <a asp-controller="TrangChu" asp-action="Menu">Xem menu</a>
+            <a asp-controller="Home" asp-action="Menu">Xem menu</a>
         </div>
     }
     else

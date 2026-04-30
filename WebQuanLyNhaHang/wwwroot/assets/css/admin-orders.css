@@ -327,6 +327,16 @@
   color: #155eef;
 }
 
+.order-status.is-shipping {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.order-status.is-cancelled {
+  background: #fee4e2;
+  color: #b42318;
+}
+
 .order-empty-row td {
   padding: 28px 16px;
   color: #667085;
@@ -436,6 +446,16 @@ body.is-order-detail-open {
   color: #c47800;
 }
 
+.order-detail-status.is-shipping {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.order-detail-status.is-cancelled {
+  background: #fee4e2;
+  color: #b42318;
+}
+
 .order-detail-header h2,
 .order-detail-header p,
 .order-detail-items h3 {
@@ -453,6 +473,35 @@ body.is-order-detail-open {
 .order-detail-header p {
   color: #667085;
   font-size: 14px;
+}
+
+.order-detail-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.order-detail-status-actions[hidden] {
+  display: none !important;
+}
+
+.order-detail-status-actions button {
+  min-height: 34px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #344054;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.order-detail-status-actions button.is-active {
+  border-color: #f7941e;
+  background: #fff7ed;
+  color: #c2410c;
 }
 
 .order-detail-loading {

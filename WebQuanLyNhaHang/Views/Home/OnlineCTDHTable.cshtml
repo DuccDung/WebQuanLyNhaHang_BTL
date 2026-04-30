@@ -1,0 +1,135 @@
+@model WebQuanLyNhaHang.ViewModel.ViewModelCart
+@{
+    int? DhId = ViewData["OnlineCartId"] is int onlineCartId
+        ? onlineCartId
+        : Context.Session.GetInt32("OnlineCartDhId");
+    int? customerId = Context.Session.GetInt32("CustomerID");
+    var cartItems = Model.CTHD_PctByDh(DhId);
+    var cartTotal = Model.TongtienById(DhId).TongTien ?? 0;
+    var checkout = Model.BuildCheckoutForm(DhId, customerId);
+    var hasCartItems = cartItems.Any();
+    var cartMessage = TempData["OnlineCartMessage"] as string ?? TempData["CartMessage"] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(cartMessage))
+{
+    <div class="cart-message">@cartMessage</div>
+}
+
+@if (!hasCartItems)
+{
+    <div class="cart-empty online-cart-empty">
+        <h2>Giỏ hàng đang trống</h2>
+        <p>Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
+        <a asp-controller="TrangChu" asp-action="Menu">Xem menu</a>
+    </div>
+}
+else
+{
+    <div class="online-cart-grid">
+        <section class="online-cart-card">
+            <div class="online-cart-card__head">
+                <h2>Các món đã chọn</h2>
+                <span>@cartItems.Count món</span>
+            </div>
+
+            <div class="online-cart-list">
+                @foreach (var item in cartItems)
+                {
+                    var optionLines = (item.Condition ?? string.Empty)
+                        .Replace("Trạng Thái:", "")
+                        .Replace("Ghi Chú:", ";")
+                        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                    <article class="online-cart-item">
+                        <div class="online-cart-item__image" style="background-image: url(@item.PathPhoto);"></div>
+                        <div class="online-cart-item__body">
+                            <div class="online-cart-item__title">
+                                <h3>@item.TenSanPham</h3>
+                                <strong>@String.Format("{0:N0}", item.ThanhTien)đ</strong>
+                            </div>
+
+                            @if (optionLines.Length > 0)
+                            {
+                                <ul class="online-cart-options">
+                                    @foreach (var option in optionLines)
+                                    {
+                                        <li>@option</li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                        <div class="online-cart-item__actions">
+                            <div class="online-cart-qty" aria-label="Số lượng">
+                                <span>-</span>
+                                <strong>@(item.SoLuong ?? 0)</strong>
+                                <span>+</span>
+                            </div>
+                            <button class="online-cart-remove js-online-remove" type="button" data-id="@item.CthdId">
+                                <i class="fa-regular fa-trash-can"></i>
+                                <span>Xóa</span>
+                            </button>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <div class="online-cart-total">
+                <span>Tổng tiền</span>
+                <strong>@String.Format("{0:N0}", cartTotal)đ</strong>
+            </div>
+        </section>
+
+        <section class="online-cart-card">
+            <div class="online-cart-card__head">
+                <h2>Thông tin nhận hàng</h2>
+                <span>Giao tận nơi</span>
+            </div>
+
+            <form class="online-checkout-form" asp-controller="Home" asp-action="CheckoutOnlineOrder" method="post">
+                @Html.AntiForgeryToken()
+
+                <label>
+                    <span>Họ tên</span>
+                    <input name="HoTen" value="@checkout.HoTen" autocomplete="name" required />
+                </label>
+
+                <label>
+                    <span>Số điện thoại</span>
+                    <input name="SoDienThoai" value="@checkout.SoDienThoai" autocomplete="tel" inputmode="tel" required />
+                </label>
+
+                <div class="online-form-row">
+                    <label>
+                        <span>Tỉnh/Thành phố</span>
+                        <input name="TinhThanh" value="@checkout.TinhThanh" placeholder="TP. Hồ Chí Minh" required />
+                    </label>
+                    <label>
+                        <span>Quận/Huyện</span>
+                        <input name="QuanHuyen" value="@checkout.QuanHuyen" placeholder="Quận 1" required />
+                    </label>
+                </div>
+
+                <label>
+                    <span>Phường/Xã</span>
+                    <input name="PhuongXa" value="@checkout.PhuongXa" placeholder="Phường Bến Nghé" />
+                </label>
+
+                <label>
+                    <span>Địa chỉ cụ thể</span>
+                    <input name="DiaChi" value="@checkout.DiaChi" placeholder="Số nhà, tên đường" required />
+                </label>
+
+                <label>
+                    <span>Ghi chú giao hàng</span>
+                    <textarea name="GhiChu" rows="3" placeholder="Ví dụ: gọi trước khi giao">@checkout.GhiChu</textarea>
+                </label>
+
+                <button class="online-checkout-button" type="submit">
+                    <span>Đặt hàng</span>
+                    <strong>@String.Format("{0:N0}", cartTotal)đ</strong>
+                </button>
+            </form>
+        </section>
+    </div>
+}

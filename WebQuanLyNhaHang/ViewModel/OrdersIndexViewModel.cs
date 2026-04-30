@@ -16,9 +16,14 @@ public class OrdersIndexViewModel
 
     public int PendingOrders => Orders.Count(order => order.StatusKey == "pending");
 
-    public int ProcessingOrders => Orders.Count(order => order.StatusKey == "processing");
+    public int ProcessingOrders => Orders.Count(order =>
+        order.StatusKey == "processing" ||
+        order.StatusKey == "preparing" ||
+        order.StatusKey == "shipping");
 
-    public int CompletedOrders => Orders.Count(order => order.StatusKey == "completed");
+    public int CompletedOrders => Orders.Count(order =>
+        order.StatusKey == "completed" ||
+        order.StatusKey == "delivered");
 }
 
 public class OrderIndexRowViewModel

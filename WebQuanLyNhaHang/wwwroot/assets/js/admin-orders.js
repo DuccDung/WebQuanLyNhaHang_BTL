@@ -218,6 +218,7 @@
     const error = modal.querySelector("[data-detail-error]");
     const content = modal.querySelector("[data-detail-content]");
     const status = modal.querySelector("[data-detail-status]");
+    const statusActions = modal.querySelector("[data-detail-status-actions]");
     const itemsBody = modal.querySelector("[data-detail-items]");
     const firstCloseButton = modal.querySelector(".order-detail-close");
 
@@ -310,6 +311,7 @@
       const items = Array.isArray(data.items) ? data.items : [];
       setText("[data-detail-item-count]", `${items.length} món`);
       renderLineItems(items);
+      renderStatusActions(data);
     }
 
     function renderLineItems(items) {
@@ -351,6 +353,66 @@
         );
 
         itemsBody.appendChild(row);
+      });
+    }
+
+    function renderStatusActions(data) {
+      if (!statusActions) {
+        return;
+      }
+
+      const options = Array.isArray(data.statusOptions) ? data.statusOptions : [];
+      statusActions.textContent = "";
+      statusActions.hidden = !data.updateStatusUrl || !options.length;
+
+      if (statusActions.hidden) {
+        return;
+      }
+
+      options.forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = option.label || option.value;
+        button.dataset.deliveryStatus = option.value || "";
+        button.className = option.value === data.statusKey ? "is-active" : "";
+
+        button.addEventListener("click", async () => {
+          const nextStatus = button.dataset.deliveryStatus;
+          if (!nextStatus) {
+            return;
+          }
+
+          button.disabled = true;
+          try {
+            const formData = new FormData();
+            formData.append("status", nextStatus);
+            const response = await fetch(data.updateStatusUrl, {
+              method: "POST",
+              body: formData,
+              headers: { "Accept": "application/json" }
+            });
+
+            if (!response.ok) {
+              throw new Error("Khong cap nhat duoc trang thai.");
+            }
+
+            const result = await response.json();
+            data.statusKey = result.statusKey;
+            data.statusLabel = result.statusLabel;
+            data.statusCssClass = result.statusCssClass;
+
+            if (status) {
+              status.textContent = result.statusLabel;
+              status.className = `order-detail-status ${result.statusCssClass || "is-pending"}`;
+            }
+
+            renderStatusActions(data);
+          } catch (err) {
+            button.disabled = false;
+          }
+        });
+
+        statusActions.appendChild(button);
       });
     }
 
