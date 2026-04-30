@@ -12,6 +12,11 @@ namespace WebQuanLyNhaHang.ViewModel
         }
         public List<CTDH_Product> CTHD_PctByDh(int? DhId) // Lấy Ctdh và product join và tìm kiếm nó theo đơn hàng; để phục vụ cart
         {
+            if (!DhId.HasValue)
+            {
+                return new List<CTDH_Product>();
+            }
+
             var result = from CTHD in _context.ChiTietHoaDons
                          join product in _context.Products
                          on CTHD.ProductId equals product.ProductId
@@ -39,15 +44,34 @@ namespace WebQuanLyNhaHang.ViewModel
 
         public DonHang TongtienById(int? DhId)
         {
+            if (!DhId.HasValue)
+            {
+                return EmptyCartOrder();
+            }
+
             var result = _context.DonHangs.FirstOrDefault(item => item.DhId == DhId && !item.Remove);
             if (result == null) {
-                throw new Exception("Lỗi Không tìm thấy đơn hàng bởi DhId tại ViewModelCart");
+                return EmptyCartOrder();
             }
             if(result.TongTien == null)
             {
                 result.TongTien = 0;
             }
             return result;
+        }
+
+        public bool HasOrderItems(int? DhId)
+        {
+            return DhId.HasValue && _context.ChiTietHoaDons
+                .Any(item => item.DhId == DhId.Value && !item.Remove && !item.Dh.Remove);
+        }
+
+        private static DonHang EmptyCartOrder()
+        {
+            return new DonHang
+            {
+                TongTien = 0
+            };
         }
     }
 }

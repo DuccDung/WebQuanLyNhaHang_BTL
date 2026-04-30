@@ -1,0 +1,137 @@
+@{
+    var activeNav = ViewData["ActiveNav"] as string ?? string.Empty;
+    var pageTitle = ViewData["Title"] as string ?? "Cloudy Café";
+
+    string Active(string key)
+    {
+        return string.Equals(activeNav, key, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+    }
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@pageTitle</title>
+    <meta name="description" content="Website Cloudy Café dùng HTML và CSS thuần.">
+    <link rel="stylesheet" href="~/cloudycafe/css/styles.css" asp-append-version="true">
+</head>
+<body>
+    <div class="site-shell">
+        <header class="header">
+            <div class="top-strip">
+                <div class="container">
+                    <span class="icon-text">
+                        <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        101 Cửa hàng khắp cả nước
+                    </span>
+                    <span class="icon-text">
+                        <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.3 19.3 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"></path></svg>
+                        Đặt hàng: 1800.6936
+                    </span>
+                    <span class="icon-text">
+                        <svg class="ui-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 19h11a4.5 4.5 0 0 0 .4-9 6.5 6.5 0 0 0-12.3-2A5.5 5.5 0 0 0 6.5 19Z"></path></svg>
+                        Cloudy Café
+                    </span>
+                </div>
+            </div>
+
+            <div class="container main-bar">
+                <details class="mobile-nav">
+                    <summary class="icon-button mobile-menu-button" aria-label="Mở menu">
+                        <svg class="ui-icon lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
+                    </summary>
+                    <div class="mobile-panel">
+                        <a href="/TrangChu/DoUong">Đồ uống</a>
+                        <a href="/TrangChu/Banh">Bánh</a>
+                        <a href="/TrangChu/Menu">Menu</a>
+                        <a href="/TrangChu/ChuyenNha">Chuyện Nhà</a>
+                        <a href="/TrangChu/CuaHang">Cửa Hàng</a>
+                    </div>
+                </details>
+
+                <a href="/TrangChu" class="logo">Cloudy <span>Café</span></a>
+
+                <nav class="nav" aria-label="Điều hướng chính">
+                    <a href="/TrangChu/DoUong" class="@Active("DoUong")">Đồ uống</a>
+                    <a href="/TrangChu/Banh" class="@Active("Banh")">Bánh</a>
+                    <a href="/TrangChu/Menu" class="@Active("Menu")">Menu</a>
+                    <a href="/TrangChu/ChuyenNha" class="@Active("ChuyenNha")">Chuyện Nhà</a>
+                    <a href="/TrangChu/CuaHang" class="@Active("CuaHang")">Cửa Hàng</a>
+                </nav>
+
+                <div class="header-actions">
+                    <a class="icon-button" href="/TrangChu/Menu" aria-label="Tìm kiếm">
+                        <svg class="ui-icon lg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+                    </a>
+                    <a class="icon-button" href="/TrangChu" aria-label="Tài khoản">
+                        <svg class="ui-icon lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </a>
+                    <a class="cart-link" href="/Home/Cart">
+                        <span class="cart-icon-wrap">
+                            <svg class="ui-icon lg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 6H6"></path></svg>
+                            <span class="cart-count">4</span>
+                        </span>
+                        <span class="label">Giỏ hàng</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main tabindex="-1">
+            @RenderBody()
+        </main>
+
+        <footer id="footer" class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div>
+                        <h3>Về Chúng Tôi</h3>
+                        <ul>
+                            <li><a href="/TrangChu/Menu">Sản phẩm</a></li>
+                            <li><a href="/TrangChu/Menu">Khuyến mãi</a></li>
+                            <li><a href="/TrangChu/ChuyenNha">Chuyện cà phê</a></li>
+                            <li><a href="/TrangChu/CuaHang">Cửa hàng</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Điều khoản</h3>
+                        <ul>
+                            <li><a href="/TrangChu">Điều khoản sử dụng</a></li>
+                            <li><a href="/TrangChu">Chính sách bảo mật thông tin</a></li>
+                            <li><a href="/TrangChu">Hướng dẫn thanh toán</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Liên hệ</h3>
+                        <ul>
+                            <li>
+                                <span class="icon-text">
+                                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.3 19.3 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"></path></svg>
+                                    <span>Đặt hàng: <strong>1800 6936</strong><br>(Miễn phí cước gọi)</span>
+                                </span>
+                            </li>
+                            <li>
+                                <span class="icon-text">
+                                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                    <span>137 Chùa Láng, Láng Thượng,<br>Đống Đa, Hà Nội, Việt Nam</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="footer-card">
+                        <div>
+                            <h2>Cloudy Café</h2>
+                            <p>Thưởng thức từng giọt tinh hoa.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© 2026 Cloudy Café. All rights reserved.</span>
+                    <span>Phiên bản HTML/CSS thuần cho đề tài F&amp;B E-commerce.</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

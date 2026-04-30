@@ -103,26 +103,44 @@ namespace WebQuanLyNhaHang.Controllers
             return View(product);
         }
         [HttpPost]  // Đón dữ liệu từ chi tiết hóa đơn gửi lên
-        public IActionResult CreateProductDetail(int soluong , int productid , string condition , string ghichu) // Thêm CTHD 
+        public IActionResult CreateProductDetail(int soluong, int productid, string? condition, string? ghichu, string? returnUrl) // Thêm CTHD 
         {
             int? banId = HttpContext.Session.GetInt32("BanId"); // lấy dữ liệu ID bàn từ Sesion
             int? DhId = HttpContext.Session.GetInt32("DhId");
             var DH = _qlnhaHangBtlContext.DonHangs.Where(e => e.DhId == DhId && !e.Remove).FirstOrDefault(); // lấy ra đơn hàng Từ cái bàn đó
-        
-            if(DH != null) // TH: Bàn đã Có đơn hàngn (thì ta tạo Thêm chi tiết hóa đơn)
+
+            if (DH == null)
             {
-                _qlnhaHangBtlContext.ChiTietHoaDons.Add(new ChiTietHoaDon {
-                    DhId = DH.DhId, // mã đơn hàng của bàn đó
-                    ProductId = productid, // mã sản phẩm vừa thêm
-                    Ghichu ="Trạng Thái: "+condition+" Ghi Chú: "+ghichu, // ghi chú
-                    SoLuong = soluong, //số Lượng 
-                });
+                DH = new DonHang
+                {
+                    GioRa = DateTime.Now,
+                    KhId = HttpContext.Session.GetInt32("CustomerID")
+                };
+
+                _qlnhaHangBtlContext.DonHangs.Add(DH);
                 _qlnhaHangBtlContext.SaveChanges();
+                HttpContext.Session.SetInt32("DhId", DH.DhId);
             }
-            else
+
+            var note = string.Join(" ", new[]
             {
-                throw new Exception("Lỗi Tại trang Home/Create");
+                string.IsNullOrWhiteSpace(condition) ? null : $"Trạng Thái: {condition}",
+                string.IsNullOrWhiteSpace(ghichu) ? null : $"Ghi Chú: {ghichu}"
+            }.Where(item => item != null));
+
+            _qlnhaHangBtlContext.ChiTietHoaDons.Add(new ChiTietHoaDon {
+                DhId = DH.DhId, // mã đơn hàng của bàn đó
+                ProductId = productid, // mã sản phẩm vừa thêm
+                Ghichu = note, // ghi chú
+                SoLuong = Math.Max(1, soluong), //số Lượng 
+            });
+            _qlnhaHangBtlContext.SaveChanges();
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
             }
+
             return RedirectToAction("Menu" , "Home"); // trở lại trang menu
         }
 
@@ -139,11 +157,29 @@ namespace WebQuanLyNhaHang.Controllers
             int? banId = HttpContext.Session.GetInt32("BanId"); // lấy dữ liệu ID bàn từ Sesion
             int? DhId = HttpContext.Session.GetInt32("DhId");
 
+            if (!DhId.HasValue)
+            {
+                TempData["CartMessage"] = "Giỏ hàng của bạn đang trống. Vui lòng chọn món trước khi gửi yêu cầu.";
+                return RedirectToAction("Cart", "Home");
+            }
+
             var DH = _qlnhaHangBtlContext.DonHangs.FirstOrDefault(e => e.DhId == DhId && !e.Remove);
             if (DH == null)
             {
-                throw new Exception("Lỗi Không tìm thấy đơn hàng khi xác nhận đặt món");
+                HttpContext.Session.Remove("DhId");
+                TempData["CartMessage"] = "Không tìm thấy giỏ hàng hiện tại. Vui lòng chọn món lại.";
+                return RedirectToAction("Cart", "Home");
             }
+
+            var hasItems = _qlnhaHangBtlContext.ChiTietHoaDons
+                .Any(item => item.DhId == DH.DhId && !item.Remove);
+
+            if (!hasItems)
+            {
+                TempData["CartMessage"] = "Giỏ hàng của bạn đang trống. Vui lòng chọn món trước khi gửi yêu cầu.";
+                return RedirectToAction("Cart", "Home");
+            }
+
             DH.BanId = banId; 
             _qlnhaHangBtlContext.SaveChanges();
             //dùng phương thức của signalR để nhận biết sự thay đổi của database khi client đặt đơn hàng
@@ -169,13 +205,14 @@ namespace WebQuanLyNhaHang.Controllers
                 //dùng phương thức của signalR để nhận biết sự thay đổi của database
                 _hubContext.Clients.All.SendAsync("DatabaseUpdated");
                 // Trả về partial view với viewModel
-                return NoContent();
+                ViewModelCart viewModelCart = new ViewModelCart(_qlnhaHangBtlContext);
+                return PartialView("CTDHTable", viewModelCart);
             }
             else
             {
-                throw new Exception("Lỗi xóa CTDH trong Cart");
+                return NotFound();
             }
-;        }
+        }
 
         public IActionResult GetCTHD() // id của cthd 
         {

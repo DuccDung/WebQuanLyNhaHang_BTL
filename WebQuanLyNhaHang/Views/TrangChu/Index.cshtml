@@ -1,568 +1,161 @@
-﻿@{
-    Layout = "HeaderFooter_TrangChu";
-}
-<style>
-    body {
-    font-family: 'Roboto', sans-serif;
-    margin-bottom: 0;
-}
+@using System.Text.Encodings.Web
+@using System.Text.Json
+@model IReadOnlyList<WebQuanLyNhaHang.Models.Product>
+@{
+    Layout = "_CloudyCafeLayout";
+    ViewData["Title"] = "Cloudy Café";
 
+    var featuredProducts = Model ?? Array.Empty<WebQuanLyNhaHang.Models.Product>();
+    string ProductImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400";
+        }
 
-.item_center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-a {
-    text-decoration: none;
-    color: #191919;
-    -o-transition: .5s;
-    -ms-transition: .5s;
-    -moz-transition: .5s;
-    -webkit-transition: .5s;
-    transition: .5s;
-}
-
-ul {
-    padding: 0;
-}
-
-/* ========================== */
-/* ============ bannar_home =======*/
-.banner_home {
-    width: 100%;
-    position: relative;
-    top: -59px;
-}
-
-.owl-carousel .banner {
-    display: block;
-    width: 100%;
-    position: relative;
-}
-
-.aspect-ratio {
-    position: relative;
-    width: 100%;
-    padding-top: 30.5%;
-    /* Tỉ lệ 16:9 */
-}
-
-    .aspect-ratio img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        return path.StartsWith("http", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/")
+            ? path
+            : $"/{path}";
     }
 
-.header__menu {
-    border-bottom: 1px solid #00000026;
-    background: rgba(255, 255, 255, 0.8);
-    height: 60px;
-    width: 100%;
-    position: sticky;
-    top: -1;
-    z-index: 999;
+    var productModalData = featuredProducts.Select(product =>
+    {
+        var conditions = product.ProductConditions
+            .Where(condition => !condition.Remove && !string.IsNullOrWhiteSpace(condition.Condition))
+            .Select(condition => condition.Condition!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(condition => condition.Equals("Đá", StringComparison.OrdinalIgnoreCase) ? 0 :
+                condition.Equals("Nóng", StringComparison.OrdinalIgnoreCase) ? 1 : 2)
+            .ToList();
+
+        if (conditions.Count == 0)
+        {
+            conditions.AddRange(new[] { "Đá", "Nóng" });
+        }
+
+        return new
+        {
+            id = product.ProductId,
+            name = product.TenSanPham ?? "Sản phẩm",
+            description = product.MoTa ?? "Thức uống được chuẩn bị theo lựa chọn của bạn.",
+            price = product.GiaTien ?? 0,
+            image = ProductImage(product.PathPhoto),
+            conditions
+        };
+    });
+
+    var productModalJson = JsonSerializer.Serialize(productModalData, new JsonSerializerOptions
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    });
 }
 
-.header_nav {
-    display: flex;
-}
-
-.header_menu > ul {
-    padding: 0;
-    margin: 0;
-    display: flex;
-}
-
-.svg-logo {
-    height: 55px;
-    fill: #fff;
-    padding-top: 5px;
-    width: 200px;
-}
-
-.clearfix {
-    display: flex;
-    margin-left: 100px;
-}
-
-    .clearfix li {
-        list-style-type: none;
-        padding: 19px 16px 19px;
-    }
-
-/* Ẩn submenu theo mặc định */
-.has_child .submenu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-}
-
-/* Hiển thị submenu khi di chuột vào mục cha */
-.has_child:hover .submenu {
-    display: block;
-    display: block;
-    color: #000;
-    font-size: 14px;
-    line-height: 22px;
-    font-weight: 600;
-    font-family: 'SF Pro Text', sans-serif;
-}
-
-.clearfix a {
-    display: block;
-    color: #000;
-    font-size: 14px;
-    line-height: 22px;
-    font-weight: 600;
-    font-family: system-ui;
-}
-
-.owl-nav {
-    display: none;
-}
-
-/* =========== menu home ========================== */
-.menu_home {
-    margin-top: -20px;
-}
-
-.menu_item {
-    margin-top: 19px;
-}
-
-    .menu_item img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-
-.menu_item_image {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-.menu_item_image {
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0px 0px 13px 0px #00000040;
-    margin: 5px;
-}
-
-.menu_item_info > h3 a {
-    font-size: 1rem;
-}
-
-.price_product_item {
-    color: #514c4c;
-    font-size: 0.9rem;
-}
-
-/* blog */
-.background-tea {
-    background-image: url(./asset/img/imgWeb/background.webp);
-}
-
-.cloudtea {
-    margin-top: 50px;
-}
-
-.cloudtea-btn3 {
-    display: block;
-    max-width: 587px;
-    background: #778B37;
-    text-align: center;
-    font-size: 16px;
-    line-height: 40px;
-    padding: 0 15px;
-    font-weight: 600;
-    border-radius: 8px;
-    color: #fff;
-    margin-top: 15px;
-}
-
-/* blog hỏme */
-.blog_home {
-    background: #FFF7E6;
-}
-
-.title_blog a {
-    font-size: 18px;
-    margin: 8px 0;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    display: -webkit-box;
-    height: 25px;
-}
-
-.title_blog {
-    font-size: 18px;
-    margin: 8px 0;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    display: -webkit-box;
-    height: 25px;
-}
-
-.article_item_image img {
-    width: 88%;
-    border-radius: 9px;
-    box-shadow: 0px 0px 13px 0px #00000040;
-    height: 150px;
-}
-
-.article_published_at {
-    color: #8d8787;
-}
-
-
-</style>
-
-<div>
-
-    <section class="banner_home">
-        <div class="owl-carousel">
-            <!-- Slide 1 -->
-            <a href="https://order.thecoffeehouse.com/giaohangtoanquoc" class="banner">
-                <div class="aspect-ratio">
-                    <picture>
-                        <source media="(max-width: 767px)"
-                                srcset="https://file.hstatic.net/1000075078/file/web_moi_-_mobile_ec4ecea680674764a70cd3fa8c3e41da.jpg">
-                        <source media="(min-width: 768px)"
-                                srcset="https://file.hstatic.net/1000075078/file/web_moi_-_desktop_945bb18b1a18460fb9faa64e72fea441.jpg">
-                        <img alt="50%"
-                             src="https://file.hstatic.net/1000075078/file/web_moi_-_desktop_945bb18b1a18460fb9faa64e72fea441.jpg">
-                    </picture>
-                </div>
-            </a>
-
-            <!-- Slide 2 -->
-            <a href="https://thecoffeehouse.com/collections/all" class="banner">
-                <div class="aspect-ratio">
-                    <picture>
-                        <source media="(max-width: 767px)"
-                                srcset="https://file.hstatic.net/1000075078/file/web-moi---mobile.jpg">
-                        <source media="(min-width: 768px)"
-                                srcset="https://file.hstatic.net/1000075078/file/web-moi---desktop.jpg">
-                        <img alt="TUNGBUNG" src="https://file.hstatic.net/1000075078/file/web-moi---desktop.jpg">
-                    </picture>
-                </div>
-            </a>
-
-            <!-- Slide 3 -->
-            <a href="https://thecoffeehouse.com/collections/all" class="banner">
-                <div class="aspect-ratio">
-                    <picture>
-                        <source media="(max-width: 767px)" srcset="">
-                        <source media="(min-width: 768px)"
-                                srcset="https://file.hstatic.net/1000075078/file/web_moi_-_desktop_2683cc176d1b43409b10140e46548999.jpg">
-                        <img alt="CPG 20%"
-                             src="https://file.hstatic.net/1000075078/file/web_moi_-_desktop_2683cc176d1b43409b10140e46548999.jpg">
-                    </picture>
-                </div>
-            </a>
-
-            <!-- Additional slides can be added similarly -->
-        </div>
-    </section>
-
-    <section class="menu_home">
-        <div class="container">
-            <div class="row">
-                <!-- Banner Item -->
-                <div class="menu_item menu_banner col-lg-6">
-                    <div class="menu_item_image">
-                        <img src="https://file.hstatic.net/1000075078/file/banner_app.jpg" alt="Bơ">
-                    </div>
-                </div>
-
-                <!-- Menu Item 1 -->
-                <div class="menu_item col-lg-3">
-                    <div class="menu_item_image">
-                        <img src="//product.hstatic.net/1000075078/product/1719929441_bo-sua-pmt_77e27a929b5340e5bc7b83bb1963f0eb_large.jpg"
-                             alt="bo sua pho mai tuoi">
-                    </div>
-                    <div class="menu_item_info">
-                        <h3>
-                            <a href="/products/bo-sua-pho-mai-tuoi" title="Bơ Sữa Phô Mai Tươi">
-                                Bơ Sữa Phô Mai
-                                Tươi
-                            </a>
-                        </h3>
-                        <div class="price_product_item">55.000 đ</div>
-                    </div>
-                </div>
-
-                <!-- Menu Item 2 -->
-                <div class="menu_item col-lg-3">
-                    <div class="menu_item_image">
-                        <img src="//product.hstatic.net/1000075078/product/1717387639_dau-pho-mai_de092bfb88614bf1bfe9bd9defc6522f_large.jpg"
-                             alt="dau pho mai tuoi">
-                    </div>
-                    <div class="menu_item_info">
-                        <h3><a href="/products/dau-pho-mai-tuoi" title="Dâu Phô Mai Tươi">Dâu Phô Mai Tươi</a></h3>
-                        <div class="price_product_item">55.000 đ</div>
-                    </div>
-                </div>
-
-                <!-- Menu Item 3 -->
-                <div class="menu_item col-lg-3">
-                    <div class="menu_item_image">
-                        <img src="//product.hstatic.net/1000075078/product/1669736893_hi-tea-vai_c3b8cee83ee248a9b4415c0115bf82ea_large.png"
-                             alt="hi tea vai">
-                    </div>
-                    <div class="menu_item_info">
-                        <h3><a href="/products/hi-tea-vai" title="Hi-Tea Vải">Hi-Tea Vải</a></h3>
-                        <div class="price_product_item">49.000 đ</div>
-                    </div>
-                </div>
-
-                <!-- Menu Item 4 -->
-                <div class="menu_item col-lg-3">
-                    <div class="menu_item_image">
-                        <img src="//product.hstatic.net/1000075078/product/1669736835_ca-phe-sua-da_e6168b6a38ec45d2b4854d2708b5d542_large.png"
-                             alt="ca phe sua da">
-                    </div>
-                    <div class="menu_item_info">
-                        <h3><a href="/products/ca-phe-sua-da" title="Cà Phê Sữa Đá">Cà Phê Sữa Đá</a></h3>
-                        <div class="price_product_item">29.000 đ</div>
-                    </div>
-                </div>
-
-                <!-- Menu Item 5 -->
-                <div class="menu_item col-lg-3">
-                    <div class="menu_item_image">
-                        <img src="//product.hstatic.net/1000075078/product/1709023492_com-chien-hai-san_ca6d44d38e3f4a6bb5e1ece33e67c2c7_large.jpg"
-                             alt="com chien hai san">
-                    </div>
-                    <div class="menu_item_info">
-                        <h3>
-                            <a href="/products/com-chien-hai-san" title="Cơm Chiên Hải Sản">Cơm Chiên Hải Sản</a>
-                        </h3>
-                        <div class="price_product_item">49.000 đ</div>
-                    </div>
-                </div>
-
-                <!-- Menu Item 6 -->
-                <div class="menu_item col-lg-3">
-                    <div class="menu_item_image">
-                        <img src="//product.hstatic.net/1000075078/product/1655348107_mochi-choco_c4f40cb98ee742f6b36f78d037baaf0b_large.jpg"
-                             alt="mochi kem chocolate">
-                    </div>
-                    <div class="menu_item_info">
-                        <h3>
-                            <a href="/products/mochi-kem-chocolate" title="Mochi Kem Chocolate">
-                                Mochi Kem
-                                Chocolate
-                            </a>
-                        </h3>
-                        <div class="price_product_item">19.000 đ</div>
-                    </div>
-                </div>
+<section class="hero">
+    <img src="https://images.unsplash.com/photo-1702748580634-29a3969e9274?crop=entropy&amp;cs=tinysrgb&amp;fit=max&amp;fm=jpg&amp;q=80&amp;w=1400" alt="Cà phê và bánh sừng bò buổi sáng">
+    <div class="hero-content">
+        <div class="container hero-copy">
+            <h1>Bắt đầu<br>ngày mới</h1>
+            <h2>Tràn đầy<br>năng lượng</h2>
+            <p>Thưởng thức ly cà phê đậm đà cùng chiếc bánh sừng bò giòn rụm trong không gian buổi sáng ấm áp tại Cloudy Café.</p>
+            <div class="hero-actions">
+                <a class="btn" href="/TrangChu/Menu">Đặt hàng ngay</a>
+                <a class="btn white" href="/TrangChu/CuaHang">Tìm cửa hàng</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
+<section class="content-section large">
+    <div class="container">
+        <div class="section-title">
+            <h2>Sản phẩm nổi bật</h2>
+            <div class="accent-line"></div>
+            <p>Thử ngay những món ngon được nhiều người yêu thích nhất tại Cloudy Café</p>
+        </div>
 
-    <section class="cloudtea index">
-        <div class="cloudtea-block right">
-            <div class="container ">
-                <div class="row background-tea d-flex align-items-center justify-content-start">
-                    <div class="col-md-6"></div>
-                    <!-- Thông tin mô tả trà -->
-                    <div class="col-md-6 info-block">
-                        <div class="img-title">
-                            <img src="https://file.hstatic.net/1000075078/file/tagline__1__1_378410beecb347f38cf8425ef7459690.png"
-                                 alt="123123">
+        <div class="product-grid">
+            @foreach (var product in featuredProducts)
+            {
+                <article class="product-card js-product-card" data-product-id="@product.ProductId">
+                    @if (product == featuredProducts.FirstOrDefault())
+                    {
+                        <span class="new-badge">Hot</span>
+                    }
+                    <div class="product-image">
+                        <img src="@ProductImage(product.PathPhoto)" alt="@product.TenSanPham" loading="lazy">
+                    </div>
+                    <div class="product-body">
+                        <h3 class="product-name">
+                            <button class="product-name-button js-open-product-modal" type="button" data-product-id="@product.ProductId">@product.TenSanPham</button>
+                        </h3>
+                        <div class="product-bottom">
+                            <span class="price">@String.Format("{0:N0}", product.GiaTien)đ</span>
+                            <button class="btn square js-open-product-modal" type="button" data-product-id="@product.ProductId" aria-label="Đặt @product.TenSanPham">
+                                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                            </button>
                         </div>
-                        <div class="cloudtea-desc" style="margin-top: 15px;">
-                            Được trồng trọt và chăm chút kỹ lưỡng, nuôi dưỡng từ thổ nhưỡng phì nhiêu, nguồn nước mát
-                            lành, bao bọc bởi mây và sương cùng nền nhiệt độ mát mẻ quanh năm, những búp trà ở Tây Bắc
-                            mập mạp và xanh mướt, hội tụ đầy đủ dưỡng chất, sinh khí, và tinh hoa đất trời.
-                            Chính khí hậu đặc trưng cùng phương pháp canh tác của đồng bào dân tộc nơi đây đã tạo ra Trà
-                            Xanh vị mộc dễ uống, dễ yêu, không thể trộn lẫn với bất kỳ vùng miền nào khác.
-                        </div>
-                        <a class="cloudtea-btn3" href="https://order.thecoffeehouse.com/tra-xanh-tay-bac"
-                           target="_blank" title="Thử ngay">
-                            Thử ngay
-                        </a>
                     </div>
-
-
-
-                </div>
-            </div>
+                </article>
+            }
         </div>
-    </section>
 
-    <section class="blog_home">
-        <div class="container">
-            <div class="clearfix"></div>
-
-            <!-- Tiêu đề blog -->
-            <h2 class="blog_home_title text-center">
-                <img src="https://file.hstatic.net/1000075078/file/coffee-2_2_92db24958ff14ac4b4249b3256f7a415.png"
-                     alt="Coffee Icon">
-                Chuyện Nhà
-            </h2>
-
-            <!-- Danh mục Coffeeholic -->
-            <h3 class="blog_home_blogtitle">
-                <a href="/blogs/coffeeholic">Coffeeholic</a>
-            </h3>
-
-            <!-- Danh sách bài viết Coffeeholic -->
-            <div class="row blog_lists">
-                <div class="col-md-4 blog_item">
-                    <a class="article_item_image"
-                       href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre"
-                       title="BẮT GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ">
-                        <img src="/asset/img/imgWeb/item-blog-1.jpg" alt="">
-                    </a>
-                    <div class="article_item_info">
-                        <div class="article_published_at"><span>01/11/2023</span></div>
-                        <h3 class="title_blog">
-                            <a href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre">
-                                BẮT
-                                GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ
-                            </a>
-                        </h3>
-                        <p>
-                            Dẫu qua bao nhiêu lớp sóng thời gian, người ta vẫn có thể tìm lại những dấu ấn thăng trầm của
-                            một Sài Gòn xưa cũ...
-                        </p>
-                    </div>
-                </div>
-
-                <div class="col-md-4 blog_item">
-                    <a class="article_item_image"
-                       href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre"
-                       title="BẮT GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ">
-                        <img src="/asset/img/imgWeb/item-blog-2.jpg" alt="">
-                    </a>
-                    <div class="article_item_info">
-                        <div class="article_published_at"><span>01/11/2023</span></div>
-                        <h3 class="title_blog">
-                            <a href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre">
-                                BẮT
-                                GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ
-                            </a>
-                        </h3>
-                        <p>
-                            Dẫu qua bao nhiêu lớp sóng thời gian, người ta vẫn có thể tìm lại những dấu ấn thăng trầm của
-                            một Sài Gòn xưa cũ...
-                        </p>
-                    </div>
-                </div>
-
-                <div class="col-md-4 blog_item">
-                    <a class="article_item_image"
-                       href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre"
-                       title="BẮT GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ">
-                        <img src="/asset/img/imgWeb/item-blog-3.jpg" alt="">
-                    </a>
-                    <div class="article_item_info">
-                        <div class="article_published_at"><span>01/11/2023</span></div>
-                        <h3 class="title_blog">
-                            <a href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre">
-                                BẮT
-                                GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ
-                            </a>
-                        </h3>
-                        <p>
-                            Dẫu qua bao nhiêu lớp sóng thời gian, người ta vẫn có thể tìm lại những dấu ấn thăng trầm của
-                            một Sài Gòn xưa cũ...
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tiêu đề Teaholic -->
-
-            <h3 class="blog_home_blogtitle mt-5">
-                <a href="/blogs/teaholic">Teaholic</a>
-            </h3>
-
-            <!-- Danh sách bài viết Teaholic -->
-            <div class="row blog_lists">
-                <div class="col-md-4 blog_item">
-                    <a class="article_item_image"
-                       href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre"
-                       title="BẮT GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ">
-                        <img src="/asset/img/imgWeb/item-blog-4.jpg" alt="">
-                    </a>
-                    <div class="article_item_info">
-                        <div class="article_published_at"><span>01/11/2023</span></div>
-                        <h3 class="title_blog">
-                            <a href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre">
-                                BẮT
-                                GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ
-                            </a>
-                        </h3>
-                        <p>
-                            Dẫu qua bao nhiêu lớp sóng thời gian, người ta vẫn có thể tìm lại những dấu ấn thăng trầm của
-                            một Sài Gòn xưa cũ...
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-4 blog_item">
-                    <a class="article_item_image"
-                       href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre"
-                       title="BẮT GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ">
-                        <img src="/asset/img/imgWeb/item-blog-5.jpg" alt="">
-                    </a>
-                    <div class="article_item_info">
-                        <div class="article_published_at"><span>01/11/2023</span></div>
-                        <h3 class="title_blog">
-                            <a href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre">
-                                BẮT
-                                GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ
-                            </a>
-                        </h3>
-                        <p>
-                            Dẫu qua bao nhiêu lớp sóng thời gian, người ta vẫn có thể tìm lại những dấu ấn thăng trầm của
-                            một Sài Gòn xưa cũ...
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-4 blog_item">
-                    <a class="article_item_image"
-                       href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre"
-                       title="BẮT GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ">
-                        <img src="/asset/img/imgWeb/item-blog-6.jpg" alt="">
-                    </a>
-                    <div class="article_item_info">
-                        <div class="article_published_at"><span>01/11/2023</span></div>
-                        <h3 class="title_blog">
-                            <a href="/blogs/coffeeholic/bat-gap-sai-gon-xua-trong-mon-uong-hien-dai-cua-gioi-tre">
-                                BẮT
-                                GẶP SÀI GÒN XƯA TRONG MÓN UỐNG HIỆN ĐẠI CỦA GIỚI TRẺ
-                            </a>
-                        </h3>
-                        <p>
-                            Dẫu qua bao nhiêu lớp sóng thời gian, người ta vẫn có thể tìm lại những dấu ấn thăng trầm của
-                            một Sài Gòn xưa cũ...
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-
-
+        <div class="center-actions">
+            <a class="btn outline" href="/TrangChu/Menu">Xem Tất Cả Menu</a>
         </div>
-    </section>
+    </div>
+</section>
 
-  
+<section class="content-section special-band">
+    <div class="container special-layout">
+        <div class="special-image">
+            <img src="https://images.unsplash.com/photo-1708572727896-117b5ea25a86?crop=entropy&amp;cs=tinysrgb&amp;fit=max&amp;fm=jpg&amp;q=80&amp;w=1080" alt="Trà xanh Tây Bắc">
+        </div>
+        <div class="special-copy">
+            <p class="script-title">Trà xanh</p>
+            <h2 class="block-title">Tây Bắc</h2>
+            <p class="muted">Vị mộc từ nhà, chở khách miền xuôi</p>
+            <p class="muted">Được trồng trọt và chăm chút kỹ lưỡng, nuôi dưỡng từ thổ nhưỡng phì nhiêu, nguồn nước mát lành, bao bọc bởi mây và sương cùng nền nhiệt độ mát mẻ quanh năm.</p>
+            <a class="btn green-btn" href="/TrangChu/DoUong">Thử ngay</a>
+        </div>
+    </div>
+</section>
 
-</div>
+<section id="chuyen-nha" class="content-section story-band">
+    <div class="container">
+        <div class="section-title">
+            <h2>Chuyện nhà</h2>
+            <div class="accent-line"></div>
+        </div>
 
-
-
+        <div class="blog-grid">
+            <a class="blog-card" href="/TrangChu/ChuyenNha">
+                <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600" alt="Câu chuyện về ly cà phê sáng" loading="lazy">
+                <div class="blog-card-body">
+                    <h3>Câu chuyện về ly cà phê sáng</h3>
+                    <p>Mỗi buổi sáng đều là một khởi đầu mới, và không gì tuyệt vời hơn việc bắt đầu ngày mới với một ly cà phê thơm ngon từ Cloudy Café.</p>
+                </div>
+            </a>
+            <a class="blog-card" href="/TrangChu/ChuyenNha">
+                <img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=600" alt="Hành trình tìm kiếm hạt cà phê hoàn hảo" loading="lazy">
+                <div class="blog-card-body">
+                    <h3>Hành trình tìm kiếm hạt cà phê hoàn hảo</h3>
+                    <p>Chúng tôi đi khắp các vùng cao nguyên Tây Bắc để tìm kiếm những hạt cà phê thượng hạng nhất, mang đến cho bạn trải nghiệm tuyệt vời nhất.</p>
+                </div>
+            </a>
+            <a class="blog-card" href="/TrangChu/ChuyenNha">
+                <img src="https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=600" alt="Bí mật của ly trà xanh Tây Bắc" loading="lazy">
+                <div class="blog-card-body">
+                    <h3>Bí mật của ly trà xanh Tây Bắc</h3>
+                    <p>Trà xanh Tây Bắc không chỉ là thức uống, mà còn là tinh hoa của đất trời, được chăm sóc kỹ lưỡng từ những người nông dân tận tâm.</p>
+                </div>
+            </a>
+            <a class="blog-card" href="/TrangChu/ChuyenNha">
+                <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600" alt="Không gian Cloudy Café" loading="lazy">
+                <div class="blog-card-body">
+                    <h3>Không gian Cloudy Café - Nơi gặp gỡ và sáng tạo</h3>
+                    <p>Với thiết kế ấm cúng và không gian thoáng đãng, Cloudy Café là điểm đến lý tưởng cho những cuộc gặp gỡ bạn bè hay làm việc sáng tạo.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>

@@ -1,99 +1,108 @@
-﻿@{
-    Layout = "HeaderFooter_TrangChu";
+@model WebQuanLyNhaHang.ViewModel.TrangChuMenuPageViewModel
+@{
+    Layout = "_CloudyCafeLayout";
+    ViewData["Title"] = Model.Title;
+
+    string ProductImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400";
+        }
+
+        return path.StartsWith("http", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/")
+            ? path
+            : $"/{path}";
+    }
 }
-@model WebQuanLyNhaHang.ViewModel.ViewModelMenu
 
+<div class="container page-pad">
+    <div class="layout-two">
+        <aside class="sidebar">
+            <h2>Danh mục</h2>
+            @if (Model.Categories.Any())
+            {
+                <ul class="category-list">
+                    @foreach (var category in Model.Categories)
+                    {
+                        var products = Model.ProductsByCategory.TryGetValue(category.CateId, out var items)
+                            ? items
+                            : Array.Empty<WebQuanLyNhaHang.Models.Product>();
 
-<main>
-    <div id="collection">
-        <div class="collection_menu_wrap">
-            <div class="container">
-                <div class="row">
+                        <li>
+                            <a class="category-button" href="#category-@category.CateId">
+                                <span>@category.TenLoaiSanPham</span>
+                                <span class="count-pill">@products.Count</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="muted">Chưa có danh mục phù hợp.</p>
+            }
+        </aside>
 
-                    <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 stikySidebar">
-                        <aside class="sidebar_menu">
-                            <!--khi man hinh to-->
-                            <ul class="hidden-sm hidden-xs">
-                                <li>
-                                    <a class="menu_scroll_link view_all " href="javascript:void(0)"
-                                       data-url="/collections/all">Tất Cả</a>
-                                </li>
-                                <li>
-                                    <a class="menu_scroll_link" href="javascript:void(0)" data-parent-id="103658000"
-                                       data-url="/collections/ca-phe">Cà Phê</a>
-                                    <ul class="sidebar_menu_lv2">
-                                        <li>
-                                            <a class="" data-url="/collections/ca-phe-highlight-2"
-                                               href="#107337573">Cà Phê Highlight</a>
-                                        </li>
-                                        <li>
-                                            <a class="" data-url="/collections/ca-phe-viet-nam" href="#103658001">
-                                                Cà
-                                                Phê Việt Nam
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li>
-                                    <a class="menu_scroll_link" href="javascript:void(0)" data-parent-id="107146008"
-                                       data-url="/collections/trai-cay-xay-0-c">Trái Cây Xay 0°C</a>
-                                    <ul class="sidebar_menu_lv2">
-                                        <li>
-                                            <a class="" data-url="/collections/trai-cay-xay-0-c"
-                                               href="#107146009">Trái Cây Xay 0°C</a>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                            </ul>
-                            <!--khi man hinh nho-->
-                            <select class="hidden-md hidden-lg" id="menuSelect">
-                                <option value="null">Tất cả</option>
-                                <option value="#103658000">Cà Phê</option>
-                                <option value="#107146008">Trái Cây Xay 0°C</option>
-
-                            </select>
-                        </aside>
-                    </div>
-
-                    <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12 border_right_before">
-                        <div class="cha block_menu_item loaded" id="107337573" data-parent-target="103658000">
-                            @foreach (var category in Model.Categories())
-                            {
-                                <h3 class="block_menu_item_title">
-                                    <span class="line_after_heading section_heading">@category.TenLoaiSanPham</span> @* cate *@
-                                </h3>
-                                <div class="flex_wrap display_flex menu_lists menu_list_collection">
-                                @foreach (var product in Model.FindProductByCate(category.CateId))
-                                {
-                                   
-                                        <div class="Home__menuItem">
-                                            <div class="menu_item_image">
-                                                <a>
-                                                    <img class=" ls-is-cached lazyloaded" style="height: 250px;"
-                                                         src="@product.PathPhoto"
-                                                         alt="">
-                                                </a>
-                                                <ul class="labels"></ul>
-                                            </div>
-                                            <div class="menu_item_info">
-                                                <h3>
-                                                    <a>@product.TenSanPham</a> @* TenSp *@
-                                                </h3>
-                                                <div class="price_product_item"> @String.Format("{0:N0}", product.GiaTien)đ</div> @* gia *@
-                                            </div>
-                                        </div>
-                                    
-                                }
-                                </div>
-                            }
-                           
-                        </div>
-                    </div>
-                </div>
+        <section>
+            <div class="menu-heading">
+                <h1>@Model.Title</h1>
+                <p>@Model.Subtitle</p>
             </div>
-        </div>
+
+            @if (!Model.Categories.Any())
+            {
+                <div class="empty-state">
+                    <h2>Chưa có sản phẩm</h2>
+                    <p>Dữ liệu phần này chưa có trong hệ thống, Cloudy Café sẽ cập nhật thêm sau.</p>
+                    <a class="btn" href="/TrangChu/Menu">Xem toàn bộ menu</a>
+                </div>
+            }
+            else
+            {
+                @foreach (var category in Model.Categories)
+                {
+                    var products = Model.ProductsByCategory.TryGetValue(category.CateId, out var items)
+                        ? items
+                        : Array.Empty<WebQuanLyNhaHang.Models.Product>();
+
+                    <section class="product-section" id="category-@category.CateId">
+                        <div class="product-section-head">
+                            <div>
+                                <h2>@category.TenLoaiSanPham</h2>
+                                <p>@products.Count sản phẩm</p>
+                            </div>
+                        </div>
+
+                        <div class="product-grid">
+                            @for (var index = 0; index < products.Count; index++)
+                            {
+                                var product = products[index];
+                                <article class="product-card" id="product-@product.ProductId">
+                                    @if (index == 0)
+                                    {
+                                        <span class="new-badge">New</span>
+                                    }
+                                    <a class="product-image" href="/TrangChu/Menu#product-@product.ProductId">
+                                        <img src="@ProductImage(product.PathPhoto)" alt="@product.TenSanPham" loading="lazy">
+                                    </a>
+                                    <div class="product-body">
+                                        <h3 class="product-name">
+                                            <a href="/TrangChu/Menu#product-@product.ProductId">@product.TenSanPham</a>
+                                        </h3>
+                                        <div class="product-bottom">
+                                            <span class="price">@String.Format("{0:N0}", product.GiaTien)đ</span>
+                                            <a class="btn square" href="/TrangChu/Menu#product-@product.ProductId" aria-label="Xem @product.TenSanPham">
+                                                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    </section>
+                }
+            }
+        </section>
     </div>
-</main>
-<script src="/asset/js/menu_home.js"></script>
+</div>

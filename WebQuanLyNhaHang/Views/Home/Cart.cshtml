@@ -25,6 +25,10 @@
 @{
     int? DhId = Context.Session.GetInt32("DhId");
     int? BanId = Context.Session.GetInt32("BanId");
+    var cartItems = Model.CTHD_PctByDh(DhId);
+    var cartTotal = Model.TongtienById(DhId).TongTien ?? 0;
+    var hasCartItems = cartItems.Any();
+    var cartMessage = TempData["CartMessage"] as string;
 }
 <body>
     <div class="foreground" >
@@ -32,7 +36,7 @@
             <div class=" text__cart-title">
                 <div>
                     <div>
-                        <a asp-controller="Home" asp-action="Menu">
+                        <a asp-controller="TrangChu" asp-action="Menu">
                             <div class="btn-back">
                                 <i class="fa-solid fa-chevron-left"></i>
                             </div>
@@ -52,51 +56,70 @@
 
         <div id="cart__content_">
             <div class="container__card">
-                @foreach (var item in Model.CTHD_PctByDh(DhId))
+                @if (!string.IsNullOrWhiteSpace(cartMessage))
                 {
-                    <div class="bought--item">
-                        <div class="item-editor">
-                            <div class="item-box">
-                                <div class="item-inner--right">
-                                    <div class="card-img" style="background-image: url(@item.PathPhoto);">
+                    <div class="cart-message">@cartMessage</div>
+                }
+
+                @if (!hasCartItems)
+                {
+                    <div class="cart-empty">
+                        <h2>Giỏ hàng đang trống</h2>
+                        <p>Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
+                        <a asp-controller="TrangChu" asp-action="Menu">Xem menu</a>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var item in cartItems)
+                    {
+                        <div class="bought--item">
+                            <div class="item-editor">
+                                <div class="item-box">
+                                    <div class="item-inner--right">
+                                        <div class="card-img" style="background-image: url(@item.PathPhoto);">
+                                        </div>
+                                        <div class="card-product-info">
+                                            <span>
+                                                <span style="color: var(--primary--color)">@item.SoLuong x</span> @item.TenSanPham
+                                            </span>
+                                            <span class="card-product--description">
+                                                @item.Condition
+                                            </span>
+                                            <span class="card-product--price">
+                                                @String.Format("{0:N0}", item.ThanhTien)đ
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div class="card-product-info">
-                                        <span>
-                                            <span style="color: var(--primary--color)">@item.SoLuong x</span> @item.TenSanPham
-                                        </span>
-                                        <span class="card-product--description">
-                                            @item.Condition
-                                        </span>
-                                        <span class="card-product--price">
-                                            @String.Format("{0:N0}", item.ThanhTien)đ
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="item-inner--left">
-                                    <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </div>
-                                    <div class="btn-edit">
-                                        <span>edit</span>
+                                    <div class="item-inner--left">
+                                        <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </div>
+                                        <div class="btn-edit">
+                                            <span>edit</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
             </div>
 
             <div class="card__total-price">
                 <div>Tổng Tiền</div>
-                <div>@String.Format("{0:N0}", @Model.TongtienById(DhId).TongTien)đ</div>
+                <div>@String.Format("{0:N0}", cartTotal)đ</div>
             </div>
-            <div class="btn-sumbit">
-                <a asp-controller="Home" asp-action="OrderSuccess">
-                    <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
-                        Gửi yêu cầu gọi món
-                    </button>
-                </a>
-            </div>
+            @if (hasCartItems)
+            {
+                <div class="btn-sumbit">
+                    <a asp-controller="Home" asp-action="OrderSuccess">
+                        <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
+                            Gửi yêu cầu gọi món
+                        </button>
+                    </a>
+                </div>
+            }
         </div>
        
 
