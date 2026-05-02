@@ -1,7 +1,9 @@
 ﻿@model List<WebQuanLyNhaHang.Models.Category>
 
-    @foreach(var category in Model)
-    {
-    <div onclick="scrollToCategory(@category.CateId)" class="category-item">@category.TenLoaiSanPham</div>
-    }
-     
+@for (var index = 0; index < Model.Count; index++)
+{
+    var category = Model[index];
+    var activeClass = index == 0 ? "is-active" : string.Empty;
+
+    <div class="category-item @activeClass" data-category-id="@category.CateId">@category.TenLoaiSanPham</div>
+}

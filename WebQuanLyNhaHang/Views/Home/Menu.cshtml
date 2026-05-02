@@ -238,6 +238,9 @@
     <script src="~/js/scripts.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
+        let updateActiveCategoryFromScroll = function () { };
+        let currentActiveCategoryId = null;
+
         function prepareMenuReveal(scope) {
             const root = scope || document;
             const elements = Array.from(root.querySelectorAll(".label-container, .menu-list"));
@@ -249,25 +252,158 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             prepareMenuReveal(document);
+            setupMenuCategorySync();
             requestAnimationFrame(function () {
                 document.body.classList.add("local-menu-ready");
+                updateActiveCategoryFromScroll();
             });
         });
 
         function scrollToCategory(categoryId) {
-            // Lấy phần tử của danh mục cần cuộn tới
-            const targetElement = document.getElementById(categoryId);
+            const targetElement = document.getElementById(String(categoryId));
 
-            // Lấy chiều cao của thanh điều hướng cố định
-            const navHeight = document.querySelector('.menu__category-nav').offsetHeight + document.querySelector('.header__menu-inner').offsetHeight;
-            // Tính toán vị trí cần cuộn tới, bù thêm khoảng cách tương ứng với chiều cao của thanh điều hướng
-            const scrollPosition = targetElement.offsetTop - navHeight;
+            if (!targetElement) {
+                return;
+            }
 
-            // Cuộn đến vị trí tính toán
+            setActiveMenuCategory(categoryId);
+
+            const scrollPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - getMenuFixedOffset();
+
             window.scrollTo({
-                top: scrollPosition,
+                top: Math.max(0, scrollPosition),
                 behavior: 'smooth'
             });
+        }
+
+        function getMenuFixedOffset() {
+            const header = document.querySelector('.header__menu-inner');
+            const categoryNav = document.querySelector('.menu__category-nav');
+
+            return (header ? header.offsetHeight : 0) + (categoryNav ? categoryNav.offsetHeight : 0) + 8;
+        }
+
+        function getMenuCategoryItems() {
+            return Array.from(document.querySelectorAll('.menu__category-nav .category-item[data-category-id]'));
+        }
+
+        function getMenuSections() {
+            const categoryIds = new Set(getMenuCategoryItems().map(function (item) {
+                return String(item.dataset.categoryId);
+            }));
+
+            return Array.from(document.querySelectorAll('#content .label-container[id]')).filter(function (section) {
+                return categoryIds.has(section.id);
+            });
+        }
+
+        function setActiveMenuCategory(categoryId) {
+            const activeId = String(categoryId);
+            const categoryItems = getMenuCategoryItems();
+
+            if (categoryItems.length === 0 || currentActiveCategoryId === activeId) {
+                return;
+            }
+
+            currentActiveCategoryId = activeId;
+
+            categoryItems.forEach(function (item) {
+                const isActive = String(item.dataset.categoryId) === activeId;
+                item.classList.toggle('is-active', isActive);
+                item.setAttribute('aria-current', isActive ? 'true' : 'false');
+
+                if (isActive) {
+                    item.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'center'
+                    });
+                }
+            });
+        }
+
+        function setupMenuCategorySync() {
+            const categoryNav = document.querySelector('.menu__category-nav');
+            const categoryItems = getMenuCategoryItems();
+            let scrollTicking = false;
+
+            if (!categoryNav || categoryItems.length === 0) {
+                return;
+            }
+
+            categoryItems.forEach(function (item, index) {
+                item.setAttribute('role', 'button');
+                item.setAttribute('tabindex', '0');
+                item.setAttribute('aria-current', index === 0 ? 'true' : 'false');
+            });
+
+            setActiveMenuCategory(categoryItems[0].dataset.categoryId);
+
+            categoryNav.addEventListener('click', function (event) {
+                const item = event.target.closest('.category-item[data-category-id]');
+
+                if (!item) {
+                    return;
+                }
+
+                scrollToCategory(item.dataset.categoryId);
+            });
+
+            categoryNav.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                const item = event.target.closest('.category-item[data-category-id]');
+
+                if (!item) {
+                    return;
+                }
+
+                event.preventDefault();
+                scrollToCategory(item.dataset.categoryId);
+            });
+
+            updateActiveCategoryFromScroll = function () {
+                const sections = getMenuSections();
+
+                if (sections.length === 0) {
+                    return;
+                }
+
+                const activationLine = getMenuFixedOffset() + 24;
+                let currentSection = sections[0];
+
+                sections.forEach(function (section) {
+                    if (section.getBoundingClientRect().top <= activationLine) {
+                        currentSection = section;
+                    }
+                });
+
+                const pageHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+                const isScrollablePage = pageHeight > window.innerHeight + 2;
+
+                if (isScrollablePage && window.innerHeight + window.pageYOffset >= pageHeight - 2) {
+                    currentSection = sections[sections.length - 1];
+                }
+
+                setActiveMenuCategory(currentSection.id);
+            };
+
+            function requestActiveCategoryUpdate() {
+                if (scrollTicking) {
+                    return;
+                }
+
+                scrollTicking = true;
+                requestAnimationFrame(function () {
+                    updateActiveCategoryFromScroll();
+                    scrollTicking = false;
+                });
+            }
+
+            window.addEventListener('scroll', requestActiveCategoryUpdate, { passive: true });
+            window.addEventListener('resize', requestActiveCategoryUpdate);
         }
 
         // chức năng tìm kiếm trong trang menu 
@@ -292,6 +428,7 @@
                 document.body.classList.remove("local-menu-ready");
                 requestAnimationFrame(function () {
                     document.body.classList.add("local-menu-ready");
+                    updateActiveCategoryFromScroll();
                 });
             }
 
