@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using WebQuanLyNhaHang.Hubs;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
@@ -15,11 +17,17 @@ namespace WebQuanLyNhaHang.Controllers
         private readonly QlnhaHangBtlContext _qlnhaHangBtlContext;
         private readonly IHubContext<ChatHub> _hubContext;
         private readonly IDataProtector _customerCookieProtector;
+        private readonly IDataProtector _dineInCustomerCookieProtector;
         private const string OnlineCartSessionKey = "OnlineCartDhId";
         private const string LegacyCartSessionKey = "DhId";
         private const string CustomerSessionKey = "CustomerID";
         private const string CustomerCookieName = "CloudyCafeCustomer";
         private const string CustomerCookiePurpose = "CloudyCafe.CustomerCookie.v1";
+        private const string DineInCustomerSessionKey = "CustomerName";
+        private const string DineInCustomerIdSessionKey = "DineInCustomerId";
+        private const string DineInCustomerCookieName = "CloudyCafeDineInCustomer";
+        private const string DineInCustomerCookiePurpose = "CloudyCafe.DineInCustomerCookie.v1";
+        private const string DineInOrderType = "dinein";
 
         public HomeController(ILogger<HomeController> logger , QlnhaHangBtlContext qlnhaHangBtlContext , IHubContext<ChatHub> hubContext, IDataProtectionProvider dataProtectionProvider)
         {
@@ -27,6 +35,7 @@ namespace WebQuanLyNhaHang.Controllers
             _qlnhaHangBtlContext = qlnhaHangBtlContext;
             _hubContext = hubContext;
             _customerCookieProtector = dataProtectionProvider.CreateProtector(CustomerCookiePurpose);
+            _dineInCustomerCookieProtector = dataProtectionProvider.CreateProtector(DineInCustomerCookiePurpose);
         }
 
         public IActionResult Index()
@@ -95,6 +104,94 @@ namespace WebQuanLyNhaHang.Controllers
         {
             HttpContext.Session.Remove(CustomerSessionKey);
             Response.Cookies.Delete(CustomerCookieName);
+        }
+
+        private DineInCustomerIdentity? GetCurrentDineInCustomer()
+        {
+            var sessionId = HttpContext.Session.GetString(DineInCustomerIdSessionKey);
+            var sessionName = HttpContext.Session.GetString(DineInCustomerSessionKey);
+            if (!string.IsNullOrWhiteSpace(sessionId) && !string.IsNullOrWhiteSpace(sessionName))
+            {
+                return new DineInCustomerIdentity(sessionId.Trim(), CleanDineInCustomerName(sessionName));
+            }
+
+            var remembered = GetRememberedDineInCustomer();
+            if (remembered == null)
+            {
+                return null;
+            }
+
+            SetDineInCustomer(remembered);
+            return remembered;
+        }
+
+        private DineInCustomerIdentity? GetRememberedDineInCustomer()
+        {
+            if (!Request.Cookies.TryGetValue(DineInCustomerCookieName, out var protectedValue))
+            {
+                return null;
+            }
+
+            try
+            {
+                var value = _dineInCustomerCookieProtector.Unprotect(protectedValue)?.Trim();
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    Response.Cookies.Delete(DineInCustomerCookieName);
+                    return null;
+                }
+
+                if (value.StartsWith("{", StringComparison.Ordinal))
+                {
+                    var cookie = JsonSerializer.Deserialize<DineInCustomerCookie>(value);
+                    if (!string.IsNullOrWhiteSpace(cookie?.Id) && !string.IsNullOrWhiteSpace(cookie.Name))
+                    {
+                        return new DineInCustomerIdentity(cookie.Id.Trim(), CleanDineInCustomerName(cookie.Name));
+                    }
+                }
+
+                return new DineInCustomerIdentity(Guid.NewGuid().ToString("N"), CleanDineInCustomerName(value));
+            }
+            catch
+            {
+                Response.Cookies.Delete(DineInCustomerCookieName);
+                return null;
+            }
+        }
+
+        private DineInCustomerIdentity CreateDineInCustomer(string customerName)
+        {
+            return new DineInCustomerIdentity(Guid.NewGuid().ToString("N"), CleanDineInCustomerName(customerName));
+        }
+
+        private void SetDineInCustomer(DineInCustomerIdentity customer)
+        {
+            HttpContext.Session.SetString(DineInCustomerIdSessionKey, customer.Id);
+            HttpContext.Session.SetString(DineInCustomerSessionKey, customer.Name);
+
+            var cookie = JsonSerializer.Serialize(new DineInCustomerCookie
+            {
+                Id = customer.Id,
+                Name = customer.Name
+            });
+
+            Response.Cookies.Append(
+                DineInCustomerCookieName,
+                _dineInCustomerCookieProtector.Protect(cookie),
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.Now.AddDays(30),
+                    HttpOnly = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Lax,
+                    Secure = Request.IsHttps
+                });
+        }
+
+        private static string CleanDineInCustomerName(string customerName)
+        {
+            var name = customerName.Trim();
+            return name.Length <= 18 ? name : name[..18];
         }
 
         public IActionResult Account()
@@ -222,23 +319,16 @@ namespace WebQuanLyNhaHang.Controllers
         // Từ Đường Dẫn Lấy được số bàn rồi vào action này
         public IActionResult Client(int BanId)
         {
-            // lấy được dữ liệu bàn
-            HttpContext.Session.SetInt32("BanId", BanId); // Lưu Id Bàn vào Session
-            // khi quét mã là đẳ đơn 1 lần => tạo 1 đơn hàng 
-            var donHangMoi = new DonHang
+            HttpContext.Session.SetInt32("BanId", BanId);
+
+            var rememberedCustomer = GetRememberedDineInCustomer();
+            if (rememberedCustomer != null)
             {
-                BanId = BanId,
-                GioRa = DateTime.Now,
-                TrangThai = false,
-                VanChuyen = false
-            };
+                SetDineInCustomer(rememberedCustomer);
+                GetOrCreateDineInOrder();
+                return RedirectToAction("Service", "Home");
+            }
 
-            _qlnhaHangBtlContext.DonHangs.Add(donHangMoi);
-            _qlnhaHangBtlContext.SaveChanges();
-
-            // Sau khi SaveChanges, ID sẽ được cập nhật tự động vào donHangMoi
-            var DHID = donHangMoi.DhId; // Lấy ID của đơn hàng
-            HttpContext.Session.SetInt32("DhId" , DHID);  // lưu đơn hàng id hiện tại vào session
             return View();
         }
 
@@ -257,7 +347,9 @@ namespace WebQuanLyNhaHang.Controllers
                 return View("Client");
             }
 
-            HttpContext.Session.SetString("CustomerName", CustomerName.Trim());
+            var customer = CreateDineInCustomer(CustomerName);
+            SetDineInCustomer(customer);
+            GetOrCreateDineInOrder();
             return RedirectToAction("Service" , "home"); // Đoạn này RedirecAction() về trang tiếp theo
         }
 
@@ -625,6 +717,11 @@ namespace WebQuanLyNhaHang.Controllers
             }
 
             DH.BanId = banId; 
+            var customer = GetCurrentDineInCustomer();
+            if (customer != null)
+            {
+                DH.GhiChu = DineInOrderMetadata.Create(customer, banId.Value).ToJson();
+            }
             DH.TrangThai = true;
             DH.VanChuyen = false;
             _qlnhaHangBtlContext.SaveChanges();
@@ -850,42 +947,82 @@ namespace WebQuanLyNhaHang.Controllers
 
         private int? GetActiveDineInOrderId()
         {
+            var banId = HttpContext.Session.GetInt32("BanId");
+            var customer = GetCurrentDineInCustomer();
             var dhId = HttpContext.Session.GetInt32(LegacyCartSessionKey);
-            if (!dhId.HasValue)
-            {
-                return null;
-            }
 
-            var isLocalOrder = _qlnhaHangBtlContext.DonHangs
-                .Any(order => order.DhId == dhId.Value && !order.Remove && order.VanChuyen != true);
-
-            if (!isLocalOrder)
+            if (dhId.HasValue)
             {
+                var sessionOrder = _qlnhaHangBtlContext.DonHangs
+                    .FirstOrDefault(order =>
+                        order.DhId == dhId.Value &&
+                        !order.Remove &&
+                        order.VanChuyen != true &&
+                        (!banId.HasValue || order.BanId == banId.Value));
+
+                if (sessionOrder != null && IsDineInOrderForCustomer(sessionOrder, customer))
+                {
+                    return sessionOrder.DhId;
+                }
+
                 HttpContext.Session.Remove(LegacyCartSessionKey);
+            }
+
+            if (!banId.HasValue || customer == null)
+            {
                 return null;
             }
 
-            return dhId;
+            var activeOrder = FindActiveDineInOrder(banId.Value, customer.Id);
+            if (activeOrder == null)
+            {
+                return null;
+            }
+
+            HttpContext.Session.SetInt32(LegacyCartSessionKey, activeOrder.DhId);
+            return activeOrder.DhId;
         }
 
         private DonHang GetOrCreateDineInOrder()
         {
             var dhId = GetActiveDineInOrderId();
             var banId = HttpContext.Session.GetInt32("BanId");
+            var customer = GetCurrentDineInCustomer();
             var DH = dhId.HasValue
                 ? _qlnhaHangBtlContext.DonHangs
-                    .FirstOrDefault(order => order.DhId == dhId.Value && !order.Remove && order.VanChuyen != true)
+                    .FirstOrDefault(order =>
+                        order.DhId == dhId.Value &&
+                        !order.Remove &&
+                        order.VanChuyen != true &&
+                        (!banId.HasValue || order.BanId == banId.Value))
                 : null;
 
             if (DH != null)
             {
+                if (customer != null && DineInOrderMetadata.TryParse(DH.GhiChu) == null)
+                {
+                    DH.GhiChu = DineInOrderMetadata.Create(customer, banId).ToJson();
+                    _qlnhaHangBtlContext.SaveChanges();
+                }
+
                 return DH;
+            }
+
+            if (!banId.HasValue)
+            {
+                throw new InvalidOperationException("Dine-in order requires a table id.");
+            }
+
+            if (customer == null)
+            {
+                throw new InvalidOperationException("Dine-in order requires a remembered customer.");
             }
 
             DH = new DonHang
             {
-                BanId = banId!.Value,
+                BanId = banId.Value,
                 GioRa = DateTime.Now,
+                GhiChu = DineInOrderMetadata.Create(customer, banId.Value).ToJson(),
                 TrangThai = false,
                 VanChuyen = false
             };
@@ -894,6 +1031,34 @@ namespace WebQuanLyNhaHang.Controllers
             _qlnhaHangBtlContext.SaveChanges();
             HttpContext.Session.SetInt32(LegacyCartSessionKey, DH.DhId);
             return DH;
+        }
+
+        private DonHang? FindActiveDineInOrder(int banId, string customerId)
+        {
+            var customerMarker = $"\"g\":\"{customerId}\"";
+            return _qlnhaHangBtlContext.DonHangs
+                .Where(order =>
+                    order.BanId == banId &&
+                    !order.Remove &&
+                    order.VanChuyen != true &&
+                    order.GhiChu != null &&
+                    order.GhiChu.Contains("\"t\":\"dinein\"") &&
+                    order.GhiChu.Contains(customerMarker))
+                .OrderByDescending(order => order.GioVao ?? order.GioRa)
+                .ThenByDescending(order => order.DhId)
+                .FirstOrDefault();
+        }
+
+        private static bool IsDineInOrderForCustomer(DonHang order, DineInCustomerIdentity? customer)
+        {
+            var metadata = DineInOrderMetadata.TryParse(order.GhiChu);
+            if (metadata == null)
+            {
+                return true;
+            }
+
+            return customer != null &&
+                string.Equals(metadata.GuestId, customer.Id, StringComparison.OrdinalIgnoreCase);
         }
 
         private void RefreshCartTotal(int dhId)
@@ -1164,6 +1329,80 @@ namespace WebQuanLyNhaHang.Controllers
             HttpContext.Session.Remove(OnlineCartSessionKey);
             TempData["success"] = "Bạn đã đăng xuất.";
             return RedirectToAction("Index", "TrangChu");
+        }
+
+        private sealed record DineInCustomerIdentity(string Id, string Name);
+
+        private sealed class DineInCustomerCookie
+        {
+            public string? Id { get; set; }
+
+            public string? Name { get; set; }
+        }
+
+        private sealed class DineInOrderMetadata
+        {
+            [JsonPropertyName("t")]
+            public string Type { get; set; } = DineInOrderType;
+
+            [JsonPropertyName("g")]
+            public string GuestId { get; set; } = string.Empty;
+
+            [JsonPropertyName("n")]
+            public string? GuestName { get; set; }
+
+            [JsonPropertyName("b")]
+            public int? TableId { get; set; }
+
+            [JsonPropertyName("s")]
+            public string Status { get; set; } = "open";
+
+            [JsonPropertyName("at")]
+            public DateTime? CreatedAt { get; set; }
+
+            public static DineInOrderMetadata Create(DineInCustomerIdentity customer, int? tableId)
+            {
+                return new DineInOrderMetadata
+                {
+                    Type = DineInOrderType,
+                    GuestId = customer.Id,
+                    GuestName = customer.Name,
+                    TableId = tableId,
+                    Status = "open",
+                    CreatedAt = DateTime.Now
+                };
+            }
+
+            public static DineInOrderMetadata? TryParse(string? value)
+            {
+                if (string.IsNullOrWhiteSpace(value) || !value.TrimStart().StartsWith("{", StringComparison.Ordinal))
+                {
+                    return null;
+                }
+
+                try
+                {
+                    var metadata = JsonSerializer.Deserialize<DineInOrderMetadata>(value);
+                    return string.Equals(metadata?.Type, DineInOrderType, StringComparison.OrdinalIgnoreCase)
+                        ? metadata
+                        : null;
+                }
+                catch (JsonException)
+                {
+                    return null;
+                }
+            }
+
+            public string ToJson()
+            {
+                GuestName = string.IsNullOrWhiteSpace(GuestName) ? null : CleanDineInCustomerName(GuestName);
+                Status = string.IsNullOrWhiteSpace(Status) ? "open" : Status.Trim();
+
+                return JsonSerializer.Serialize(this, new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                });
+            }
         }
 
     }
