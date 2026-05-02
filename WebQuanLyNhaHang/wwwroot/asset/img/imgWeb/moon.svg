@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18.823" height="18.823" viewBox="0 0 18.823 18.823">
+  <g id="moon" transform="translate(0 0)">
+    <circle id="Ellipse_74" data-name="Ellipse 74" cx="9.412" cy="9.412" r="9.412" transform="translate(0 0)" fill="#27426b"/>
+    <path id="Path_1318" data-name="Path 1318" d="M103.968,101.065a4.553,4.553,0,1,1-5.2-7.319,5.926,5.926,0,1,0,6.083,6.083A4.543,4.543,0,0,1,103.968,101.065Z" transform="translate(-89.579 -90.299)" fill="#ffd370"/>
+    <g id="Group_345" data-name="Group 345" transform="translate(2.718 3.327)">
+      <path id="Path_1319" data-name="Path 1319" d="M306.053,92.818l.21,1.9.21-1.9,1.9-.21-1.9-.21-.21-1.9-.21,1.9-1.9.21Z" transform="translate(-295.689 -90.499)" fill="#fff"/>
+      <path id="Path_1320" data-name="Path 1320" d="M76.728,367.11l.15,1.36.15-1.36,1.36-.15-1.36-.15-.15-1.36-.15,1.36-1.36.15Z" transform="translate(-75.315 -355.341)" fill="#fff"/>
+      <rect id="Rectangle_179" data-name="Rectangle 179" width="0.381" height="0.381" transform="translate(6.144 5.989) rotate(-45)" fill="#fff"/>
+      <rect id="Rectangle_180" data-name="Rectangle 180" width="0.381" height="0.381" transform="translate(12.605 3.973) rotate(-45)" fill="#fff"/>
+      <rect id="Rectangle_181" data-name="Rectangle 181" width="0.381" height="0.381" transform="translate(13.748 7.32) rotate(-45)" fill="#fff"/>
+      <rect id="Rectangle_182" data-name="Rectangle 182" width="0.381" height="0.381" transform="translate(0 1.442) rotate(-45)" fill="#fff"/>
+      <rect id="Rectangle_183" data-name="Rectangle 183" width="0.381" height="0.381" transform="translate(9.936 12.357) rotate(-45)" fill="#fff"/>
+      <rect id="Rectangle_184" data-name="Rectangle 184" width="0.381" height="0.381" transform="translate(1.526 0.462) rotate(-45)" fill="#fff"/>
+    </g>
+  </g>
+</svg>

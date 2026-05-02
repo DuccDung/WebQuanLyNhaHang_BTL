@@ -4,6 +4,13 @@
 @{
     int? banId = Context.Session.GetInt32("BanId");
     string? dineInCustomerId = Context.Session.GetString("DineInCustomerId");
+    var customerName = Context.Session.GetString("CustomerName")?.Trim();
+    var displayCustomerName = string.IsNullOrWhiteSpace(customerName) ? "Quý khách" : customerName;
+    var currentHour = DateTime.Now.Hour;
+    var isNightTime = currentHour >= 18 || currentHour < 5;
+    var greetingText = isNightTime ? "Chào buổi tối" : "Chào buổi sáng";
+    var greetingIcon = isNightTime ? "/asset/img/imgWeb/moon.svg" : "/asset/img/imgWeb/icons8-sun.gif";
+    var tableCode = banId.HasValue ? $"A{banId.Value}" : "A--";
     var submittedItems = Model?.SubmittedDineInItems(banId, dineInCustomerId) ?? new List<WebQuanLyNhaHang.ViewModel.CTDH_Product>();
     var submittedTotal = submittedItems.Sum(item => item.ThanhTien ?? 0);
 }
@@ -55,6 +62,85 @@
         background: #fff;
     }
 
+    .service-shop-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        margin-bottom: 10px;
+        padding: 0 3px;
+    }
+
+    .service-shop-header__info {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .service-shop-header__name {
+        margin: 0 0 7px;
+        color: #111827;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .service-shop-header__address {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        gap: 7px;
+        margin: 0;
+        color: #1f2933;
+        font-size: 14px;
+        line-height: 18px;
+    }
+
+    .service-shop-header__pin {
+        color: #c4c4c4;
+        font-size: 18px;
+        flex: 0 0 auto;
+    }
+
+    .service-shop-header__address-text {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .service-language-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 63px;
+        height: 33px;
+        border: 0;
+        border-radius: 9px;
+        background: #fff;
+        color: #111827;
+        box-shadow: 0 6px 18px rgba(17, 24, 39, .12);
+    }
+
+    .service-language-button__flag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 17px;
+        border-radius: 4px;
+        background: #ef1c25;
+        color: #ffde59;
+        font-size: 11px;
+        line-height: 1;
+    }
+
+    .service-language-button i {
+        font-size: 11px;
+    }
+
     .service-reveal {
         opacity: 0;
         transform: translateY(14px);
@@ -68,6 +154,15 @@
     }
 
     .service-soft-card {
+        position: relative;
+        width: 100%;
+        height: 105px;
+        border: 1px solid #edf0f4;
+        border-radius: 12px;
+        background: linear-gradient(123.68deg, rgb(255, 240, 232) 4.76%, rgb(255, 255, 255) 47.02%, rgb(224, 243, 255) 98.09%);
+        box-shadow: none;
+        overflow: hidden;
+        cursor: pointer;
         transition: transform .2s ease, box-shadow .2s ease;
     }
 
@@ -75,13 +170,168 @@
         transform: scale(.98);
     }
 
+    .service-action-title {
+        position: relative;
+        z-index: 2;
+        margin: 13px 10px 0;
+        color: #111827;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 17px;
+        text-align: left;
+    }
+
+    .service-action-image {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        display: block;
+        width: 92px;
+        max-width: 82%;
+        height: auto;
+        object-fit: contain;
+        pointer-events: none;
+    }
+
+    .service-action-image--payment {
+        right: -2px;
+        bottom: -1px;
+        width: 96px;
+    }
+
+    .service-action-image--staff {
+        right: -2px;
+        bottom: 0;
+        width: 88px;
+    }
+
+    .service-action-image--rate {
+        right: -3px;
+        bottom: -2px;
+        width: 91px;
+    }
+
     .service-menu-button {
-        transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
-        box-shadow: 0 10px 24px rgba(220, 53, 69, .18);
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 92px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 14px;
+        background: url("/asset/img/imgWeb/bg-menu.png") center / cover no-repeat;
+        color: #fff;
+        overflow: hidden;
+        text-decoration: none;
+        box-shadow: none;
+        transition: transform .2s ease, filter .2s ease;
     }
 
     .service-menu-button:active {
         transform: translateY(1px) scale(.99);
+    }
+
+    .service-menu-button__text {
+        position: relative;
+        z-index: 2;
+        color: #fff;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .service-menu-button__arrow {
+        position: relative;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-left: 14px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .42);
+        color: #fff;
+        font-size: 13px;
+        line-height: 1;
+    }
+
+    .service-greeting {
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .service-greeting__title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        max-width: 100%;
+        gap: 6px;
+        margin: 0;
+        color: #1f2933;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 22px;
+    }
+
+    .service-greeting__icon {
+        width: 21px;
+        height: 21px;
+        object-fit: contain;
+        flex: 0 0 auto;
+    }
+
+    .service-greeting__name {
+        min-width: 0;
+        max-width: 145px;
+        color: #2f6df6;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .service-greeting__edit {
+        color: #2f6df6;
+        font-size: 11px;
+        line-height: 1;
+        flex: 0 0 auto;
+        margin-left: 3px;
+    }
+
+    .service-greeting__subtitle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 0;
+        color: #1f2933;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 18px;
+    }
+
+    .service-greeting__table {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 39px;
+        height: 20px;
+        padding: 0 7px;
+        border: 1px solid #1f2933;
+        border-radius: 999px;
+        background: #fff;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
     }
 
     .submitted-orders {
@@ -169,6 +419,54 @@
         color: #8a5a20;
         font-size: 14px;
         line-height: 1.45;
+    }
+
+    .point-login-button {
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr) 24px;
+        align-items: center;
+        width: 100%;
+        min-height: 84px;
+        padding: 0 14px 0 0;
+        border: 1px solid rgba(46, 137, 215, .14);
+        border-radius: 12px 12px 0 0;
+        background: #d5ecff;
+        color: #1476db;
+        overflow: hidden;
+        text-decoration: none;
+        box-shadow: none;
+        transition: transform .18s ease, filter .18s ease;
+    }
+
+    .point-login-button:active {
+        transform: scale(.99);
+        filter: brightness(.98);
+    }
+
+    .point-login-button__image {
+        display: block;
+        width: 86px;
+        height: 84px;
+        object-fit: cover;
+        object-position: center bottom;
+    }
+
+    .point-login-button__text {
+        min-width: 0;
+        margin-left: 5px;
+        width: 210px;
+        color: #0c81dc;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 17.68px;
+        text-align: left;
+    }
+
+    .point-login-button__next {
+        display: block;
+        width: 18px;
+        height: 18px;
+        justify-self: end;
     }
 
     .payment-bottom-modal {
@@ -697,10 +995,19 @@
 
 <body class="service-page">
 
-    <div class="container header-banner text-start mt-4 custom-padding d-flex justify-content-between align-items-center service-reveal" style="--reveal-delay: 40ms;">
-        <div>
-            <p><strong>DAB Coffee - Chùa Láng</strong></p>
-            <p>137 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội, Việt Nam</p>
+    <div class="container custom-padding service-reveal" style="--reveal-delay: 40ms;">
+        <div class="service-shop-header">
+            <div class="service-shop-header__info">
+                <h1 class="service-shop-header__name">O2O Coffee - Chùa Láng</h1>
+                <p class="service-shop-header__address">
+                    <i class="fa-solid fa-location-dot service-shop-header__pin" aria-hidden="true"></i>
+                    <span class="service-shop-header__address-text">137 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội, Việt Nam</span>
+                </p>
+            </div>
+            <button type="button" class="service-language-button" aria-label="Ngôn ngữ tiếng Việt">
+                <span class="service-language-button__flag">★</span>
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 
@@ -721,56 +1028,59 @@
             </div>
         </div>
 
-        <div class="row text-center service-reveal" style="--reveal-delay: 180ms;">
-            <div class="col-12 mt-3">
-                <p>
-                    Chúc bạn một ngày tốt lành!<br>
-                    Chúng tôi sẽ phục vụ bạn tại bàn!
-                </p>
-            </div>
-        </div>
-
-        <div class="row my-4 justify-content-between service-reveal" style="--reveal-delay: 250ms;">
-            <div class="col-4 col-md-4 col-lg-4 mb-3 d-flex justify-content-center">
-                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                    <div class="card-icon text-center">
-                        <img src="/asset/img/imgWeb/request_payment.svg" alt="">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center">Gọi thanh toán</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="col-4 col-md-4 col-lg-4 mb-3 d-flex justify-content-center">
-                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#requestModal">
-                    <div class="card-icon  text-center">
-                        <img src="/asset/img/imgWeb/request_service.svg" alt="">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center">Gọi nhân viên</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="col-4 col-md-4 col-lg-4 mb-3 d-flex justify-content-center">
-                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#reviewModal">
-                    <div class="card-icon  text-center">
-                        <img src="/asset/img/imgWeb/rate.svg" alt="">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center">Đánh giá</h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="row my-4 service-reveal" style="--reveal-delay: 320ms;">
+        <div class="row service-reveal" style="--reveal-delay: 180ms;">
             <div class="col-12">
-                <a asp-controller="Home" asp-action="Menu">
-                    <button class="btn btn-danger btn-lg btn-lg-custom w-100 service-menu-button">
-                        <img src="/asset/img/imgWeb/menu.svg" alt="icon" class="icon-left" style="margin-right: 14px;">
-                        Xem Menu - Gọi Món
-                    </button>
+                <div class="service-greeting">
+                    <h1 class="service-greeting__title">
+                        <img class="service-greeting__icon" src="@greetingIcon" alt="">
+                        <span>@greetingText <span class="service-greeting__name">@displayCustomerName</span></span>
+                        <i class="fa-solid fa-pen service-greeting__edit" aria-hidden="true"></i>
+                    </h1>
+                    <p class="service-greeting__subtitle">
+                        <span>Chúng tôi sẽ trả đồ cho bạn tại bàn:</span>
+                        <span class="service-greeting__table">@tableCode</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row service-reveal" style="--reveal-delay: 220ms;">
+            <div class="col-12">
+                <a href="#" class="point-login-button" aria-label="Nhập số điện thoại để tích điểm">
+                    <img class="point-login-button__image" src="/asset/img/imgWeb/img-request-login.png" alt="">
+                    <span class="point-login-button__text">Nhập số điện thoại để tích điểm</span>
+                    <img class="point-login-button__next" src="/asset/img/imgWeb/next-icon.svg" alt="">
+                </a>
+            </div>
+        </div>
+
+        <div class="row my-3 justify-content-between service-reveal gx-2" style="--reveal-delay: 250ms;">
+            <div class="col-4 col-md-4 col-lg-4 mb-2 d-flex justify-content-center">
+                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                    <h5 class="service-action-title">Gọi thanh toán</h5>
+                    <img class="service-action-image service-action-image--payment" src="/asset/img/imgWeb/request_payment_2.png" alt="">
+                </div>
+            </div>
+            <div class="col-4 col-md-4 col-lg-4 mb-2 d-flex justify-content-center">
+                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#requestModal">
+                    <h5 class="service-action-title">Gọi nhân viên</h5>
+                    <img class="service-action-image service-action-image--staff" src="/asset/img/imgWeb/bg-request_service.png" alt="">
+                </div>
+            </div>
+            <div class="col-4 col-md-4 col-lg-4 mb-2 d-flex justify-content-center">
+                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                    <h5 class="service-action-title">Đánh giá</h5>
+                    <img class="service-action-image service-action-image--rate" src="/asset/img/imgWeb/bg-rate.png" alt="">
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mt-2 mb-3 service-reveal" style="--reveal-delay: 320ms;">
+            <div class="col-12">
+                <a asp-controller="Home" asp-action="Menu" class="service-menu-button" aria-label="Xem Menu - Gọi món">
+                    <span class="service-menu-button__text">Xem Menu - Gọi món</span>
+                    <span class="service-menu-button__arrow"><i class="fa-solid fa-chevron-right"></i></span>
                 </a>
             </div>
         </div>

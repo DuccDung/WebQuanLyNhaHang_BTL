@@ -1,6 +1,6 @@
 # WebQuanLyNhaHang - System Context
 
-Cap nhat: 2026-05-02
+Cap nhat: 2026-05-03
 
 ## 1. Tong Quan He Thong
 
@@ -561,3 +561,254 @@ ON OnlineOrderInfo (DH_ID);
 CREATE INDEX IX_OnlineOrderInfo_Status
 ON OnlineOrderInfo (TrangThaiGiaoHang, NgayDat DESC);
 ```
+
+## 18. Cap Nhat Gan Day Cho UI Khach Tai Ban
+
+Trang chinh duoc sua nhieu nhat:
+
+- `Views/Home/Service.cshtml`
+- `Views/Home/Menu.cshtml`
+- `Views/Home/Cart.cshtml`
+- `Views/Home/ProductTable.cshtml`
+- `Views/Home/CTDHTable.cshtml`
+- `ViewModel/ViewModelMenu.cs`
+- `ViewModel/ViewModelCart.cs`
+- `Controllers/HomeController.cs`
+
+### Service page `/Home/Service`
+
+Trang service hien dang la man hinh khach tai ban sau khi nhap ten.
+
+Nguon du lieu dang dung:
+
+- `BanId` lay tu session `Context.Session.GetInt32("BanId")`.
+- Ten khach lay tu session `Context.Session.GetString("CustomerName")`.
+- Guest id lay tu session `Context.Session.GetString("DineInCustomerId")`.
+- Cac mon da goi lay qua `ViewModelCart.SubmittedDineInItems(banId, dineInCustomerId)`.
+
+Khoi chao moi:
+
+- Thay text cu `Chuc ban mot ngay tot lanh...`.
+- Hien icon theo gio:
+  - Buoi toi: `/asset/img/imgWeb/moon.svg`
+  - Buoi sang/ngay: `/asset/img/imgWeb/icons8-sun.gif`
+- Text title dang co dang:
+  - `Chao buoi toi <Ten khach>` hoac `Chao buoi sang <Ten khach>`.
+  - Neu khong co ten thi fallback `Quy khach`.
+- Co icon but nho mau xanh bang FontAwesome `fa-pen`.
+- Dong phu:
+  - `Chung toi se tra do cho ban tai ban:`
+  - Ma ban dang hien dang pill: `A{banId}`, vi du `A27`.
+- CSS lien quan nam trong class:
+  - `.service-greeting`
+  - `.service-greeting__title`
+  - `.service-greeting__icon`
+  - `.service-greeting__name`
+  - `.service-greeting__edit`
+  - `.service-greeting__subtitle`
+  - `.service-greeting__table`
+- Yeu cau gan nhat: rieng `.service-greeting` co `margin-bottom: 10px`.
+
+Nut tich diem moi:
+
+- Da them nut `Nhap so dien thoai de tich diem` ngay duoi khoi chao va truoc 3 card chuc nang.
+- Asset:
+  - Anh trai: `/asset/img/imgWeb/img-request-login.png`
+  - Icon next: `/asset/img/imgWeb/next-icon.svg`
+  - Nen: `#d5ecff`
+- CSS lien quan:
+  - `.point-login-button`
+  - `.point-login-button__image`
+  - `.point-login-button__text`
+  - `.point-login-button__next`
+- Text cua nut dang dung:
+  - `font-size: 13px`
+  - `font-weight: 600`
+  - `line-height: 17.68px`
+  - `color: #0c81dc`
+  - `margin-left: 5px`
+  - `width: 210px`
+
+Popup goi thanh toan:
+
+- Nut `Goi thanh toan` mo bottom sheet `#paymentModal`.
+- Bottom sheet nam duoi man hinh va truot len bang CSS:
+  - `.payment-bottom-modal`
+  - `#paymentModal.modal.fade:not(.show) .payment-bottom-modal`
+  - `#paymentModal.modal.show .payment-bottom-modal`
+- Co 3 phuong thuc:
+  - `Tien mat`: `/asset/img/imgWeb/cash.svg`
+  - `The ngan hang`: `/asset/img/imgWeb/card_02.svg`
+  - `Ung dung dien thoai`: `/asset/img/imgWeb/app.svg`
+- Mac dinh chon `The ngan hang`.
+- Nut gui request co id `sendPaymentRequest`, hien toast `paymentRequestToast`, sau do tu dong dong popup.
+
+Popup goi nhan vien:
+
+- Nut `Goi nhan vien` mo bottom sheet `#requestModal`.
+- UI dang giong mau mobile bottom sheet:
+  - Thanh handle nho o tren.
+  - Title `Goi nhan vien`.
+  - Subtitle `Ban muon yeu cau nhan vien lam gi?`
+  - O nhap co icon but va nen xam nhe.
+  - Nut cam `Gui yeu cau`.
+- CSS lien quan:
+  - `.request-bottom-modal`
+  - `.request-sheet`
+  - `.request-input-wrap`
+  - `.request-sheet__input`
+  - `.request-sheet__submit`
+- O nhap da duoc rut chieu cao xuong:
+  - `height: 50px`
+  - `min-height: 50px`
+- Script:
+  - Focus vao textarea khi modal mo.
+  - Gui request se hien toast, doi text nut, tu dong dong popup, reset input khi modal dong.
+
+Popup danh gia:
+
+- Nut `Danh gia` mo bottom sheet `#reviewModal`.
+- UI dang co:
+  - Thanh handle nho o tren.
+  - Nut dong `x`.
+  - Nen panel vang nhat.
+  - Cau hoi `Trai nghiem cua ban o nha hang hom nay the nao?`
+  - 5 sao co the click, mac dinh 3 sao.
+  - Label rating mac dinh `Binh thuong`.
+  - Cac chip ly do co the click toggle:
+    - `Ve sinh khong sach se`
+    - `Nhan vien khong nhiet tinh`
+    - `Mon an khong ngon`
+    - `Mon an phuc vu lau`
+    - `Gia khong phu hop voi chat luong`
+    - `Khong gian bat tien`
+    - `Khong gian on`
+  - Textarea gop y.
+  - O nhap so dien thoai.
+  - Nut cam `Gui danh gia`.
+- CSS lien quan:
+  - `.review-bottom-modal`
+  - `.review-sheet`
+  - `.review-panel`
+  - `.review-star`
+  - `.review-tag`
+  - `.review-comment`
+  - `.review-actions`
+  - `.review-phone`
+  - `.review-submit`
+- Luu y trong Razor CSS: media query phai viet `@@media`, khong viet `@media`.
+- Script:
+  - `setReviewRating(value)` update sao va label.
+  - Click tag toggle class `.is-selected`.
+  - Gui review hien toast va tu dong dong popup.
+  - Khi dong modal thi reset sao ve 3, clear tag/input/toast.
+
+Danh sach mon da goi tren Service:
+
+- Hien duoi cac nut chuc nang.
+- Lay tu `ViewModelCart.SubmittedDineInItems`.
+- Text trong danh sach da duoc chinh khong qua dam theo yeu cau truoc do.
+
+### Menu page `/Home/Menu`
+
+Tim kiem menu da duoc xu ly lai:
+
+- Input `#txtSearchBox`.
+- Action server: `HomeController.GetName(string? txtsearch)`.
+- Partial render ket qua: `Views/Home/ProductTable.cshtml`.
+- ViewModel: `ViewModelMenu.ProductsBySearch(string? txtsearchName)`.
+
+Logic search moi:
+
+- Normalize text bang helper bo dau va lowercase.
+- Tim theo:
+  - Ten san pham.
+  - Ten loai san pham.
+  - Mo ta.
+  - Gia.
+- Ho tro nhieu tu khoa.
+- Sap xep theo score:
+  - Trung ten chinh xac.
+  - Ten bat dau bang keyword.
+  - Ten chua keyword.
+  - Category/mo ta/gia.
+- Client JS co debounce khoang 240ms.
+- Huy request cu neu nguoi dung tiep tuc go.
+- Khi o search rong thi restore menu ban dau.
+- Neu khong co ket qua thi partial hien card `Khong tim thay mon phu hop`.
+
+Nhan `Da goi`:
+
+- San pham da dat truoc do hien badge `Da goi x`.
+- Badge duoc dat duoi gia, khong chen canh nut `+`.
+- Ap dung ca menu chinh va partial search.
+
+### Cart page `/Home/Cart?DhId=DhId`
+
+Da sua UI/logic cart tai ban:
+
+- Khi bam nut `x` xoa mon: hien popup xac nhan truoc khi xoa.
+- Popup order confirm truoc khi goi mon.
+- Sau khi goi mon thanh cong hien popup success theo thiet ke.
+- Khi cart trong:
+  - Hien anh `/asset/img/imgWeb/cart_empty.jpg`.
+  - An tong tien/0d.
+  - An nut clear.
+  - An nut submit/dat mon.
+- JS dong bo lai trang thai clear sau khi refresh partial AJAX.
+
+### Logic order tai ban sau khi dat mon
+
+Da chinh luong de khong hong logic khi khach quay lai Menu:
+
+- `OrderSuccess` danh dau order tai ban da submit bang metadata status `submitted`.
+- Sau khi dat thanh cong thi xoa session `DhId`.
+- Khi vao lai `/Home/Menu`, he thong tao order moi thay vi sua order da submit.
+- San pham da dat van hien duoi Service page va hien badge `Da goi` trong Menu.
+
+Helper lien quan:
+
+- `HomeController.GetActiveDineInOrderId`
+- `HomeController.FindActiveDineInOrder`
+- `HomeController.GetOrCreateDineInOrder`
+- `ViewModelCart.SubmittedDineInItems(int? banId, string? guestId)`
+- `ViewModelMenu.CountSubmittedDineInProduct(int? banId, string? guestId, int productId)`
+
+Quy tac active/open dine-in order:
+
+- Order active/open la order tai ban `TrangThai != true`.
+- Order da submit co `TrangThai == true` va metadata status `submitted`.
+
+### Favicon / logo tab
+
+Da dong bo favicon ve logo admin:
+
+- Asset: `/assets/images/admin-favicon.svg`
+- Cac view/layout da gan:
+  - Home Cart/Menu/Service/Client/ProductDetail.
+  - `HeaderFooter_TrangChu`.
+  - `_CloudyCafeLayout`.
+  - `Head_Layout`.
+  - `Header_Left_Layout`.
+  - Admin pages da co san `admin-favicon.svg`.
+
+### Asset moi dang duoc dung trong UI gan day
+
+Trong `wwwroot/asset/img/imgWeb`:
+
+- `moon.svg`
+- `icons8-sun.gif`
+- `img-request-login.png`
+- `next-icon.svg`
+- `cash.svg`
+- `card_02.svg`
+- `app.svg`
+- `cart_empty.jpg`
+
+Ngoai ra git status hien tai con thay mot so asset moi chua tracked:
+
+- `bg-rate.png`
+- `bg-request_service.png`
+- `request_payment_2.png`
+
+Can can than khong xoa cac asset nay neu user dang dung cho UI moi.
