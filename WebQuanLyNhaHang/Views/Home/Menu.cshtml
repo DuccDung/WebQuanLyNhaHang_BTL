@@ -25,9 +25,70 @@
     <link rel="stylesheet" type="text/css" href="btl.css">
     <link rel="stylesheet" href="~/WebQuanLyNhaHang.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/asset/css/menu.css">
+    <style>
+        body.local-menu-page {
+            background: #fff;
+        }
+
+        .local-menu-reveal {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity .42s ease, transform .42s ease;
+            transition-delay: var(--menu-delay, 0ms);
+        }
+
+        body.local-menu-ready .local-menu-reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .header__menu-inner,
+        .menu__category-nav {
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity .36s ease, transform .36s ease;
+        }
+
+        body.local-menu-ready .header__menu-inner,
+        body.local-menu-ready .menu__category-nav {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .menu-list {
+            transition: opacity .36s ease, transform .36s ease, box-shadow .2s ease;
+        }
+
+        .menu-list.local-menu-reveal {
+            transform: translateY(10px);
+        }
+
+        body.local-menu-ready .menu-list.local-menu-reveal {
+            transform: translateY(0);
+        }
+
+        .menu-item {
+            transition: transform .18s ease;
+        }
+
+        .menu-item:active {
+            transform: scale(.99);
+        }
+
+        .foodter {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity .36s ease .24s, transform .36s ease .24s;
+        }
+
+        body.local-menu-ready .foodter {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
     <title>Kính chào quý khách</title>
 </head>
-<body>
+<body class="local-menu-page">
     <div class="app__menu">
         <div class="header__menu-inner" style="position:fixed; top:0; left:0; right:0; z-index:1000;">
             <a asp-controller="Home" asp-action="Service">
@@ -48,17 +109,17 @@
             @await Component.InvokeAsync("Category")
         </div>
         <div class="" style="position:fixed; top:0; right:0; left:0; height:50px; background-color:#fff; z-index: 20;"></div>
-        <div class="container__menu" id="content" style="margin-top: 90px;">
+        <div class="container__menu local-menu-reveal" id="content" style="margin-top: 90px; --menu-delay: 110ms;">
 
             @foreach (var category in Model.Categories())
             {
-                <div id="@category.CateId" class="label-container">
+                <div id="@category.CateId" class="label-container local-menu-reveal">
                     @category.TenLoaiSanPham
                 </div>
 
                 foreach (var product in Model.FindProductByCate(category.CateId))
                 {
-                    <div class="menu-list">
+                    <div class="menu-list local-menu-reveal">
                         <table>
                             <tr class="menu-item">
                                 <td class="menu__product-img" style="width:10px">
@@ -112,6 +173,21 @@
     <script src="~/js/scripts.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
+        function prepareMenuReveal(scope) {
+            const root = scope || document;
+            const elements = Array.from(root.querySelectorAll(".label-container, .menu-list"));
+            elements.forEach(function (element, index) {
+                element.classList.add("local-menu-reveal");
+                element.style.setProperty("--menu-delay", Math.min(360, 40 + index * 24) + "ms");
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            prepareMenuReveal(document);
+            requestAnimationFrame(function () {
+                document.body.classList.add("local-menu-ready");
+            });
+        });
 
         function scrollToCategory(categoryId) {
             // Lấy phần tử của danh mục cần cuộn tới
@@ -143,6 +219,14 @@
                         success: function (response) {
                             // Cập nhật nội dung của phần tử có id là "content" bằng dữ liệu trả về
                             $("div#content").html(response);
+                            const content = document.getElementById("content");
+                            if (content) {
+                                prepareMenuReveal(content);
+                                document.body.classList.remove("local-menu-ready");
+                                requestAnimationFrame(function () {
+                                    document.body.classList.add("local-menu-ready");
+                                });
+                            }
                         },
                         error: function (xhr, status, error) {
                             console.error('Error:', error);
