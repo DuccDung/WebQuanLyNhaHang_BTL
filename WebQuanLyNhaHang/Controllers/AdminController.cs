@@ -284,6 +284,33 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpGet]
         [AdminSessionAuthorize]
+        public async Task<IActionResult> LatestOrderNotification(int? orderId)
+        {
+            var query = _context.DonHangs
+                .AsNoTracking()
+                .Include(order => order.Kh)
+                .Include(order => order.OnlineOrderInfo)
+                .Include(order => order.ChiTietHoaDons.Where(item => !item.Remove))
+                .Where(order => !order.Remove && order.TrangThai == true);
+
+            var order = orderId.HasValue
+                ? await query.FirstOrDefaultAsync(item => item.DhId == orderId.Value)
+                : await query
+                    .OrderByDescending(item => item.GioRa ?? item.GioVao)
+                    .ThenByDescending(item => item.DhId)
+                    .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                return NotFound(new { message = "Không tìm thấy đơn hàng mới." });
+            }
+
+            var payload = BuildOrderNotificationPayload(order);
+            return Json(payload);
+        }
+
+        [HttpGet]
+        [AdminSessionAuthorize]
         public IActionResult ProcessPayment(int BanId)
         {
             var donHangList = _context.DonHangs.Where(e => e.BanId == BanId && !e.Remove).ToList();
@@ -296,6 +323,146 @@ namespace WebQuanLyNhaHang.Controllers
             _context.SaveChanges();
             return NoContent();
         }
+
+        private static object BuildOrderNotificationPayload(DonHang order)
+        {
+            var onlineMetadata = OnlineOrderMetadata.TryParse(order.GhiChu);
+            var dineInMetadata = TryParseDineInOrderMetadata(order.GhiChu);
+            var isDineIn = order.BanId.HasValue;
+            var customerName = ResolveCustomerName(order, onlineMetadata, dineInMetadata);
+            var customerPhone = ResolveCustomerPhone(order, onlineMetadata);
+            var locationLabel = ResolveOrderLocation(order, onlineMetadata);
+            var orderTime = order.GioRa ?? order.GioVao;
+            var totalAmount = order.TongTien ?? order.ChiTietHoaDons.Where(item => !item.Remove).Sum(item => item.ThanhTien ?? 0m);
+
+            return new
+            {
+                orderId = order.DhId,
+                orderCode = $"DH{order.DhId:000}",
+                locationLabel,
+                customerName,
+                customerPhone,
+                totalLabel = totalAmount > 0m ? FormatOrderAlertCurrency(totalAmount) : "Chưa tính",
+                tableAmountLabel = totalAmount > 0m ? FormatShortOrderAlertCurrency(totalAmount) : string.Empty,
+                itemCount = order.ChiTietHoaDons.Count(item => !item.Remove),
+                orderTime = FormatDateTime(orderTime),
+                tableTimeLabel = FormatTime(orderTime),
+                tableId = order.BanId,
+                isDineIn
+            };
+        }
+
+        private static string ResolveCustomerName(
+            DonHang order,
+            OnlineOrderMetadata? onlineMetadata,
+            DineInOrderNotificationMetadata? dineInMetadata)
+        {
+            var name = order.OnlineOrderInfo?.NguoiNhan
+                ?? onlineMetadata?.RecipientName
+                ?? dineInMetadata?.GuestName
+                ?? order.Kh?.TenKhachHang;
+
+            return string.IsNullOrWhiteSpace(name) ? "Khách lẻ" : name.Trim();
+        }
+
+        private static string ResolveCustomerPhone(DonHang order, OnlineOrderMetadata? onlineMetadata)
+        {
+            var phone = order.OnlineOrderInfo?.SoDienThoai
+                ?? onlineMetadata?.Phone
+                ?? order.Kh?.SoDienThoai;
+
+            return string.IsNullOrWhiteSpace(phone) ? "Chưa có SĐT" : phone.Trim();
+        }
+
+        private static string ResolveOrderLocation(DonHang order, OnlineOrderMetadata? onlineMetadata)
+        {
+            if (order.BanId.HasValue)
+            {
+                return $"Bàn {order.BanId.Value}";
+            }
+
+            var onlineAddress = order.OnlineOrderInfo == null
+                ? null
+                : string.Join(", ", new[]
+                {
+                    order.OnlineOrderInfo.DiaChi,
+                    order.OnlineOrderInfo.PhuongXa,
+                    order.OnlineOrderInfo.QuanHuyen,
+                    order.OnlineOrderInfo.TinhThanh
+                }.Where(item => !string.IsNullOrWhiteSpace(item)));
+
+            if (!string.IsNullOrWhiteSpace(onlineAddress))
+            {
+                return onlineAddress;
+            }
+
+            if (!string.IsNullOrWhiteSpace(onlineMetadata?.FullAddress))
+            {
+                return onlineMetadata.FullAddress;
+            }
+
+            return "Mang về / giao hàng";
+        }
+
+        private static DineInOrderNotificationMetadata? TryParseDineInOrderMetadata(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || !value.TrimStart().StartsWith("{", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(value);
+                var root = document.RootElement;
+
+                if (!root.TryGetProperty("t", out var typeElement)
+                    || !string.Equals(typeElement.GetString(), "dinein", StringComparison.OrdinalIgnoreCase))
+                {
+                    return null;
+                }
+
+                var guestName = root.TryGetProperty("n", out var nameElement) ? nameElement.GetString() : null;
+
+                return new DineInOrderNotificationMetadata(guestName);
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        private static string FormatDateTime(DateTime? value)
+        {
+            return value.HasValue ? value.Value.ToString("HH:mm dd/MM/yyyy", VietnameseCulture) : string.Empty;
+        }
+
+        private static string FormatOrderAlertCurrency(decimal value)
+        {
+            return value.ToString("N0", VietnameseCulture) + "đ";
+        }
+
+        private static string FormatTime(DateTime? value)
+        {
+            return value.HasValue ? value.Value.ToString("HH:mm", VietnameseCulture) : string.Empty;
+        }
+
+        private static string FormatShortOrderAlertCurrency(decimal amount)
+        {
+            if (amount <= 0)
+            {
+                return string.Empty;
+            }
+
+            if (amount >= 1000m)
+            {
+                return Math.Round(amount / 1000m, MidpointRounding.AwayFromZero).ToString("N0", VietnameseCulture) + "k";
+            }
+
+            return amount.ToString("N0", VietnameseCulture);
+        }
+
+        private sealed record DineInOrderNotificationMetadata(string? GuestName);
 
         private static Dictionary<string, DashboardValueSeries> BuildRevenueSeries(
             IEnumerable<DashboardOrderFact> orderFacts,

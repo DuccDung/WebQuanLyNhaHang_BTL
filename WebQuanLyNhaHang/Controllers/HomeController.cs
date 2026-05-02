@@ -705,7 +705,7 @@ namespace WebQuanLyNhaHang.Controllers
             }
 
             TempData["CartMessage"] = $"Đặt hàng thành công. Mã đơn của bạn là DH{DH.DhId:000}.";
-            _hubContext.Clients.All.SendAsync("OderSuccess");
+            _hubContext.Clients.All.SendAsync("OderSuccess", DH.DhId);
             _hubContext.Clients.All.SendAsync("OnlineOrderCreated", DH.DhId);
 
             return RedirectToAction("OnlineCart", "Home");
@@ -760,7 +760,7 @@ namespace WebQuanLyNhaHang.Controllers
             HttpContext.Session.Remove(LegacyCartSessionKey);
             //dùng phương thức của signalR để nhận biết sự thay đổi của database khi client đặt đơn hàng
             // Phát sự kiện qua SignalR
-            _hubContext.Clients.All.SendAsync("OderSuccess");
+            _hubContext.Clients.All.SendAsync("OderSuccess", DH.DhId);
             return RedirectToAction("Service", "Home");
         }
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

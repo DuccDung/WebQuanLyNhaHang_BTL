@@ -42,6 +42,7 @@
 <body>
     <form asp-controller="Home" asp-action="CreateProductDetail" method="post" id="product-detail-form">
         <div class="app__product product-detail">
+            <button type="button" class="product-detail-back" id="product-detail-back" aria-label="Quay lại"></button>
             <div class="container-fluid img-container bg-light p-0">
                 <img src="@Model.PathPhoto" class="img-fluid" alt="Responsive image">
             </div>
@@ -110,6 +111,16 @@
             // Thêm lớp 'active' để chi tiết sản phẩm xuất hiện từ dưới lên
             document.querySelector('.product-detail').classList.add('active');
         };
+
+        document.getElementById('product-detail-back').addEventListener('click', function () {
+            if (window.history.length > 1) {
+                window.history.back();
+                return;
+            }
+
+            window.location.href = '@Url.Action("Menu", "Home")';
+        });
+
         // sử lý (+,-) số lượng
             document.getElementById('button-plus').addEventListener('click', function () {
                 let quantityInput = document.getElementById('quantity');

@@ -71,12 +71,21 @@
                             {
                                 var hasOrderInfo = !string.IsNullOrWhiteSpace(item.TimeLabel) || !string.IsNullOrWhiteSpace(item.AmountLabel);
 
-                                <button type="button"
+                                <article
                                         class="restaurant-table-card @item.CardClass"
                                         data-table-card
                                         data-table-id="@item.TableId"
+                                        data-table-url="@Url.Action("Client", "Home", new { BanId = item.TableId }, Context.Request.Scheme)"
+                                        role="button"
+                                        tabindex="0"
                                         aria-label="Xem thông tin bàn @item.TableId">
                                     <span class="restaurant-table-card__title">Bàn @item.TableId</span>
+                                    <button class="restaurant-table-card__qr" type="button" data-qr-trigger aria-label="Tạo QR cho bàn @item.TableId">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                                            <path d="M14 14h2.8v2.8H14V14Zm4.2 0H20v6h-6v-1.8h4.2V14Z" fill="currentColor"></path>
+                                        </svg>
+                                    </button>
 
                                     <span class="restaurant-table-card__status status-pill status-pill--@item.StatusClass">
                                         @item.StatusLabel
@@ -117,7 +126,7 @@
                                             }
                                         </span>
                                     }
-                                </button>
+                                </article>
                             }
                         </div>
                     </section>
@@ -135,10 +144,92 @@
         </div>
     </div>
 
+    <div class="order-alert" id="orderAlert" aria-hidden="true">
+        <button class="order-alert__backdrop" type="button" data-order-alert-close aria-label="Đóng thông báo"></button>
+        <section class="order-alert__dialog" role="dialog" aria-modal="true" aria-labelledby="orderAlertTitle">
+            <div class="order-alert__header">
+                <span class="order-alert__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 8h12l-1 12H7L6 8Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"></path>
+                        <path d="M9 8a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                    </svg>
+                </span>
+                <div>
+                    <p class="order-alert__eyebrow">Thông báo mới</p>
+                    <h2 class="order-alert__title" id="orderAlertTitle">Có đơn hàng mới</h2>
+                </div>
+                <button class="order-alert__close" type="button" data-order-alert-close aria-label="Đóng thông báo">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="order-alert__body">
+                <div class="order-alert__location">
+                    <span class="order-alert__location-label">Vị trí đơn</span>
+                    <strong data-order-alert-location>Đang cập nhật...</strong>
+                </div>
+
+                <div class="order-alert__grid">
+                    <div class="order-alert__item">
+                        <span>Mã đơn</span>
+                        <strong data-order-alert-code>--</strong>
+                    </div>
+                    <div class="order-alert__item">
+                        <span>Khách hàng</span>
+                        <strong data-order-alert-customer>--</strong>
+                    </div>
+                    <div class="order-alert__item">
+                        <span>Số điện thoại</span>
+                        <strong data-order-alert-phone>--</strong>
+                    </div>
+                    <div class="order-alert__item">
+                        <span>Tạm tính</span>
+                        <strong data-order-alert-total>--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-alert__actions">
+                <button class="order-alert__button order-alert__button--secondary" type="button" data-order-alert-close>Để sau</button>
+                <button class="order-alert__button order-alert__button--primary" type="button" data-order-alert-view>Xem đơn</button>
+            </div>
+        </section>
+    </div>
+
+    <div class="qr-modal" id="qrModal" aria-hidden="true">
+        <button class="qr-modal__backdrop" type="button" data-qr-close aria-label="Đóng QR"></button>
+        <section class="qr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
+            <div class="qr-modal__header">
+                <div>
+                    <p class="qr-modal__eyebrow">QR gọi món</p>
+                    <h2 class="qr-modal__title" id="qrModalTitle">Bàn</h2>
+                </div>
+                <button class="qr-modal__close" type="button" data-qr-close aria-label="Đóng QR">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="qr-modal__body">
+                <div class="qr-modal__code" id="qrCodeBox"></div>
+                <p class="qr-modal__link" data-qr-link></p>
+            </div>
+
+            <div class="qr-modal__actions">
+                <button class="qr-modal__button qr-modal__button--secondary" type="button" data-qr-close>Đóng</button>
+                <a class="qr-modal__button qr-modal__button--primary" href="#" target="_blank" rel="noopener" data-qr-open>Mở link</a>
+            </div>
+        </section>
+    </div>
+
     <audio id="success-sound" src="/asset/sound/Thongbao1.mp3" preload="auto"></audio>
 
     <script src="~/assets/plugins/Jquery/dist/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="~/assets/js/admin-tables.js" asp-append-version="true"></script>
 </body>
 </html>

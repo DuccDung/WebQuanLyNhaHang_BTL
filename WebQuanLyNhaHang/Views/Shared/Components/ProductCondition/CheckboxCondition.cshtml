@@ -15,11 +15,10 @@
                 ? string.Equals(item.Condition, selectedCondition, StringComparison.OrdinalIgnoreCase)
                 : item == Model.First();
 
-            <div class="select-item">
+            <div class="select-item product-condition-option">
                 <div class="component__cs-radio">
                     <input class="component__cs-radio--border" type="radio" id="@optionId" name="condition" value="@item.Condition" checked="@isChecked">
                     <label class="radio-label" for="@optionId">@item.Condition</label>
-                    <span class="price_customize">0 đ</span>
                 </div>
             </div>
         }
