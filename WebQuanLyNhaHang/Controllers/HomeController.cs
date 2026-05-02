@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using WebQuanLyNhaHang.Hubs;
@@ -13,14 +14,19 @@ namespace WebQuanLyNhaHang.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly QlnhaHangBtlContext _qlnhaHangBtlContext;
         private readonly IHubContext<ChatHub> _hubContext;
+        private readonly IDataProtector _customerCookieProtector;
         private const string OnlineCartSessionKey = "OnlineCartDhId";
         private const string LegacyCartSessionKey = "DhId";
+        private const string CustomerSessionKey = "CustomerID";
+        private const string CustomerCookieName = "CloudyCafeCustomer";
+        private const string CustomerCookiePurpose = "CloudyCafe.CustomerCookie.v1";
 
-        public HomeController(ILogger<HomeController> logger , QlnhaHangBtlContext qlnhaHangBtlContext , IHubContext<ChatHub> hubContext)
+        public HomeController(ILogger<HomeController> logger , QlnhaHangBtlContext qlnhaHangBtlContext , IHubContext<ChatHub> hubContext, IDataProtectionProvider dataProtectionProvider)
         {
             _logger = logger;
             _qlnhaHangBtlContext = qlnhaHangBtlContext;
             _hubContext = hubContext;
+            _customerCookieProtector = dataProtectionProvider.CreateProtector(CustomerCookiePurpose);
         }
 
         public IActionResult Index()
@@ -28,9 +34,72 @@ namespace WebQuanLyNhaHang.Controllers
             return View();
         }
 
+        private int? GetCurrentCustomerId()
+        {
+            var customerId = HttpContext.Session.GetInt32(CustomerSessionKey);
+            if (customerId.HasValue)
+            {
+                return customerId;
+            }
+
+            if (!Request.Cookies.TryGetValue(CustomerCookieName, out var protectedCustomerId))
+            {
+                return null;
+            }
+
+            try
+            {
+                var customerIdText = _customerCookieProtector.Unprotect(protectedCustomerId);
+                if (!int.TryParse(customerIdText, out var id))
+                {
+                    ClearCustomerLogin();
+                    return null;
+                }
+
+                var exists = _qlnhaHangBtlContext.KhachHangs
+                    .Any(customer => customer.KhId == id && !customer.Remove);
+
+                if (!exists)
+                {
+                    ClearCustomerLogin();
+                    return null;
+                }
+
+                HttpContext.Session.SetInt32(CustomerSessionKey, id);
+                return id;
+            }
+            catch
+            {
+                ClearCustomerLogin();
+                return null;
+            }
+        }
+
+        private void SetCustomerLogin(int customerId)
+        {
+            HttpContext.Session.SetInt32(CustomerSessionKey, customerId);
+            Response.Cookies.Append(
+                CustomerCookieName,
+                _customerCookieProtector.Protect(customerId.ToString()),
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.Now.AddDays(30),
+                    HttpOnly = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Lax,
+                    Secure = Request.IsHttps
+                });
+        }
+
+        private void ClearCustomerLogin()
+        {
+            HttpContext.Session.Remove(CustomerSessionKey);
+            Response.Cookies.Delete(CustomerCookieName);
+        }
+
         public IActionResult Account()
         {
-            var customerId = HttpContext.Session.GetInt32("CustomerID");
+            var customerId = GetCurrentCustomerId();
             if (!customerId.HasValue)
             {
                 TempData["error"] = "Vui lòng đăng nhập để xem thông tin tài khoản.";
@@ -42,7 +111,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             if (khachHang == null)
             {
-                HttpContext.Session.Remove("CustomerID");
+                ClearCustomerLogin();
                 TempData["error"] = "Không tìm thấy tài khoản. Vui lòng đăng nhập lại.";
                 return RedirectToAction("Index", "Home");
             }
@@ -61,7 +130,7 @@ namespace WebQuanLyNhaHang.Controllers
             string? PathPhoto,
             IFormFile? PhotoFile)
         {
-            var customerId = HttpContext.Session.GetInt32("CustomerID");
+            var customerId = GetCurrentCustomerId();
             if (!customerId.HasValue)
             {
                 TempData["error"] = "Vui lòng đăng nhập để cập nhật thông tin tài khoản.";
@@ -73,7 +142,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             if (khachHang == null)
             {
-                HttpContext.Session.Remove("CustomerID");
+                ClearCustomerLogin();
                 TempData["error"] = "Không tìm thấy tài khoản. Vui lòng đăng nhập lại.";
                 return RedirectToAction("Index", "Home");
             }
@@ -139,7 +208,7 @@ namespace WebQuanLyNhaHang.Controllers
 
                 khachHang.PathPhoto = $"/uploads/customers/{fileName}";
             }
-            else
+            else if (PathPhoto != null)
             {
                 khachHang.PathPhoto = PathPhoto?.Trim();
             }
@@ -179,8 +248,16 @@ namespace WebQuanLyNhaHang.Controllers
         }
         // Từ trang Client gửi tên và số bàn tới đây để thêm dữ liệu khách hàng vào bàn
         [HttpPost]
-        public IActionResult CustomerInfo(string CustomerName) {
-            HttpContext.Session.SetString("CustomerName", CustomerName);
+        [ValidateAntiForgeryToken]
+        public IActionResult CustomerInfo(string? CustomerName) {
+            if (string.IsNullOrWhiteSpace(CustomerName))
+            {
+                ModelState.AddModelError(nameof(CustomerName), "Vui lòng nhập tên của bạn.");
+                ViewData["CustomerName"] = CustomerName;
+                return View("Client");
+            }
+
+            HttpContext.Session.SetString("CustomerName", CustomerName.Trim());
             return RedirectToAction("Service" , "home"); // Đoạn này RedirecAction() về trang tiếp theo
         }
 
@@ -369,6 +446,44 @@ namespace WebQuanLyNhaHang.Controllers
             return View(viewModelCart);
         }
 
+        public async Task<IActionResult> OrderHistory()
+        {
+            var customerId = GetCurrentCustomerId();
+            if (!customerId.HasValue)
+            {
+                TempData["error"] = "Vui lòng đăng nhập để xem lịch sử đơn hàng.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var orders = await _qlnhaHangBtlContext.DonHangs
+                .AsNoTracking()
+                .Where(order =>
+                    order.KhId == customerId.Value &&
+                    !order.Remove &&
+                    order.VanChuyen == true &&
+                    order.GhiChu != null &&
+                    order.GhiChu.Contains("\"t\":\"online\""))
+                .Include(order => order.ChiTietHoaDons.Where(item => !item.Remove))
+                    .ThenInclude(item => item.Product)
+                .Include(order => order.OnlineOrderInfo)
+                .OrderByDescending(order => order.GioVao ?? order.GioRa)
+                .ThenByDescending(order => order.DhId)
+                .ToListAsync();
+
+            var model = new OnlineOrderHistoryViewModel
+            {
+                Orders = orders
+                    .Select(order => new { Order = order, Metadata = OnlineOrderMetadata.TryParse(order.GhiChu) })
+                    .Where(item =>
+                        item.Metadata != null &&
+                        !string.Equals(item.Metadata.DeliveryStatus, OnlineOrderMetadata.StatusCart, StringComparison.OrdinalIgnoreCase))
+                    .Select(item => BuildOnlineOrderHistoryRow(item.Order, item.Metadata!))
+                    .ToList()
+            };
+
+            return View(model);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CheckoutOnlineOrder(OnlineCheckoutForm form)
@@ -434,6 +549,29 @@ namespace WebQuanLyNhaHang.Controllers
             DH.BanId = null;
             DH.GioVao ??= DateTime.Now;
             DH.GioRa = DateTime.Now;
+
+            var onlineInfo = _qlnhaHangBtlContext.OnlineOrderInfos
+                .FirstOrDefault(item => item.DhId == DH.DhId);
+            if (onlineInfo == null)
+            {
+                onlineInfo = new OnlineOrderInfo
+                {
+                    DhId = DH.DhId
+                };
+                _qlnhaHangBtlContext.OnlineOrderInfos.Add(onlineInfo);
+            }
+
+            onlineInfo.TrangThaiGiaoHang = OnlineOrderMetadata.StatusPending;
+            onlineInfo.NguoiNhan = metadata.RecipientName;
+            onlineInfo.SoDienThoai = metadata.Phone;
+            onlineInfo.TinhThanh = metadata.City;
+            onlineInfo.QuanHuyen = metadata.District;
+            onlineInfo.PhuongXa = metadata.Ward;
+            onlineInfo.DiaChi = metadata.AddressLine;
+            onlineInfo.GhiChuGiaoHang = metadata.Note;
+            onlineInfo.NgayDat = metadata.SubmittedAt;
+            onlineInfo.NgayCapNhat = DateTime.Now;
+            onlineInfo.Remove = false;
 
             RefreshCartTotal(DH.DhId);
             _qlnhaHangBtlContext.SaveChanges();
@@ -546,6 +684,42 @@ namespace WebQuanLyNhaHang.Controllers
             }
 
             CTHD.Remove = true;
+            _qlnhaHangBtlContext.SaveChanges();
+            RefreshCartTotal(CTHD.DhId);
+
+            _hubContext.Clients.All.SendAsync("OnlineCartUpdated");
+            ViewData["OnlineCartId"] = cartOrder.DhId;
+            ViewModelCart viewModelCart = new ViewModelCart(_qlnhaHangBtlContext);
+            return PartialView("OnlineCTDHTable", viewModelCart);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateOnlineItemQuantity(int id, int quantity)
+        {
+            var cartOrder = GetActiveOnlineCartOrder();
+            if (cartOrder == null)
+            {
+                return NotFound();
+            }
+
+            var CTHD = _qlnhaHangBtlContext.ChiTietHoaDons
+                .Include(item => item.Product)
+                .FirstOrDefault(item => item.CthdId == id && item.DhId == cartOrder.DhId && !item.Remove);
+
+            if (CTHD == null)
+            {
+                return NotFound();
+            }
+
+            var newQuantity = Math.Max(1, quantity);
+            var oldQuantity = Math.Max(1, CTHD.SoLuong ?? 1);
+            var unitPrice = oldQuantity > 0
+                ? (CTHD.ThanhTien ?? CTHD.Product?.GiaTien ?? 0m) / oldQuantity
+                : CTHD.Product?.GiaTien ?? 0m;
+
+            CTHD.SoLuong = newQuantity;
+            CTHD.ThanhTien = unitPrice * newQuantity;
+
             _qlnhaHangBtlContext.SaveChanges();
             RefreshCartTotal(CTHD.DhId);
 
@@ -856,6 +1030,77 @@ namespace WebQuanLyNhaHang.Controllers
             return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
         }
 
+        private static OnlineOrderHistoryRowViewModel BuildOnlineOrderHistoryRow(DonHang order, OnlineOrderMetadata metadata)
+        {
+            var info = order.OnlineOrderInfo;
+            var deliveryStatus = !string.IsNullOrWhiteSpace(info?.TrangThaiGiaoHang)
+                ? info!.TrangThaiGiaoHang
+                : metadata.DeliveryStatus;
+            var status = ResolveCustomerStatusDisplay(deliveryStatus);
+            var submittedAt = metadata.SubmittedAt ?? order.GioVao ?? order.GioRa;
+            var items = order.ChiTietHoaDons
+                .Where(item => !item.Remove)
+                .Select(item => new OnlineOrderHistoryItemViewModel
+                {
+                    ProductName = string.IsNullOrWhiteSpace(item.Product?.TenSanPham)
+                        ? "Sản phẩm"
+                        : item.Product!.TenSanPham!.Trim(),
+                    ProductPhoto = item.Product?.PathPhoto,
+                    Quantity = Math.Max(0, item.SoLuong ?? 0),
+                    LineTotal = item.ThanhTien ?? 0m,
+                    Note = string.IsNullOrWhiteSpace(item.Ghichu) ? null : item.Ghichu.Trim()
+                })
+                .ToList();
+
+            var total = order.TongTien ?? items.Sum(item => item.LineTotal);
+
+            return new OnlineOrderHistoryRowViewModel
+            {
+                OrderId = order.DhId,
+                OrderCode = $"DH{order.DhId:000}",
+                SubmittedAt = submittedAt,
+                TotalAmount = total,
+                StatusKey = status.Key,
+                StatusLabel = status.Label,
+                StatusCssClass = status.CssClass,
+                RecipientName = info?.NguoiNhan ?? metadata.RecipientName,
+                Phone = info?.SoDienThoai ?? metadata.Phone,
+                Address = BuildOnlineAddress(info) ?? metadata.FullAddress,
+                Note = info?.GhiChuGiaoHang ?? metadata.Note,
+                Items = items
+            };
+        }
+
+        private static string? BuildOnlineAddress(OnlineOrderInfo? info)
+        {
+            if (info == null)
+            {
+                return null;
+            }
+
+            var address = string.Join(", ", new[]
+            {
+                info.DiaChi,
+                info.PhuongXa,
+                info.QuanHuyen,
+                info.TinhThanh
+            }.Where(item => !string.IsNullOrWhiteSpace(item)));
+
+            return string.IsNullOrWhiteSpace(address) ? null : address;
+        }
+
+        private static (string Key, string Label, string CssClass) ResolveCustomerStatusDisplay(string? status)
+        {
+            return OnlineOrderMetadata.NormalizeStatus(status) switch
+            {
+                OnlineOrderMetadata.StatusPreparing => ("preparing", "Đang chuẩn bị", "is-processing"),
+                OnlineOrderMetadata.StatusShipping => ("shipping", "Đang giao", "is-shipping"),
+                OnlineOrderMetadata.StatusDelivered => ("delivered", "Đã giao", "is-completed"),
+                OnlineOrderMetadata.StatusCancelled => ("cancelled", "Đã hủy", "is-cancelled"),
+                _ => ("pending", "Chờ xác nhận", "is-pending")
+            };
+        }
+
 
         // ================================= trang Login =====================================================================
         [HttpPost]
@@ -892,7 +1137,7 @@ namespace WebQuanLyNhaHang.Controllers
             if (khachHang != null)
             {
                 var id = khachHang.KhId;
-                HttpContext.Session.SetInt32("CustomerID", id);
+                SetCustomerLogin(id);
                 var cartOrder = GetActiveOnlineCartOrder();
                 if (cartOrder != null && !cartOrder.KhId.HasValue)
                 {
@@ -915,7 +1160,7 @@ namespace WebQuanLyNhaHang.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult CustomerLogout()
         {
-            HttpContext.Session.Remove("CustomerID");
+            ClearCustomerLogin();
             HttpContext.Session.Remove(OnlineCartSessionKey);
             TempData["success"] = "Bạn đã đăng xuất.";
             return RedirectToAction("Index", "TrangChu");

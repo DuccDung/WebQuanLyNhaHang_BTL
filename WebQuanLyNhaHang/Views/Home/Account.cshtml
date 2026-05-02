@@ -35,14 +35,6 @@
 
 <div class="profile-bg">
     <div class="container profile-shell">
-        <a class="back-link" asp-controller="TrangChu" asp-action="Index">
-            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m12 19-7-7 7-7"></path>
-                <path d="M19 12H5"></path>
-            </svg>
-            Quay về trang chủ
-        </a>
-
         @if (TempData["success"] != null)
         {
             <div class="notice auth-message auth-message--success">@TempData["success"]</div>
@@ -110,12 +102,7 @@
 
                 <div class="account-photo-grid">
                     <label>
-                        <span class="form-label">Đường dẫn ảnh đại diện</span>
-                        <input class="input" asp-for="PathPhoto" placeholder="/uploads/customers/avatar.png">
-                    </label>
-
-                    <label>
-                        <span class="form-label">Hoặc tải ảnh mới</span>
+                        <span class="form-label">Tải ảnh đại diện mới</span>
                         <input class="input" name="PhotoFile" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
                     </label>
                 </div>

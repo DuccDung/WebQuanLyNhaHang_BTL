@@ -17,6 +17,8 @@ public partial class QlnhaHangBtlContext : DbContext
 
     public virtual DbSet<Ban> Bans { get; set; }
 
+    public virtual DbSet<BaiVietChuyenNha> BaiVietChuyenNhas { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<ChiTietHoaDon> ChiTietHoaDons { get; set; }
@@ -49,6 +51,12 @@ public partial class QlnhaHangBtlContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<CuaHang> CuaHangs { get; set; }
+
+    public virtual DbSet<OnlineOrderInfo> OnlineOrderInfos { get; set; }
+
+    public virtual DbSet<OnlineOrderStatusHistory> OnlineOrderStatusHistories { get; set; }
+
     public virtual DbSet<Thuong> Thuongs { get; set; }
     public virtual DbSet<ProductConditions> ProductConditions { get; set; }
 
@@ -65,6 +73,34 @@ public partial class QlnhaHangBtlContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("Ghi Chu");
             entity.Property(e => e.Remove).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<BaiVietChuyenNha>(entity =>
+        {
+            entity.HasKey(e => e.BaiVietId).HasName("PK_BaiVietChuyenNha");
+
+            entity.ToTable("BaiVietChuyenNha");
+
+            entity.Property(e => e.BaiVietId).HasColumnName("BaiViet_ID");
+            entity.Property(e => e.AltText).HasMaxLength(200);
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.HienThi).HasDefaultValue(true);
+            entity.Property(e => e.NgayDang)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NoiBat).HasDefaultValue(false);
+            entity.Property(e => e.PathPhoto).HasMaxLength(500);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
+            entity.Property(e => e.SapXep).HasDefaultValue(0);
+            entity.Property(e => e.Slug)
+                .HasMaxLength(220)
+                .IsUnicode(false);
+            entity.Property(e => e.TacGia).HasMaxLength(100);
+            entity.Property(e => e.TieuDe).HasMaxLength(200);
+            entity.Property(e => e.TomTat).HasMaxLength(600);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -376,6 +412,84 @@ public partial class QlnhaHangBtlContext : DbContext
                 .HasForeignKey(d => d.CateId)
                 .HasConstraintName("FK__Product__Cate_ID__7B5B524B");
         });
+
+        modelBuilder.Entity<CuaHang>(entity =>
+        {
+            entity.HasKey(e => e.CuaHangId).HasName("PK_CuaHang");
+            entity.ToTable("CuaHang");
+            entity.Property(e => e.CuaHangId).HasColumnName("CuaHang_ID");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.DiaChi).HasMaxLength(300);
+            entity.Property(e => e.GoogleMapUrl).HasMaxLength(700);
+            entity.Property(e => e.HienThi).HasDefaultValue(true);
+            entity.Property(e => e.Latitude).HasColumnType("decimal(10, 7)");
+            entity.Property(e => e.Longitude).HasColumnType("decimal(10, 7)");
+            entity.Property(e => e.PathPhoto).HasMaxLength(500);
+            entity.Property(e => e.PhuongXa).HasMaxLength(80);
+            entity.Property(e => e.QuanHuyen).HasMaxLength(80);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
+            entity.Property(e => e.SapXep).HasDefaultValue(0);
+            entity.Property(e => e.SoDienThoai).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.TenCuaHang).HasMaxLength(150);
+            entity.Property(e => e.TinhThanh).HasMaxLength(80);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<OnlineOrderInfo>(entity =>
+        {
+            entity.HasKey(e => e.OnlineOrderInfoId).HasName("PK_OnlineOrderInfo");
+            entity.ToTable("OnlineOrderInfo");
+            entity.HasIndex(e => e.DhId, "UQ_OnlineOrderInfo_DH_ID").IsUnique();
+            entity.Property(e => e.OnlineOrderInfoId).HasColumnName("OnlineOrderInfo_ID");
+            entity.Property(e => e.CuaHangId).HasColumnName("CuaHang_ID");
+            entity.Property(e => e.DhId).HasColumnName("DH_ID");
+            entity.Property(e => e.DiaChi).HasMaxLength(300);
+            entity.Property(e => e.GhiChuGiaoHang).HasMaxLength(300);
+            entity.Property(e => e.NgayCapNhat).HasColumnType("datetime");
+            entity.Property(e => e.NgayDat).HasColumnType("datetime");
+            entity.Property(e => e.NguoiNhan).HasMaxLength(100);
+            entity.Property(e => e.PhiGiaoHang).HasColumnType("money").HasDefaultValue(0m);
+            entity.Property(e => e.PhuongThucThanhToan).HasMaxLength(30).IsUnicode(false);
+            entity.Property(e => e.PhuongXa).HasMaxLength(80);
+            entity.Property(e => e.QuanHuyen).HasMaxLength(80);
+            entity.Property(e => e.Remove).HasDefaultValue(false);
+            entity.Property(e => e.SoDienThoai).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.TinhThanh).HasMaxLength(80);
+            entity.Property(e => e.TrangThaiGiaoHang).HasMaxLength(30).IsUnicode(false).HasDefaultValue(OnlineOrderMetadata.StatusCart);
+            entity.Property(e => e.TrangThaiThanhToan).HasMaxLength(30).IsUnicode(false);
+
+            entity.HasOne(d => d.CuaHang).WithMany(p => p.OnlineOrderInfos)
+                .HasForeignKey(d => d.CuaHangId)
+                .HasConstraintName("FK_OnlineOrderInfo_CuaHang");
+
+            entity.HasOne(d => d.Dh).WithOne(p => p.OnlineOrderInfo)
+                .HasForeignKey<OnlineOrderInfo>(d => d.DhId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OnlineOrderInfo_DonHang");
+        });
+
+        modelBuilder.Entity<OnlineOrderStatusHistory>(entity =>
+        {
+            entity.HasKey(e => e.HistoryId).HasName("PK_OnlineOrderStatusHistory");
+            entity.ToTable("OnlineOrderStatusHistory");
+            entity.Property(e => e.HistoryId).HasColumnName("History_ID");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.DhId).HasColumnName("DH_ID");
+            entity.Property(e => e.GhiChu).HasMaxLength(300);
+            entity.Property(e => e.NvId).HasColumnName("NV_ID");
+            entity.Property(e => e.TrangThaiCu).HasMaxLength(30).IsUnicode(false);
+            entity.Property(e => e.TrangThaiMoi).HasMaxLength(30).IsUnicode(false);
+
+            entity.HasOne(d => d.Dh).WithMany(p => p.OnlineOrderStatusHistories)
+                .HasForeignKey(d => d.DhId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OnlineOrderStatusHistory_DonHang");
+
+            entity.HasOne(d => d.Nv).WithMany(p => p.OnlineOrderStatusHistories)
+                .HasForeignKey(d => d.NvId)
+                .HasConstraintName("FK_OnlineOrderStatusHistory_NhanVien");
+        });
+
         modelBuilder.Entity<ProductConditions>(entity =>
         {
             entity.HasKey(e => e.ProductConditionId).HasName("[PK__ProductC__D6ABB1739E437D37]");

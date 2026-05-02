@@ -1,0 +1,80 @@
+@model WebQuanLyNhaHang.ViewModel.AdminCuaHangPageViewModel
+@{
+    Layout = "_AdminContentLayout";
+    ViewData["Title"] = "Quản lý cửa hàng";
+    ViewData["ActiveAdminNav"] = "Stores";
+}
+
+<div class="admin-content">
+    <div class="admin-content__top">
+        <div>
+            <p class="admin-eyebrow">Cloudy Café Online</p>
+            <h1>Quản lý cửa hàng</h1>
+            <p>Thêm, sửa và ẩn các chi nhánh đang hiển thị ngoài website.</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="admin-alert">@TempData["success"]</div>
+    }
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="admin-alert admin-alert--error"></div>
+    }
+
+    <section class="admin-panel">
+        <h2>Thêm cửa hàng</h2>
+        <form class="admin-form-grid" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <label>Tên cửa hàng <input name="TenCuaHang" value="@Model.Form.TenCuaHang" required /></label>
+            <label>Địa chỉ <input name="DiaChi" value="@Model.Form.DiaChi" required /></label>
+            <label>Tỉnh thành <input name="TinhThanh" value="@Model.Form.TinhThanh" /></label>
+            <label>Quận huyện <input name="QuanHuyen" value="@Model.Form.QuanHuyen" /></label>
+            <label>Phường xã <input name="PhuongXa" value="@Model.Form.PhuongXa" /></label>
+            <label>Số điện thoại <input name="SoDienThoai" value="@Model.Form.SoDienThoai" /></label>
+            <label>Giờ mở cửa <input name="GioMoCua" type="time" value="@(Model.Form.GioMoCua?.ToString("HH\\:mm"))" /></label>
+            <label>Giờ đóng cửa <input name="GioDongCua" type="time" value="@(Model.Form.GioDongCua?.ToString("HH\\:mm"))" /></label>
+            <label class="admin-form-grid__wide">Ảnh <input name="PathPhoto" value="@Model.Form.PathPhoto" /></label>
+            <label class="admin-form-grid__wide">Google Maps <input name="GoogleMapUrl" value="@Model.Form.GoogleMapUrl" /></label>
+            <label>Sắp xếp <input name="SapXep" type="number" value="@Model.Form.SapXep" /></label>
+            <label class="admin-check"><input name="HienThi" type="checkbox" value="true" @(Model.Form.HienThi ? "checked" : null) /><input name="HienThi" type="hidden" value="false" /> Hiển thị</label>
+            <div class="admin-form-actions"><button type="submit">Thêm cửa hàng</button></div>
+        </form>
+    </section>
+
+    <section class="admin-panel">
+        <h2>Danh sách cửa hàng</h2>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Tên</th>
+                        <th>Địa chỉ</th>
+                        <th>Giờ</th>
+                        <th>Hiển thị</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var store in Model.Stores)
+                    {
+                        <tr>
+                            <td><strong>@store.TenCuaHang</strong><small>@store.SoDienThoai</small></td>
+                            <td>@store.DiaChi</td>
+                            <td>@(store.GioMoCua?.ToString("HH\\:mm") ?? "--") - @(store.GioDongCua?.ToString("HH\\:mm") ?? "--")</td>
+                            <td>@(store.HienThi ? "Có" : "Không")</td>
+                            <td class="admin-row-actions">
+                                <a asp-action="Edit" asp-route-id="@store.CuaHangId">Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@store.CuaHangId" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit">Ẩn</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

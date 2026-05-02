@@ -32,6 +32,45 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
+app.Use(async (context, next) =>
+{
+    const string customerSessionKey = "CustomerID";
+    const string customerCookieName = "CloudyCafeCustomer";
+    const string protectorPurpose = "CloudyCafe.CustomerCookie.v1";
+
+    if (!context.Session.GetInt32(customerSessionKey).HasValue &&
+        context.Request.Cookies.TryGetValue(customerCookieName, out var protectedCustomerId))
+    {
+        var protector = context.RequestServices
+            .GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>()
+            .CreateProtector(protectorPurpose);
+
+        try
+        {
+            var customerIdText = Microsoft.AspNetCore.DataProtection.DataProtectionCommonExtensions.Unprotect(protector, protectedCustomerId);
+            if (int.TryParse(customerIdText, out var customerId))
+            {
+                var db = context.RequestServices.GetRequiredService<QlnhaHangBtlContext>();
+                var customerExists = await db.KhachHangs
+                    .AnyAsync(customer => customer.KhId == customerId && !customer.Remove);
+
+                if (customerExists)
+                {
+                    context.Session.SetInt32(customerSessionKey, customerId);
+                }
+                else
+                {
+                    context.Response.Cookies.Delete(customerCookieName);
+                }
+            }
+        }
+        catch
+        {
+            context.Response.Cookies.Delete(customerCookieName);
+        }
+    }
+    await next();
+});
 app.UseCookiePolicy();
 app.UseAuthorization();
 

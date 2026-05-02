@@ -1,0 +1,298 @@
+@model WebQuanLyNhaHang.ViewModel.OnlineOrderHistoryViewModel
+@using WebQuanLyNhaHang.Models
+@{
+    Layout = "_CloudyCafeLayout";
+    ViewData["Title"] = "Lịch sử đơn hàng";
+    var statusSteps = new[]
+    {
+        OnlineOrderMetadata.StatusPending,
+        OnlineOrderMetadata.StatusPreparing,
+        OnlineOrderMetadata.StatusShipping,
+        OnlineOrderMetadata.StatusDelivered
+    };
+    var stepLabels = new Dictionary<string, string>
+    {
+        [OnlineOrderMetadata.StatusPending] = "Chờ xác nhận",
+        [OnlineOrderMetadata.StatusPreparing] = "Đang chuẩn bị",
+        [OnlineOrderMetadata.StatusShipping] = "Đang giao",
+        [OnlineOrderMetadata.StatusDelivered] = "Đã giao"
+    };
+
+    int StatusIndex(string status)
+    {
+        var index = Array.IndexOf(statusSteps, status);
+        return index < 0 ? 0 : index;
+    }
+
+    string PhotoUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return Url.Content("~/assets/images/logo.png");
+        }
+
+        var value = path.Trim();
+        if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return value;
+        }
+
+        if (value.StartsWith("~/", StringComparison.OrdinalIgnoreCase))
+        {
+            return Url.Content(value);
+        }
+
+        return value.StartsWith("/")
+            ? value
+            : Url.Content($"~/{value}");
+    }
+}
+
+<div class="profile-bg order-history-page">
+    <div class="container profile-shell">
+        <section class="profile-hero-card order-history-hero">
+            <div class="profile-cover"></div>
+            <div class="profile-main">
+                <h1>Lịch sử đơn hàng</h1>
+                <p>Theo dõi các đơn hàng online và trạng thái giao hàng của bạn.</p>
+            </div>
+        </section>
+
+        @if (!Model.Orders.Any())
+        {
+            <div class="empty-state order-history-empty">
+                <h2>Chưa có đơn hàng online</h2>
+                <p>Khi bạn đặt hàng online thành công, đơn hàng sẽ xuất hiện tại đây.</p>
+                <a class="btn" asp-controller="TrangChu" asp-action="Menu">Xem menu</a>
+            </div>
+        }
+        else
+        {
+            <div class="order-history-list" data-order-history-list data-page-size="5">
+                @foreach (var order in Model.Orders)
+                {
+                    var currentIndex = StatusIndex(order.StatusKey);
+                    var isCancelled = string.Equals(order.StatusKey, OnlineOrderMetadata.StatusCancelled, StringComparison.OrdinalIgnoreCase);
+                    var isDelivered = string.Equals(order.StatusKey, OnlineOrderMetadata.StatusDelivered, StringComparison.OrdinalIgnoreCase);
+                    var previewItems = order.Items.Take(2).ToList();
+
+                    <article class="online-order-card @(isDelivered ? "is-delivered is-compact" : string.Empty)" data-order-id="@order.OrderId" data-order-history-item>
+                        <div class="online-order-card__head">
+                            <div>
+                                <span class="order-code">@order.OrderCode</span>
+                                <h2>Đơn hàng online</h2>
+                                <p>@(order.SubmittedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa có thời gian")</p>
+                            </div>
+                            <span class="order-status-pill @order.StatusCssClass">@order.StatusLabel</span>
+                        </div>
+
+                        @if (isDelivered)
+                        {
+                            <div class="delivered-order-summary">
+                                <div>
+                                    <span>Tổng thanh toán</span>
+                                    <strong>@String.Format("{0:N0}", order.TotalAmount)đ</strong>
+                                </div>
+                                <p>
+                                    @foreach (var item in previewItems)
+                                    {
+                                        <span>@item.ProductName x @item.Quantity</span>
+                                    }
+                                    @if (order.Items.Count > previewItems.Count)
+                                    {
+                                        <span>+@(order.Items.Count - previewItems.Count) món khác</span>
+                                    }
+                                </p>
+                            </div>
+
+                            <details class="delivered-order-details">
+                                <summary>Xem chi tiết đơn đã giao</summary>
+                                <div class="delivered-order-details__body">
+                                    <div class="order-history-meta">
+                                        <div>
+                                            <span>Người nhận</span>
+                                            <strong>@(string.IsNullOrWhiteSpace(order.RecipientName) ? "Chưa có tên" : order.RecipientName)</strong>
+                                        </div>
+                                        <div>
+                                            <span>Số điện thoại</span>
+                                            <strong>@(string.IsNullOrWhiteSpace(order.Phone) ? "Chưa có SĐT" : order.Phone)</strong>
+                                        </div>
+                                        <div>
+                                            <span>Địa chỉ</span>
+                                            <strong>@(string.IsNullOrWhiteSpace(order.Address) ? "Chưa có địa chỉ" : order.Address)</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="order-history-items">
+                                        @foreach (var item in order.Items)
+                                        {
+                                            <div class="order-history-item">
+                                                <img src="@PhotoUrl(item.ProductPhoto)" alt="@item.ProductName">
+                                                <div>
+                                                    <strong>@item.ProductName</strong>
+                                                    <span>Số lượng: @item.Quantity</span>
+                                                    @if (!string.IsNullOrWhiteSpace(item.Note))
+                                                    {
+                                                        <small>@item.Note</small>
+                                                    }
+                                                </div>
+                                                <b>@String.Format("{0:N0}", item.LineTotal)đ</b>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(order.Note))
+                                    {
+                                        <p class="order-history-note">Ghi chú: @order.Note</p>
+                                    }
+                                </div>
+                            </details>
+                        }
+                        else
+                        {
+                            <div class="order-progress @(isCancelled ? "is-cancelled" : string.Empty)">
+                                @if (isCancelled)
+                                {
+                                    <span class="order-progress-cancelled">Đơn hàng đã hủy</span>
+                                }
+                                else
+                                {
+                                    @foreach (var step in statusSteps)
+                                    {
+                                        var stepIndex = StatusIndex(step);
+                                        <span class="order-progress-step @(stepIndex <= currentIndex ? "active" : string.Empty)">
+                                            <i></i>
+                                            <small>@stepLabels[step]</small>
+                                        </span>
+                                    }
+                                }
+                            </div>
+
+                            <div class="order-history-meta">
+                                <div>
+                                    <span>Người nhận</span>
+                                    <strong>@(string.IsNullOrWhiteSpace(order.RecipientName) ? "Chưa có tên" : order.RecipientName)</strong>
+                                </div>
+                                <div>
+                                    <span>Số điện thoại</span>
+                                    <strong>@(string.IsNullOrWhiteSpace(order.Phone) ? "Chưa có SĐT" : order.Phone)</strong>
+                                </div>
+                                <div>
+                                    <span>Địa chỉ</span>
+                                    <strong>@(string.IsNullOrWhiteSpace(order.Address) ? "Chưa có địa chỉ" : order.Address)</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-history-items">
+                                @foreach (var item in order.Items)
+                                {
+                                    <div class="order-history-item">
+                                        <img src="@PhotoUrl(item.ProductPhoto)" alt="@item.ProductName">
+                                        <div>
+                                            <strong>@item.ProductName</strong>
+                                            <span>Số lượng: @item.Quantity</span>
+                                            @if (!string.IsNullOrWhiteSpace(item.Note))
+                                            {
+                                                <small>@item.Note</small>
+                                            }
+                                        </div>
+                                        <b>@String.Format("{0:N0}", item.LineTotal)đ</b>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(order.Note))
+                            {
+                                <p class="order-history-note">Ghi chú: @order.Note</p>
+                            }
+
+                            <div class="order-history-total">
+                                <span>Tổng thanh toán</span>
+                                <strong>@String.Format("{0:N0}", order.TotalAmount)đ</strong>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+            <nav class="order-history-pagination" aria-label="Phân trang lịch sử đơn hàng" data-order-history-pagination hidden></nav>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    <script>
+        const historyConnection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+        historyConnection.start().catch(err => console.error(err.toString()));
+        historyConnection.on("OnlineOrderStatusUpdated", function () {
+            window.location.reload();
+        });
+
+        const orderList = document.querySelector("[data-order-history-list]");
+        const pagination = document.querySelector("[data-order-history-pagination]");
+
+        if (orderList && pagination) {
+            const cards = Array.from(orderList.querySelectorAll("[data-order-history-item]"));
+            const pageSize = Number(orderList.dataset.pageSize || "5");
+            const pageCount = Math.ceil(cards.length / pageSize);
+            let currentPage = 1;
+
+            function renderPage(page) {
+                currentPage = Math.min(Math.max(page, 1), pageCount);
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+
+                cards.forEach((card, index) => {
+                    card.hidden = index < start || index >= end;
+                });
+
+                pagination.querySelectorAll("button[data-page]").forEach(button => {
+                    const isActive = Number(button.dataset.page) === currentPage;
+                    button.classList.toggle("active", isActive);
+                    button.setAttribute("aria-current", isActive ? "page" : "false");
+                });
+
+                const previous = pagination.querySelector("[data-page-action='previous']");
+                const next = pagination.querySelector("[data-page-action='next']");
+                if (previous && next) {
+                    previous.disabled = currentPage === 1;
+                    next.disabled = currentPage === pageCount;
+                }
+            }
+
+            if (pageCount > 1) {
+                pagination.hidden = false;
+                pagination.innerHTML = [
+                    "<button type=\"button\" data-page-action=\"previous\">Trước</button>",
+                    ...Array.from({ length: pageCount }, (_, index) => `<button type="button" data-page="${index + 1}">${index + 1}</button>`),
+                    "<button type=\"button\" data-page-action=\"next\">Sau</button>"
+                ].join("");
+
+                pagination.addEventListener("click", function (event) {
+                    const button = event.target.closest("button");
+                    if (!button) {
+                        return;
+                    }
+
+                    if (button.dataset.pageAction === "previous") {
+                        renderPage(currentPage - 1);
+                        return;
+                    }
+
+                    if (button.dataset.pageAction === "next") {
+                        renderPage(currentPage + 1);
+                        return;
+                    }
+
+                    if (button.dataset.page) {
+                        renderPage(Number(button.dataset.page));
+                    }
+                });
+            }
+
+            renderPage(1);
+        }
+    </script>
+}

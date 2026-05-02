@@ -4,24 +4,49 @@
     var pageTitle = ViewData["Title"] as string ?? "Cloudy Café";
     var productModalJson = ViewData["ProductModalJson"] as string;
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
-    var currentCartId = Context.Session.GetInt32("OnlineCartDhId");
     var currentCustomerId = Context.Session.GetInt32("CustomerID");
     var currentCustomer = currentCustomerId.HasValue
         ? CartDb.KhachHangs.FirstOrDefault(customer => customer.KhId == currentCustomerId.Value && !customer.Remove)
         : null;
     var customerPhoto = currentCustomer?.PathPhoto?.Trim();
     var hasCustomerPhoto = !string.IsNullOrWhiteSpace(customerPhoto);
-    var cartCount = currentCartId.HasValue && currentCustomerId.HasValue
+    var cartCount = currentCustomerId.HasValue
         ? CartDb.ChiTietHoaDons
             .Where(item =>
-                item.DhId == currentCartId.Value &&
                 !item.Remove &&
                 !item.Dh.Remove &&
                 item.Dh.KhId == currentCustomerId.Value &&
                 item.Dh.VanChuyen == true &&
-                item.Dh.TrangThai != true)
+                item.Dh.TrangThai != true &&
+                item.Dh.GhiChu != null &&
+                item.Dh.GhiChu.Contains("\"t\":\"online\"") &&
+                item.Dh.GhiChu.Contains("\"s\":\"cart\""))
             .Sum(item => item.SoLuong ?? 0)
         : 0;
+    var hasActiveOnlineDelivery = false;
+    if (currentCustomerId.HasValue)
+    {
+        var onlineOrders = CartDb.DonHangs
+            .Where(order =>
+                order.KhId == currentCustomerId.Value &&
+                !order.Remove &&
+                order.VanChuyen == true &&
+                order.TrangThai == true &&
+                order.GhiChu != null &&
+                order.GhiChu.Contains("\"t\":\"online\""))
+            .OrderByDescending(order => order.GioVao ?? order.GioRa)
+            .Take(8)
+            .ToList();
+
+        hasActiveOnlineDelivery = onlineOrders.Any(order =>
+        {
+            var metadata = WebQuanLyNhaHang.Models.OnlineOrderMetadata.TryParse(order.GhiChu);
+            var status = WebQuanLyNhaHang.Models.OnlineOrderMetadata.NormalizeStatus(metadata?.DeliveryStatus);
+            return status != WebQuanLyNhaHang.Models.OnlineOrderMetadata.StatusDelivered &&
+                status != WebQuanLyNhaHang.Models.OnlineOrderMetadata.StatusCancelled &&
+                status != WebQuanLyNhaHang.Models.OnlineOrderMetadata.StatusCart;
+        });
+    }
 
     string Active(string key)
     {
@@ -141,6 +166,7 @@
                                     </span>
                                 </div>
                                 <a class="account-popover-link" asp-controller="Home" asp-action="Account">Thông tin tài khoản</a>
+                                <a class="account-popover-link" asp-controller="Home" asp-action="OrderHistory">Lịch sử đơn hàng</a>
                                 <form asp-controller="Home" asp-action="CustomerLogout" method="post">
                                     <button class="account-popover-link danger" type="submit">Đăng xuất</button>
                                 </form>
@@ -167,6 +193,14 @@
         <main tabindex="-1">
             @RenderBody()
         </main>
+
+        @if (hasActiveOnlineDelivery)
+        {
+            <a class="floating-shipper-button" asp-controller="Home" asp-action="OrderHistory" aria-label="Theo dõi đơn hàng online">
+                <span class="floating-shipper-button__ring"></span>
+                <img src="~/cloudycafe/img/icon_shiper.png" asp-append-version="true" alt="">
+            </a>
+        }
 
         <footer id="footer" class="footer">
             <div class="container">

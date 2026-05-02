@@ -40,11 +40,44 @@
     .card-custom{
         width:125px;
     }
+
+    body.service-page {
+        background: #fff;
+    }
+
+    .service-reveal {
+        opacity: 0;
+        transform: translateY(14px);
+        transition: opacity .45s ease, transform .45s ease;
+        transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    body.service-ready .service-reveal {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .service-soft-card {
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .service-soft-card:active {
+        transform: scale(.98);
+    }
+
+    .service-menu-button {
+        transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+        box-shadow: 0 10px 24px rgba(220, 53, 69, .18);
+    }
+
+    .service-menu-button:active {
+        transform: translateY(1px) scale(.99);
+    }
 </style>
 
-<body>
+<body class="service-page">
 
-    <div class="container header-banner text-start mt-4 custom-padding d-flex justify-content-between align-items-center">
+    <div class="container header-banner text-start mt-4 custom-padding d-flex justify-content-between align-items-center service-reveal" style="--reveal-delay: 40ms;">
         <div>
             <p><strong>DAB Coffee - Chùa Láng</strong></p>
             <p>137 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội, Việt Nam</p>
@@ -52,7 +85,7 @@
     </div>
 
     <div class="container custom-padding">
-        <div class="row">
+        <div class="row service-reveal" style="--reveal-delay: 110ms;">
             <div class="col-12 text-center">
                 <!-- Carousel bắt đầu -->
                 <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="1500">
@@ -68,7 +101,7 @@
             </div>
         </div>
 
-        <div class="row text-center">
+        <div class="row text-center service-reveal" style="--reveal-delay: 180ms;">
             <div class="col-12 mt-3">
                 <p>
                     Chúc bạn một ngày tốt lành!<br>
@@ -77,9 +110,9 @@
             </div>
         </div>
 
-        <div class="row my-4 justify-content-between">
+        <div class="row my-4 justify-content-between service-reveal" style="--reveal-delay: 250ms;">
             <div class="col-4 col-md-4 col-lg-4 mb-3 d-flex justify-content-center">
-                <div class="card-custom card fixed-size" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#paymentModal">
                     <div class="card-icon text-center">
                         <img src="/asset/img/imgWeb/request_payment.svg" alt="">
                     </div>
@@ -89,7 +122,7 @@
                 </div>
             </div>
             <div class="col-4 col-md-4 col-lg-4 mb-3 d-flex justify-content-center">
-                <div class="card-custom card fixed-size" data-bs-toggle="modal" data-bs-target="#requestModal">
+                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#requestModal">
                     <div class="card-icon  text-center">
                         <img src="/asset/img/imgWeb/request_service.svg" alt="">
                     </div>
@@ -99,7 +132,7 @@
                 </div>
             </div>
             <div class="col-4 col-md-4 col-lg-4 mb-3 d-flex justify-content-center">
-                <div class="card-custom card fixed-size" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#reviewModal">
                     <div class="card-icon  text-center">
                         <img src="/asset/img/imgWeb/rate.svg" alt="">
                     </div>
@@ -111,10 +144,10 @@
         </div>
 
 
-        <div class="row my-4">
+        <div class="row my-4 service-reveal" style="--reveal-delay: 320ms;">
             <div class="col-12">
                 <a asp-controller="Home" asp-action="Menu">
-                    <button class="btn btn-danger btn-lg btn-lg-custom w-100">
+                    <button class="btn btn-danger btn-lg btn-lg-custom w-100 service-menu-button">
                         <img src="/asset/img/imgWeb/menu.svg" alt="icon" class="icon-left" style="margin-right: 14px;">
                         Xem Menu - Gọi Món
                     </button>
@@ -196,6 +229,14 @@
         </div>
 
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            requestAnimationFrame(function () {
+                document.body.classList.add("service-ready");
+            });
+        });
+    </script>
 
 </body>
 

@@ -1,0 +1,37 @@
+@model WebQuanLyNhaHang.Models.BaiVietChuyenNha
+@{
+    Layout = "_AdminContentLayout";
+    ViewData["Title"] = "Sửa bài viết";
+    ViewData["ActiveAdminNav"] = "Stories";
+}
+
+<div class="admin-content">
+    <div class="admin-content__top">
+        <div>
+            <p class="admin-eyebrow">Cloudy Café Online</p>
+            <h1>Sửa bài viết</h1>
+        </div>
+        <a class="admin-link-button" asp-action="Index">Quay lại</a>
+    </div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="admin-alert admin-alert--error"></div>
+    }
+    <section class="admin-panel">
+        <form class="admin-form-grid" asp-action="Edit" asp-route-id="@Model.BaiVietId" method="post">
+            @Html.AntiForgeryToken()
+            <label>Tiêu đề <input asp-for="TieuDe" required /></label>
+            <label>Slug <input asp-for="Slug" /></label>
+            <label class="admin-form-grid__wide">Tóm tắt <textarea asp-for="TomTat" rows="3"></textarea></label>
+            <label class="admin-form-grid__wide">Nội dung <textarea asp-for="NoiDung" rows="5"></textarea></label>
+            <label class="admin-form-grid__wide">Ảnh <input asp-for="PathPhoto" /></label>
+            <label>Alt ảnh <input asp-for="AltText" /></label>
+            <label>Tác giả <input asp-for="TacGia" /></label>
+            <label>Ngày đăng <input asp-for="NgayDang" type="datetime-local" /></label>
+            <label>Sắp xếp <input asp-for="SapXep" type="number" /></label>
+            <label class="admin-check"><input asp-for="NoiBat" /> Nổi bật</label>
+            <label class="admin-check"><input asp-for="HienThi" /> Hiển thị</label>
+            <div class="admin-form-actions"><button type="submit">Lưu thay đổi</button></div>
+        </form>
+    </section>
+</div>

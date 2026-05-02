@@ -1,59 +1,215 @@
-﻿@model IEnumerable<WebQuanLyNhaHang.Models.ChiTietHoaDon>
+@model IEnumerable<WebQuanLyNhaHang.Models.ChiTietHoaDon>
+@using System.Globalization
 
 @{
-    ViewData["Title"] = "Index";
+    Layout = "_AdminContentLayout";
+    ViewData["Title"] = "Chi tiết đơn";
+    ViewData["ActiveAdminNav"] = "OrderDetails";
+
+    var culture = CultureInfo.GetCultureInfo("vi-VN");
+    var details = Model?.ToList() ?? new List<WebQuanLyNhaHang.Models.ChiTietHoaDon>();
+    var totalQuantity = details.Sum(item => item.SoLuong ?? 0);
+    var totalRevenue = details.Sum(item => item.ThanhTien ?? 0m);
+    var orderCount = details.Select(item => item.DhId).Distinct().Count();
+    var onlineCount = details.Count(item => item.Dh?.VanChuyen == true);
+
+    string FormatCurrency(decimal? value) => $"{(value ?? 0m).ToString("N0", culture)}đ";
+    string FormatDateTime(DateTime? value) => value.HasValue
+        ? value.Value.ToString("dd/MM/yyyy HH:mm", culture)
+        : "Chưa cập nhật";
 }
 
-<h1>Index</h1>
+@section Styles {
+    <style>
+        .order-detail-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.SoLuong)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ThanhTien)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Ghichu)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Dh)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Product)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.SoLuong)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ThanhTien)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Ghichu)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Dh.DhId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product.ProductId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CthdId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CthdId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CthdId">Delete</a>
-            </td>
-        </tr>
+        .order-detail-stat {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            padding: 16px;
+        }
+
+        .order-detail-stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .order-detail-stat strong {
+            display: block;
+            margin-top: 8px;
+            color: var(--ink);
+            font-size: 24px;
+            line-height: 1.15;
+        }
+
+        .order-detail-product {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+
+        .order-detail-product__image {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: #fff7ed;
+            object-fit: cover;
+            flex: 0 0 auto;
+        }
+
+        .order-detail-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            border-radius: 999px;
+            padding: 5px 10px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .order-detail-badge.is-online {
+            background: #ecfeff;
+            color: #0e7490;
+        }
+
+        .order-detail-badge.is-done {
+            background: #f0fdf4;
+            color: #15803d;
+        }
+
+        .order-detail-badge.is-open {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .order-detail-empty {
+            padding: 36px 16px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        @@media (max-width: 980px) {
+            .order-detail-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 560px) {
+            .order-detail-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 }
-    </tbody>
-</table>
+
+<div class="admin-content">
+    <div class="admin-content__top">
+        <div>
+            <p class="admin-eyebrow">F&amp;B Admin</p>
+            <h1>Chi tiết đơn</h1>
+            <p>Theo dõi món trong từng đơn, số lượng, thành tiền và trạng thái phục vụ.</p>
+        </div>
+        <a class="admin-link-button" asp-controller="DonHangs" asp-action="Index">Xem đơn hàng</a>
+    </div>
+
+    <div class="order-detail-stats">
+        <div class="order-detail-stat">
+            <span>Dòng chi tiết</span>
+            <strong>@details.Count</strong>
+        </div>
+        <div class="order-detail-stat">
+            <span>Tổng món</span>
+            <strong>@totalQuantity</strong>
+        </div>
+        <div class="order-detail-stat">
+            <span>Tổng tiền</span>
+            <strong>@FormatCurrency(totalRevenue)</strong>
+        </div>
+        <div class="order-detail-stat">
+            <span>Số đơn</span>
+            <strong>@orderCount</strong>
+        </div>
+    </div>
+
+    <section class="admin-panel">
+        <h2>Danh sách chi tiết đơn</h2>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Món</th>
+                        <th>Mã đơn</th>
+                        <th>Loại đơn</th>
+                        <th>Số lượng</th>
+                        <th>Thành tiền</th>
+                        <th>Thời gian</th>
+                        <th>Trạng thái</th>
+                        <th>Ghi chú</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!details.Any())
+                    {
+                        <tr>
+                            <td class="order-detail-empty" colspan="9">Chưa có chi tiết đơn nào.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in details.OrderByDescending(item => item.Dh?.GioVao).ThenByDescending(item => item.CthdId))
+                        {
+                            var productName = item.Product?.TenSanPham ?? $"Sản phẩm #{item.ProductId}";
+                            var orderType = item.Dh?.VanChuyen == true ? "Đơn mang về" : "Đơn tại quán";
+                            var statusText = item.Dh?.TrangThai == true ? "Hoàn tất" : "Đang xử lý";
+                            var statusClass = item.Dh?.TrangThai == true ? "is-done" : "is-open";
+
+                            <tr>
+                                <td>
+                                    <div class="order-detail-product">
+                                        @if (!string.IsNullOrWhiteSpace(item.Product?.PathPhoto))
+                                        {
+                                            <img class="order-detail-product__image" src="@item.Product.PathPhoto" alt="@productName" />
+                                        }
+                                        else
+                                        {
+                                            <div class="order-detail-product__image" aria-hidden="true"></div>
+                                        }
+                                        <div>
+                                            <strong>@productName</strong>
+                                            <small>#@item.ProductId</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><strong>#@item.DhId</strong><small>@(item.Dh?.BanId != null ? $"Bàn {item.Dh.BanId}" : "Online")</small></td>
+                                <td><span class="order-detail-badge @(item.Dh?.VanChuyen == true ? "is-online" : null)">@orderType</span></td>
+                                <td>@(item.SoLuong ?? 0)</td>
+                                <td>@FormatCurrency(item.ThanhTien)</td>
+                                <td>@FormatDateTime(item.Dh?.GioVao)</td>
+                                <td><span class="order-detail-badge @statusClass">@statusText</span></td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Ghichu) ? "--" : item.Ghichu)</td>
+                                <td class="admin-row-actions">
+                                    <a asp-action="Details" asp-route-id="@item.CthdId">Xem</a>
+                                    <a asp-action="Edit" asp-route-id="@item.CthdId">Sửa</a>
+                                    <a asp-action="Delete" asp-route-id="@item.CthdId">Xóa</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

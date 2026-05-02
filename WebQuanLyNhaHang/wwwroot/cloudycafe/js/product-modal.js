@@ -187,6 +187,73 @@
     document.body.classList.remove("modal-open");
   }
 
+  function animateProductToCart() {
+    const sourceImage = elements.image;
+    const cartTarget = document.querySelector(".cart-icon-wrap") || document.querySelector(".cart-link");
+
+    if (!sourceImage || !cartTarget || !sourceImage.src) {
+      return Promise.resolve();
+    }
+
+    const sourceRect = sourceImage.getBoundingClientRect();
+    const targetRect = cartTarget.getBoundingClientRect();
+
+    if (!sourceRect.width || !sourceRect.height || !targetRect.width || !targetRect.height) {
+      return Promise.resolve();
+    }
+
+    const flyer = document.createElement("img");
+    flyer.className = "cart-flyer";
+    flyer.src = sourceImage.src;
+    flyer.alt = "";
+    flyer.setAttribute("aria-hidden", "true");
+
+    const startSize = Math.min(86, Math.max(54, sourceRect.width * 0.28));
+    const startX = sourceRect.left + sourceRect.width / 2 - startSize / 2;
+    const startY = sourceRect.top + sourceRect.height / 2 - startSize / 2;
+    const endSize = 24;
+    const endX = targetRect.left + targetRect.width / 2 - endSize / 2;
+    const endY = targetRect.top + targetRect.height / 2 - endSize / 2;
+    const controlY = Math.min(startY, endY) - 90;
+
+    flyer.style.width = `${startSize}px`;
+    flyer.style.height = `${startSize}px`;
+    flyer.style.left = `${startX}px`;
+    flyer.style.top = `${startY}px`;
+    document.body.appendChild(flyer);
+
+    const animation = flyer.animate(
+      [
+        {
+          transform: "translate3d(0, 0, 0) scale(1)",
+          opacity: 0.98
+        },
+        {
+          transform: `translate3d(${(endX - startX) * 0.45}px, ${controlY - startY}px, 0) scale(0.72)`,
+          opacity: 0.9,
+          offset: 0.58
+        },
+        {
+          transform: `translate3d(${endX - startX}px, ${endY - startY}px, 0) scale(${endSize / startSize})`,
+          opacity: 0.12
+        }
+      ],
+      {
+        duration: 760,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "forwards"
+      }
+    );
+
+    return animation.finished
+      .catch(() => undefined)
+      .then(() => {
+        flyer.remove();
+        cartTarget.classList.add("cart-drop-pulse");
+        window.setTimeout(() => cartTarget.classList.remove("cart-drop-pulse"), 520);
+      });
+  }
+
   document.addEventListener("click", (event) => {
     const explicitButton = event.target.closest(".js-open-product-modal");
     const card = event.target.closest(".js-product-card");
@@ -248,7 +315,24 @@
     }
   });
 
-  form.addEventListener("submit", () => {
+  let isSubmittingAfterAnimation = false;
+  form.addEventListener("submit", (event) => {
     updateHiddenInputs();
+
+    if (isSubmittingAfterAnimation) {
+      return;
+    }
+
+    event.preventDefault();
+    const submitButton = form.querySelector(".product-submit-button");
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.classList.add("is-submitting");
+    }
+
+    animateProductToCart().finally(() => {
+      isSubmittingAfterAnimation = true;
+      form.submit();
+    });
   });
 })();

@@ -32,4 +32,6 @@ public partial class NhanVien
     public virtual ICollection<NvPq> NvPqs { get; set; } = new List<NvPq>();
 
     public virtual ICollection<Thuong> Thuongs { get; set; } = new List<Thuong>();
+
+    public virtual ICollection<OnlineOrderStatusHistory> OnlineOrderStatusHistories { get; set; } = new List<OnlineOrderStatusHistory>();
 }

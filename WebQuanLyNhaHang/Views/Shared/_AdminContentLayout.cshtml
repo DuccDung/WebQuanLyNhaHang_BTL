@@ -1,0 +1,48 @@
+@using Microsoft.AspNetCore.Http
+@{
+    Layout = null;
+    var title = ViewData["Title"]?.ToString() ?? "Admin";
+    var activeNav = ViewData["ActiveAdminNav"]?.ToString() ?? string.Empty;
+    var adminName = Context.Session.GetString("NhanVienName") ?? "Admin";
+    var adminAccount = Context.Session.GetString("NhanVienTaiKhoan") ?? "admin";
+    var initials = string.Concat(
+        adminName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(2)
+            .Select(part => char.ToUpperInvariant(part[0])));
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title</title>
+    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="dashboard-app">
+        @await Html.PartialAsync("_AdminSidebar")
+
+        <div class="main-shell">
+            <header class="topbar">
+                <div class="topbar__meta">
+                    <p class="topbar__eyebrow">Cloudy Café Admin</p>
+                    <div class="topbar__heading">
+                        <h1>@title</h1>
+                        <p>@adminAccount</p>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-scroll">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -12,6 +12,89 @@
     <link rel="stylesheet" href="~/asset/css/responsive.css">
     <link rel="stylesheet" type="text/css" href="btl.css">
     <link rel="stylesheet" href="~/asset/css/error.css">
+    <style>
+        .client-name-form {
+            display: grid;
+            gap: 10px;
+        }
+
+        .client-name-error {
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .inputName.input-validation-error {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+        }
+
+        .client-transition-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, .94);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .28s ease, visibility .28s ease;
+        }
+
+        .client-transition-overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .client-loader {
+            width: min(280px, 100%);
+            display: grid;
+            justify-items: center;
+            gap: 14px;
+            color: #333;
+            text-align: center;
+            transform: translateY(8px);
+            transition: transform .28s ease;
+        }
+
+        .client-transition-overlay.is-visible .client-loader {
+            transform: translateY(0);
+        }
+
+        .client-loader-spinner {
+            width: 46px;
+            height: 46px;
+            border: 4px solid rgba(247, 148, 30, .18);
+            border-top-color: rgb(247, 148, 30);
+            border-radius: 999px;
+            animation: clientSpin .72s linear infinite;
+        }
+
+        .client-loader-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .client-loader-text {
+            margin: 0;
+            color: #777;
+            font-size: 13px;
+        }
+
+        .client-name-form.is-loading .buy__item {
+            opacity: .82;
+            pointer-events: none;
+        }
+
+        @@keyframes clientSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
     <title>Kính chào quý khách</title>
 </head>
 
@@ -33,14 +116,54 @@
         <div class="text-tt text-center">Mời bạn nhập tên để nhà hàng phục vụ bạn nhanh chóng hơn, chính xác hơn</div>
 
         <div class="text-center">
-            <form asp-controller="home" asp-action="CustomerInfo" method="post">
-                <input maxlength="18" placeholder="Tên của bạn" name="CustomerName" type="text" class="inputName">
-                <button type="submit" class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
+            <form class="client-name-form" asp-controller="home" asp-action="CustomerInfo" method="post" data-client-form>
+                @Html.AntiForgeryToken()
+                <input maxlength="18" placeholder="Tên của bạn" name="CustomerName" type="text" class="inputName" required autocomplete="name" value="@(ViewData["CustomerName"] as string ?? string.Empty)">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <span class="client-name-error">Vui lòng nhập tên của bạn.</span>
+                }
+                <button type="submit" class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;" data-client-submit>
                     Bắt đầu
                 </button>
             </form>
         </div>
     </div>
+
+    <div class="client-transition-overlay" data-client-loading aria-hidden="true">
+        <div class="client-loader">
+            <div class="client-loader-spinner" aria-hidden="true"></div>
+            <p class="client-loader-title">Đang chuẩn bị bàn của bạn</p>
+            <p class="client-loader-text">Cloudy Cafe sẽ phục vụ bạn ngay</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("[data-client-form]");
+            const submitButton = document.querySelector("[data-client-submit]");
+            const loading = document.querySelector("[data-client-loading]");
+
+            if (!form || !loading) {
+                return;
+            }
+
+            form.addEventListener("submit", function () {
+                if (!form.checkValidity()) {
+                    return;
+                }
+
+                form.classList.add("is-loading");
+                loading.classList.add("is-visible");
+                loading.setAttribute("aria-hidden", "false");
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = "Đang vào...";
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

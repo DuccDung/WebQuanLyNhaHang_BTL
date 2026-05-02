@@ -70,7 +70,7 @@
                             : Array.Empty<WebQuanLyNhaHang.Models.Product>();
 
                         <li>
-                            <a class="category-button" href="#category-@category.CateId">
+                            <a class="category-button" href="#category-@category.CateId" data-category-link="category-@category.CateId">
                                 <span>@category.TenLoaiSanPham</span>
                                 <span class="count-pill">@products.Count</span>
                             </a>
@@ -85,11 +85,6 @@
         </aside>
 
         <section>
-            <div class="menu-heading">
-                <h1>@Model.Title</h1>
-                <p>@Model.Subtitle</p>
-            </div>
-
             @if (!Model.Categories.Any())
             {
                 <div class="empty-state">
@@ -110,7 +105,6 @@
                         <div class="product-section-head">
                             <div>
                                 <h2>@category.TenLoaiSanPham</h2>
-                                <p>@products.Count sản phẩm</p>
                             </div>
                         </div>
 
@@ -146,3 +140,47 @@
         </section>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const categoryLinks = Array.from(document.querySelectorAll("[data-category-link]"));
+            const sections = Array.from(document.querySelectorAll(".product-section[id]"));
+
+            function setActiveCategory(sectionId) {
+                categoryLinks.forEach(function (link) {
+                    link.classList.toggle("active", link.dataset.categoryLink === sectionId);
+                });
+            }
+
+            if (categoryLinks.length > 0) {
+                setActiveCategory(categoryLinks[0].dataset.categoryLink);
+            }
+
+            categoryLinks.forEach(function (link) {
+                link.addEventListener("click", function () {
+                    setActiveCategory(link.dataset.categoryLink);
+                });
+            });
+
+            const observer = new IntersectionObserver(function (entries) {
+                const visibleEntries = entries
+                    .filter(function (entry) { return entry.isIntersecting; })
+                    .sort(function (a, b) {
+                        return Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top);
+                    });
+
+                if (visibleEntries.length > 0) {
+                    setActiveCategory(visibleEntries[0].target.id);
+                }
+            }, {
+                rootMargin: "-140px 0px -55% 0px",
+                threshold: 0.01
+            });
+
+            sections.forEach(function (section) {
+                observer.observe(section);
+            });
+        });
+    </script>
+}

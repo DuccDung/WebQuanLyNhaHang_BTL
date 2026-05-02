@@ -36,4 +36,8 @@ public partial class DonHang
     public virtual KhuyenMai? Km { get; set; }
 
     public virtual NhanVien? Nv { get; set; }
+
+    public virtual OnlineOrderInfo? OnlineOrderInfo { get; set; }
+
+    public virtual ICollection<OnlineOrderStatusHistory> OnlineOrderStatusHistories { get; set; } = new List<OnlineOrderStatusHistory>();
 }

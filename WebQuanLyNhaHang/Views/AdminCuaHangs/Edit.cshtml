@@ -1,0 +1,38 @@
+@model WebQuanLyNhaHang.Models.CuaHang
+@{
+    Layout = "_AdminContentLayout";
+    ViewData["Title"] = "Sửa cửa hàng";
+    ViewData["ActiveAdminNav"] = "Stores";
+}
+
+<div class="admin-content">
+    <div class="admin-content__top">
+        <div>
+            <p class="admin-eyebrow">Cloudy Café Online</p>
+            <h1>Sửa cửa hàng</h1>
+        </div>
+        <a class="admin-link-button" asp-action="Index">Quay lại</a>
+    </div>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="admin-alert admin-alert--error"></div>
+    }
+    <section class="admin-panel">
+        <form class="admin-form-grid" asp-action="Edit" asp-route-id="@Model.CuaHangId" method="post">
+            @Html.AntiForgeryToken()
+            <label>Tên cửa hàng <input asp-for="TenCuaHang" required /></label>
+            <label>Địa chỉ <input asp-for="DiaChi" required /></label>
+            <label>Tỉnh thành <input asp-for="TinhThanh" /></label>
+            <label>Quận huyện <input asp-for="QuanHuyen" /></label>
+            <label>Phường xã <input asp-for="PhuongXa" /></label>
+            <label>Số điện thoại <input asp-for="SoDienThoai" /></label>
+            <label>Giờ mở cửa <input asp-for="GioMoCua" type="time" /></label>
+            <label>Giờ đóng cửa <input asp-for="GioDongCua" type="time" /></label>
+            <label class="admin-form-grid__wide">Ảnh <input asp-for="PathPhoto" /></label>
+            <label class="admin-form-grid__wide">Google Maps <input asp-for="GoogleMapUrl" /></label>
+            <label>Sắp xếp <input asp-for="SapXep" type="number" /></label>
+            <label class="admin-check"><input asp-for="HienThi" /> Hiển thị</label>
+            <div class="admin-form-actions"><button type="submit">Lưu thay đổi</button></div>
+        </form>
+    </section>
+</div>

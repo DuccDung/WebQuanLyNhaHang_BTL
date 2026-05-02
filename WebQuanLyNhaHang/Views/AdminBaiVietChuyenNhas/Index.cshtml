@@ -1,0 +1,79 @@
+@model WebQuanLyNhaHang.ViewModel.AdminBaiVietChuyenNhaPageViewModel
+@{
+    Layout = "_AdminContentLayout";
+    ViewData["Title"] = "Quản lý Chuyện nhà";
+    ViewData["ActiveAdminNav"] = "Stories";
+}
+
+<div class="admin-content">
+    <div class="admin-content__top">
+        <div>
+            <p class="admin-eyebrow">Cloudy Café Online</p>
+            <h1>Quản lý Chuyện nhà</h1>
+            <p>Quản lý các bài viết đang hiển thị ngoài website.</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="admin-alert">@TempData["success"]</div>
+    }
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="admin-alert admin-alert--error"></div>
+    }
+
+    <section class="admin-panel">
+        <h2>Thêm bài viết</h2>
+        <form class="admin-form-grid" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <label>Tiêu đề <input name="TieuDe" value="@Model.Form.TieuDe" required /></label>
+            <label>Slug <input name="Slug" value="@Model.Form.Slug" /></label>
+            <label class="admin-form-grid__wide">Tóm tắt <textarea name="TomTat" rows="3">@Model.Form.TomTat</textarea></label>
+            <label class="admin-form-grid__wide">Nội dung <textarea name="NoiDung" rows="5">@Model.Form.NoiDung</textarea></label>
+            <label class="admin-form-grid__wide">Ảnh <input name="PathPhoto" value="@Model.Form.PathPhoto" /></label>
+            <label>Alt ảnh <input name="AltText" value="@Model.Form.AltText" /></label>
+            <label>Tác giả <input name="TacGia" value="@Model.Form.TacGia" /></label>
+            <label>Ngày đăng <input name="NgayDang" type="datetime-local" value="@Model.Form.NgayDang.ToString("yyyy-MM-ddTHH:mm")" /></label>
+            <label>Sắp xếp <input name="SapXep" type="number" value="@Model.Form.SapXep" /></label>
+            <label class="admin-check"><input name="NoiBat" type="checkbox" value="true" @(Model.Form.NoiBat ? "checked" : null) /><input name="NoiBat" type="hidden" value="false" /> Nổi bật</label>
+            <label class="admin-check"><input name="HienThi" type="checkbox" value="true" @(Model.Form.HienThi ? "checked" : null) /><input name="HienThi" type="hidden" value="false" /> Hiển thị</label>
+            <div class="admin-form-actions"><button type="submit">Thêm bài viết</button></div>
+        </form>
+    </section>
+
+    <section class="admin-panel">
+        <h2>Danh sách bài viết</h2>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Tác giả</th>
+                        <th>Ngày đăng</th>
+                        <th>Hiển thị</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var post in Model.Posts)
+                    {
+                        <tr>
+                            <td><strong>@post.TieuDe</strong><small>@post.Slug</small></td>
+                            <td>@post.TacGia</td>
+                            <td>@post.NgayDang.ToString("dd/MM/yyyy")</td>
+                            <td>@(post.HienThi ? "Có" : "Không")</td>
+                            <td class="admin-row-actions">
+                                <a asp-action="Edit" asp-route-id="@post.BaiVietId">Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@post.BaiVietId" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit">Ẩn</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

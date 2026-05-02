@@ -74,16 +74,30 @@ namespace WebQuanLyNhaHang.Controllers
                 "CAKE"));
         }
 
-        public IActionResult ChuyenNha()
+        public async Task<IActionResult> ChuyenNha()
         {
             ViewData["ActiveNav"] = "ChuyenNha";
-            return View();
+            var posts = await _qlnhaHangBtlContext.BaiVietChuyenNhas
+                .AsNoTracking()
+                .Where(post => post.HienThi && !post.Remove)
+                .OrderBy(post => post.SapXep)
+                .ThenByDescending(post => post.NgayDang)
+                .ToListAsync();
+
+            return View(posts);
         }
 
-        public IActionResult CuaHang()
+        public async Task<IActionResult> CuaHang()
         {
             ViewData["ActiveNav"] = "CuaHang";
-            return View();
+            var stores = await _qlnhaHangBtlContext.CuaHangs
+                .AsNoTracking()
+                .Where(store => store.HienThi && !store.Remove)
+                .OrderBy(store => store.SapXep)
+                .ThenBy(store => store.CuaHangId)
+                .ToListAsync();
+
+            return View(stores);
         }
 
         private TrangChuMenuPageViewModel BuildMenuPage(string title, string subtitle, params string[] categoryNames)
