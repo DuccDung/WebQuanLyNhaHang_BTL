@@ -168,12 +168,77 @@ textarea::placeholder {
     width: 100%;
     -webkit-transition: all .3s ease-in-out;
     transition: all .3s ease-in-out;
+    position: relative;
+    overflow: hidden;
 }
 
     .add-to-order span {
         font-size: 12px;
         display: block;
     }
+
+.add-to-order__content,
+.add-to-order__loading {
+    width: 100%;
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.add-to-order__label {
+    font-size: 16px !important;
+}
+
+.add-to-order__price {
+    font-size: 12px !important;
+}
+
+.add-to-order__loading {
+    align-items: center;
+    display: flex !important;
+    gap: 8px;
+    justify-content: center;
+    left: 0;
+    opacity: 0;
+    padding: 0 12px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scale(.96);
+    pointer-events: none;
+}
+
+.add-to-order__loading span {
+    width: auto;
+}
+
+.add-to-order__spinner {
+    animation: add-to-order-spin .72s linear infinite;
+    border: 2px solid rgba(255, 255, 255, .45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block !important;
+    height: 16px;
+    width: 16px !important;
+}
+
+.add-to-order.is-loading {
+    background-color: #df7f0a;
+    cursor: wait;
+}
+
+.add-to-order.is-loading .add-to-order__content {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
+.add-to-order.is-loading .add-to-order__loading {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
+@keyframes add-to-order-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 
 .btn-outline-secondary {
     border-radius: 8px;

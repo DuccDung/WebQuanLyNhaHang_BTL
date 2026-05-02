@@ -334,7 +334,8 @@ namespace WebQuanLyNhaHang.Controllers
 
         public IActionResult Service()
         {
-            return View();
+            ViewModelCart viewModelCart = new ViewModelCart(_qlnhaHangBtlContext);
+            return View(viewModelCart);
         }
         // Từ trang Client gửi tên và số bàn tới đây để thêm dữ liệu khách hàng vào bàn
         [HttpPost]
@@ -358,48 +359,53 @@ namespace WebQuanLyNhaHang.Controllers
             ViewModelMenu viewModelMenu = new ViewModelMenu(_qlnhaHangBtlContext);
             return View(viewModelMenu);
         }
-        public IActionResult GetName(string txtsearch)
+        public IActionResult GetName(string? txtsearch)
         {
             ViewModelMenu viewModelMenu = new ViewModelMenu(_qlnhaHangBtlContext);
             var results = viewModelMenu.ProductsBySearch(txtsearch);
-            if(results == null)
-            {
-                Console.WriteLine("jjdj");
-            }
             return PartialView("ProductTable", results);
         }
        
 
-        public IActionResult ProductDetail(int ProductID)
+        public IActionResult ProductDetail(int ProductID, int? cthdId)
         {
             int? banId = HttpContext.Session.GetInt32("BanId"); // lấy dữ liệu ID bàn từ Sesion
             int? DhId = GetActiveDineInOrderId(); // Lấy id đơn local
             ViewModelProductDetail viewModelProductDetail = new ViewModelProductDetail(_qlnhaHangBtlContext);
             var product = viewModelProductDetail.FindProductDetaiById(ProductID); // Dữ Liệu product đưa vào View
+            ViewData["CthdId"] = cthdId;
+            ViewData["SelectedCondition"] = null;
+            ViewData["GhiChu"] = null;
             // 
             var DH = _qlnhaHangBtlContext.DonHangs.Where(e => e.DhId == DhId && !e.Remove && e.VanChuyen != true).FirstOrDefault(); // lấy ra đơn hàng Của bàn đag quét
             if(DH != null)
             {
                 var CTDH = _qlnhaHangBtlContext.ChiTietHoaDons
-             .Where(e => e.ProductId == ProductID && e.DhId == DH.DhId && !e.Remove).FirstOrDefault();
+             .Where(e => e.ProductId == ProductID && e.DhId == DH.DhId && !e.Remove && (!cthdId.HasValue || e.CthdId == cthdId.Value)).FirstOrDefault();
                 // chi tiết đơn hàng của sản phẩm
                 if (CTDH == null)
                 {  // trường hợp chưa có Chi tiết đơn hàng thì mặc định cho nó về 1
                     ViewData["SoLuong"] = 1;
+                    ViewData["CthdId"] = null;
                 }
                 else
                 {
                     ViewData["SoLuong"] = CTDH.SoLuong;
+                    ViewData["CthdId"] = CTDH.CthdId;
+                    var editState = ParseCartItemNote(CTDH.Ghichu);
+                    ViewData["SelectedCondition"] = editState.Condition;
+                    ViewData["GhiChu"] = editState.Note;
                 }
             }
             else
             {
                 ViewData["SoLuong"] = 1;
+                ViewData["CthdId"] = null;
             }
             return View(product);
         }
         [HttpPost]  // Đón dữ liệu từ chi tiết hóa đơn gửi lên
-        public IActionResult CreateProductDetail(int soluong, int productid, string? condition, string? ghichu, string? returnUrl) // Thêm CTHD 
+        public IActionResult CreateProductDetail(int soluong, int productid, int? cthdId, string? condition, string? ghichu, string? returnUrl) // Thêm CTHD 
         {
             if (!HttpContext.Session.GetInt32("BanId").HasValue)
             {
@@ -424,6 +430,30 @@ namespace WebQuanLyNhaHang.Controllers
                 string.IsNullOrWhiteSpace(ghichu) ? null : $"Ghi Chú: {ghichu}"
             }.Where(item => item != null));
             var unitPrice = (product.GiaTien ?? 0m) + ResolveOptionExtra(condition, ghichu);
+
+            if (cthdId.HasValue)
+            {
+                var editCartItem = _qlnhaHangBtlContext.ChiTietHoaDons
+                    .FirstOrDefault(item =>
+                        item.CthdId == cthdId.Value &&
+                        item.DhId == DH.DhId &&
+                        item.ProductId == productid &&
+                        !item.Remove &&
+                        item.Dh.VanChuyen != true);
+
+                if (editCartItem != null)
+                {
+                    editCartItem.Ghichu = note;
+                    editCartItem.SoLuong = quantity;
+                    editCartItem.ThanhTien = unitPrice * quantity;
+
+                    _qlnhaHangBtlContext.SaveChanges();
+                    RefreshCartTotal(DH.DhId);
+                    _hubContext.Clients.All.SendAsync("DatabaseUpdated");
+
+                    return RedirectAfterAddToCart(returnUrl);
+                }
+            }
 
             var cartItem = _qlnhaHangBtlContext.ChiTietHoaDons
                 .FirstOrDefault(item =>
@@ -720,11 +750,14 @@ namespace WebQuanLyNhaHang.Controllers
             var customer = GetCurrentDineInCustomer();
             if (customer != null)
             {
-                DH.GhiChu = DineInOrderMetadata.Create(customer, banId.Value).ToJson();
+                var metadata = DineInOrderMetadata.Create(customer, banId.Value);
+                metadata.Status = "submitted";
+                DH.GhiChu = metadata.ToJson();
             }
             DH.TrangThai = true;
             DH.VanChuyen = false;
             _qlnhaHangBtlContext.SaveChanges();
+            HttpContext.Session.Remove(LegacyCartSessionKey);
             //dùng phương thức của signalR để nhận biết sự thay đổi của database khi client đặt đơn hàng
             // Phát sự kiện qua SignalR
             _hubContext.Clients.All.SendAsync("OderSuccess");
@@ -762,6 +795,36 @@ namespace WebQuanLyNhaHang.Controllers
             {
                 return NotFound();
             }
+        }
+
+        [HttpPost]
+        public IActionResult ClearCart()
+        {
+            var localDhId = GetActiveDineInOrderId();
+            if (!localDhId.HasValue)
+            {
+                ViewModelCart emptyViewModelCart = new ViewModelCart(_qlnhaHangBtlContext);
+                return PartialView("CTDHTable", emptyViewModelCart);
+            }
+
+            var cartItems = _qlnhaHangBtlContext.ChiTietHoaDons
+                .Where(item =>
+                    item.DhId == localDhId.Value &&
+                    !item.Remove &&
+                    item.Dh.VanChuyen != true)
+                .ToList();
+
+            foreach (var item in cartItems)
+            {
+                item.Remove = true;
+            }
+
+            _qlnhaHangBtlContext.SaveChanges();
+            RefreshCartTotal(localDhId.Value);
+
+            _hubContext.Clients.All.SendAsync("DatabaseUpdated");
+            ViewModelCart viewModelCart = new ViewModelCart(_qlnhaHangBtlContext);
+            return PartialView("CTDHTable", viewModelCart);
         }
 
         [HttpPost]
@@ -958,6 +1021,7 @@ namespace WebQuanLyNhaHang.Controllers
                         order.DhId == dhId.Value &&
                         !order.Remove &&
                         order.VanChuyen != true &&
+                        order.TrangThai != true &&
                         (!banId.HasValue || order.BanId == banId.Value));
 
                 if (sessionOrder != null && IsDineInOrderForCustomer(sessionOrder, customer))
@@ -994,6 +1058,7 @@ namespace WebQuanLyNhaHang.Controllers
                         order.DhId == dhId.Value &&
                         !order.Remove &&
                         order.VanChuyen != true &&
+                        order.TrangThai != true &&
                         (!banId.HasValue || order.BanId == banId.Value))
                 : null;
 
@@ -1041,6 +1106,7 @@ namespace WebQuanLyNhaHang.Controllers
                     order.BanId == banId &&
                     !order.Remove &&
                     order.VanChuyen != true &&
+                    order.TrangThai != true &&
                     order.GhiChu != null &&
                     order.GhiChu.Contains("\"t\":\"dinein\"") &&
                     order.GhiChu.Contains(customerMarker))
@@ -1111,6 +1177,36 @@ namespace WebQuanLyNhaHang.Controllers
             }
 
             return extra;
+        }
+
+        private static (string? Condition, string? Note) ParseCartItemNote(string? cartItemNote)
+        {
+            if (string.IsNullOrWhiteSpace(cartItemNote))
+            {
+                return (null, null);
+            }
+
+            const string conditionPrefix = "Trạng Thái:";
+            const string notePrefix = "Ghi Chú:";
+            var noteIndex = cartItemNote.IndexOf(notePrefix, StringComparison.OrdinalIgnoreCase);
+            string? condition = null;
+            string? note = null;
+
+            if (cartItemNote.StartsWith(conditionPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var conditionStart = conditionPrefix.Length;
+                var conditionLength = noteIndex >= 0
+                    ? noteIndex - conditionStart
+                    : cartItemNote.Length - conditionStart;
+                condition = cartItemNote.Substring(conditionStart, conditionLength).Trim();
+            }
+
+            if (noteIndex >= 0)
+            {
+                note = cartItemNote.Substring(noteIndex + notePrefix.Length).Trim();
+            }
+
+            return (condition, note);
         }
 
         private IActionResult RedirectAfterAddToCart(string? returnUrl)

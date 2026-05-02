@@ -12,10 +12,11 @@ namespace WebQuanLyNhaHang.Views.Shared.Components.ProductConditioin
         {
             _qlnhaHangBtlContext = qlnhaHangBtlContext;
         }
-        public async Task<IViewComponentResult> InvokeAsync(int ProductID) // liệt kê ra category
+        public async Task<IViewComponentResult> InvokeAsync(int ProductID, string? selectedCondition = null) // liệt kê ra category
         {
             ViewModelProductDetail viewModelProductDetail = new ViewModelProductDetail(_qlnhaHangBtlContext);
             var productCondition = viewModelProductDetail.FindProductConditionDetaiById(ProductID);
+            ViewData["SelectedCondition"] = selectedCondition;
             return View("CheckboxCondition" , productCondition);
         }
     }

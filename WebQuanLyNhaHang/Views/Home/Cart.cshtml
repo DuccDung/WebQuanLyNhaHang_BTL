@@ -3,6 +3,8 @@
 <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+        <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
@@ -28,7 +30,6 @@
     var cartItems = Model.CTHD_PctByDh(DhId);
     var cartTotal = Model.TongtienById(DhId).TongTien ?? 0;
     var hasCartItems = cartItems.Any();
-    var cartMessage = TempData["CartMessage"] as string;
 }
 <body>
     <div class="foreground" >
@@ -47,20 +48,18 @@
                     Các món đang gọi
                 </div>
                 <div class="clear-button__container">
-                    <div class="btn--clear-cart">
-                        Clear
-                    </div>
+                    @if (hasCartItems)
+                    {
+                        <div class="btn--clear-cart" role="button" tabindex="0">
+                            Clear
+                        </div>
+                    }
                 </div>
             </div>
         </div>
 
         <div id="cart__content_">
             <div class="container__card">
-                @if (!string.IsNullOrWhiteSpace(cartMessage))
-                {
-                    <div class="cart-message">@cartMessage</div>
-                }
-
                 @if (!hasCartItems)
                 {
                     <div class="cart-empty">
@@ -92,12 +91,12 @@
                                         </div>
                                     </div>
                                     <div class="item-inner--left">
-                                        <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId">
+                                        <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId" data-name="@item.TenSanPham">
                                             <i class="fa-solid fa-xmark"></i>
                                         </div>
-                                        <div class="btn-edit">
+                                        <a asp-controller="Home" asp-action="ProductDetail" asp-route-ProductID="@item.ProductId" asp-route-cthdId="@item.CthdId" class="btn-edit">
                                             <span>edit</span>
-                                        </div>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -106,14 +105,14 @@
                 }
             </div>
 
-            <div class="card__total-price">
-                <div>Tổng Tiền</div>
-                <div>@String.Format("{0:N0}", cartTotal)đ</div>
-            </div>
             @if (hasCartItems)
             {
+                <div class="card__total-price">
+                    <div>Tổng Tiền</div>
+                    <div>@String.Format("{0:N0}", cartTotal)đ</div>
+                </div>
                 <div class="btn-sumbit">
-                    <a asp-controller="Home" asp-action="OrderSuccess">
+                    <a asp-controller="Home" asp-action="OrderSuccess" class="cart-order-submit">
                         <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
                             Gửi yêu cầu gọi món
                         </button>
@@ -124,29 +123,252 @@
        
 
     </div>
+    <div class="cart-confirm" id="cartRemoveConfirm" aria-hidden="true">
+        <div class="cart-confirm__backdrop" data-confirm-cancel></div>
+        <div class="cart-confirm__dialog" role="dialog" aria-modal="true" aria-labelledby="cartRemoveConfirmTitle">
+            <div class="cart-confirm__message" id="cartRemoveConfirmTitle">
+                Bạn có chắc muốn loại bỏ sản phẩm này khỏi giỏ hàng của mình không?
+            </div>
+            <div class="cart-confirm__actions">
+                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-confirm-cancel>Không</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-confirm-agree>Đồng ý</button>
+            </div>
+        </div>
+    </div>
+    <div class="cart-confirm" id="cartOrderConfirm" aria-hidden="true">
+        <div class="cart-confirm__backdrop" data-order-cancel></div>
+        <div class="cart-confirm__dialog" role="dialog" aria-modal="true" aria-labelledby="cartOrderConfirmTitle">
+            <div class="cart-confirm__message" id="cartOrderConfirmTitle">
+                Bạn có chắc muốn đặt những món đã chọn không?
+            </div>
+            <div class="cart-confirm__actions">
+                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-order-cancel>Không</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-order-agree>Đồng ý</button>
+            </div>
+        </div>
+    </div>
+    <div class="cart-confirm cart-success" id="cartOrderSuccess" aria-hidden="true">
+        <div class="cart-confirm__backdrop"></div>
+        <div class="cart-success__dialog" role="dialog" aria-modal="true" aria-labelledby="cartOrderSuccessTitle">
+            <div class="cart-success__icon" aria-hidden="true">
+                <span></span>
+            </div>
+            <h2 id="cartOrderSuccessTitle">Gọi món thành công, vui lòng chờ nhân viên ra xác nhận!</h2>
+            <div class="cart-success__note">
+                Lưu ý: Nếu đợi quá lâu hoặc có thay đổi về món đã gọi bạn có thể dùng chức năng <strong>Gọi nhân viên</strong> ở màn hình chính
+            </div>
+            <div class="cart-success__actions">
+                <button type="button" class="cart-success__button" data-success-ok>Đồng ý</button>
+            </div>
+        </div>
+    </div>
     <!-- Thêm SignalR script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Lắng nghe sự kiện khi click vào nút remove
-            $(document).on('click','.btn-remove' ,function () {
-                var cthdId = $(this).data('id'); // Lấy id từ thuộc tính data-id của div
+            const confirmModal = $('#cartRemoveConfirm');
+            const confirmMessage = $('#cartRemoveConfirmTitle');
+            const orderConfirmModal = $('#cartOrderConfirm');
+            const orderSuccessModal = $('#cartOrderSuccess');
+            let pendingRemove = null;
+            let pendingOrderUrl = null;
+            let successRedirectUrl = '@Url.Action("Service", "Home")';
+
+            function refreshCartContent(response) {
+                const cartContent = $("div#cart__content_");
+                cartContent.addClass('is-refreshing');
+                setTimeout(function () {
+                    cartContent.html(response);
+                    syncCartHeaderActions();
+                    requestAnimationFrame(function () {
+                        cartContent.removeClass('is-refreshing');
+                    });
+                }, 120);
+            }
+
+            function syncCartHeaderActions() {
+                const hasItems = $("div#cart__content_ .bought--item").length > 0;
+                $('.btn--clear-cart').toggle(hasItems);
+            }
+
+            function openRemoveConfirm(removeButton) {
+                const productName = removeButton.data('name') || 'sản phẩm này';
+                pendingRemove = {
+                    id: removeButton.data('id'),
+                    item: removeButton.closest('.bought--item')
+                };
+                confirmMessage.text('Bạn có chắc muốn loại bỏ sản phẩm ' + productName + ' khỏi giỏ hàng của mình không?');
+                confirmModal.addClass('is-open').attr('aria-hidden', 'false');
+                $('body').addClass('cart-confirm-open');
+                setTimeout(function () {
+                    $('[data-confirm-agree]').trigger('focus');
+                }, 180);
+            }
+
+            function closeRemoveConfirm() {
+                confirmModal.removeClass('is-open').attr('aria-hidden', 'true');
+                $('body').removeClass('cart-confirm-open');
+            }
+
+            function openOrderConfirm(orderUrl) {
+                pendingOrderUrl = orderUrl;
+                orderConfirmModal.addClass('is-open').attr('aria-hidden', 'false');
+                $('body').addClass('cart-confirm-open');
+                setTimeout(function () {
+                    $('[data-order-agree]').trigger('focus');
+                }, 180);
+            }
+
+            function closeOrderConfirm() {
+                orderConfirmModal.removeClass('is-open').attr('aria-hidden', 'true');
+                $('body').removeClass('cart-confirm-open');
+            }
+
+            function openOrderSuccess() {
+                orderSuccessModal.addClass('is-open').attr('aria-hidden', 'false');
+                $('body').addClass('cart-confirm-open');
+                setTimeout(function () {
+                    $('[data-success-ok]').trigger('focus');
+                }, 180);
+            }
+
+            $(document).on('click', '.btn-remove', function (event) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                openRemoveConfirm($(this));
+            });
+
+            $(document).on('click', '[data-confirm-cancel]', function () {
+                pendingRemove = null;
+                closeRemoveConfirm();
+            });
+
+            $(document).on('keydown', function (event) {
+                if (event.key === 'Escape' && confirmModal.hasClass('is-open')) {
+                    pendingRemove = null;
+                    closeRemoveConfirm();
+                }
+                if (event.key === 'Escape' && orderConfirmModal.hasClass('is-open')) {
+                    pendingOrderUrl = null;
+                    closeOrderConfirm();
+                }
+            });
+
+            $(document).on('click', '[data-confirm-agree]', function () {
+                if (!pendingRemove || $(this).hasClass('is-loading')) {
+                    return;
+                }
+
+                var agreeButton = $(this);
+                var cthdId = pendingRemove.id;
+                var itemRow = pendingRemove.item;
+
+                agreeButton.addClass('is-loading');
+                itemRow.addClass('is-removing');
 
                 $.ajax({
-                    url: '@Url.Action("RemoveItem", "Home")', // Đường dẫn đến action xử lý
-                    type: 'POST', // Phương thức gửi là POST
+                    url: '@Url.Action("RemoveItem", "Home")',
+                    type: 'POST',
                     data: {
-                        id: cthdId  // Gửi id chi tiết đơn hàng
+                        id: cthdId
                     },
                     success: function(response) {
-                        $("div#cart__content_").html(response); // trả về 1 patialView
+                        closeRemoveConfirm();
+                        refreshCartContent(response);
                     },
                     error: function(xhr, status, error) {
-                        console.log("Đã có lỗi xảy ra: " + error);
+                        itemRow.removeClass('is-removing');
+                        console.log("Remove item error: " + error);
+                    },
+                    complete: function() {
+                        agreeButton.removeClass('is-loading');
+                        pendingRemove = null;
                     }
                 });
             });
+
+            $(document).on('click', '.cart-order-submit', function (event) {
+                event.preventDefault();
+                const orderUrl = $(this).attr('href');
+                if (orderUrl) {
+                    openOrderConfirm(orderUrl);
+                }
+            });
+
+            $(document).on('click', '[data-order-cancel]', function () {
+                pendingOrderUrl = null;
+                closeOrderConfirm();
+            });
+
+            $(document).on('click', '[data-order-agree]', function () {
+                if (!pendingOrderUrl || $(this).hasClass('is-loading')) {
+                    return;
+                }
+
+                const agreeButton = $(this);
+                agreeButton.addClass('is-loading');
+
+                $.ajax({
+                    url: pendingOrderUrl,
+                    type: 'GET',
+                    success: function(response, status, xhr) {
+                        const redirectedUrl = xhr.responseURL || successRedirectUrl;
+                        if (redirectedUrl.indexOf('/Home/Cart') !== -1) {
+                            window.location.href = redirectedUrl;
+                            return;
+                        }
+                        successRedirectUrl = redirectedUrl;
+                        closeOrderConfirm();
+                        openOrderSuccess();
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Order submit error: " + error);
+                        window.location.href = pendingOrderUrl;
+                    },
+                    complete: function() {
+                        agreeButton.removeClass('is-loading');
+                        pendingOrderUrl = null;
+                    }
+                });
+            });
+
+            $(document).on('click', '[data-success-ok]', function () {
+                window.location.href = successRedirectUrl;
+            });
+
+            function clearCart() {
+                const clearButton = $('.btn--clear-cart');
+                if (clearButton.hasClass('is-loading')) {
+                    return;
+                }
+
+                clearButton.addClass('is-loading');
+
+                $.ajax({
+                    url: '@Url.Action("ClearCart", "Home")',
+                    type: 'POST',
+                    success: function(response) {
+                        refreshCartContent(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Clear cart error: " + error);
+                    },
+                    complete: function() {
+                        clearButton.removeClass('is-loading');
+                    }
+                });
+            }
+
+            $(document).on('click', '.btn--clear-cart', clearCart);
+            $(document).on('keydown', '.btn--clear-cart', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    clearCart();
+                }
+            });
+
+            syncCartHeaderActions();
         });
 
         // ==== ==== sử lý sự thay đổi của database
@@ -161,6 +383,7 @@
             $.get('/Home/GetCTHD', function (data) {
                 const content = document.getElementById("cart__content_");
                 content.innerHTML = data; //Thay thế nội dung của danh sách bằng HTML từ partial view
+                $('.btn--clear-cart').toggle($("div#cart__content_ .bought--item").length > 0);
             });
         });
 

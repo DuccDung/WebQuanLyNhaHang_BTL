@@ -1,28 +1,48 @@
 ﻿@using Microsoft.AspNetCore.Http 
+@inject WebQuanLyNhaHang.Models.QlnhaHangBtlContext DbContext
 @model List<WebQuanLyNhaHang.ViewModel.CategoryProduct> //Xử Lý tìm kiếm , đây là 1 partialView đưa vào list product-cate trang này sẽ Ren() sản phẩm như trang menu
 @{
     int? DhId = Context.Session.GetInt32("DhId");
+    int? BanId = Context.Session.GetInt32("BanId");
+    string? dineInCustomerId = Context.Session.GetString("DineInCustomerId");
+    var menuModel = new WebQuanLyNhaHang.ViewModel.ViewModelMenu(DbContext);
 }
 
-    @foreach (var product in Model)
+    @if (Model == null || !Model.Any())
     {
-        <div class="menu-list">
-            <table>
-                <tr class="menu-item">
-                    <td class="menu__product-img" style="width:10px">
-                        <div class="product__item-img" style="background-image: url(@product.PathPhoto);"></div>
-                    </td>
-                    <td class="menu__product-name">
-                        <div>@product.TenSanPham</div>
-                        <div class="menu__product-price" style="text-align: left; color:orange;">
-                            @String.Format("{0:N0}", product.GiaTien)đ
-                        </div>
-                    </td>
-                <td class="menu__product-plus">
-                    @await Component.InvokeAsync("MenuAddSub", new { ProductId = product.ProductId, DhId = DhId }) @* component +- *@
-                </td>
-                </tr>
-            </table>
+        <div class="menu-search-empty">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="menu-search-empty__title">Không tìm thấy món phù hợp</div>
+            <div class="menu-search-empty__text">Bạn thử nhập tên món khác, loại món hoặc mức giá nhé.</div>
         </div>
+    }
+    else
+    {
+        @foreach (var product in Model)
+        {
+            var submittedQuantity = menuModel.CountSubmittedDineInProduct(BanId, dineInCustomerId, product.ProductId);
+            <div class="menu-list">
+                <table>
+                    <tr class="menu-item">
+                        <td class="menu__product-img" style="width:10px">
+                            <div class="product__item-img" style="background-image: url(@product.PathPhoto);"></div>
+                        </td>
+                        <td class="menu__product-name">
+                            <div>@product.TenSanPham</div>
+                            <div class="menu__product-price" style="text-align: left; color:orange;">
+                                @String.Format("{0:N0}", product.GiaTien)đ
+                            </div>
+                            @if (submittedQuantity > 0)
+                            {
+                                <div class="ordered-dinein-badge">Đã gọi @submittedQuantity</div>
+                            }
+                        </td>
+                    <td class="menu__product-plus">
+                        @await Component.InvokeAsync("MenuAddSub", new { ProductId = product.ProductId, DhId = DhId }) @* component +- *@
+                    </td>
+                    </tr>
+                </table>
+            </div>
+        }
     }
 

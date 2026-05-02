@@ -66,6 +66,41 @@ namespace WebQuanLyNhaHang.ViewModel
                 .Any(item => item.DhId == DhId.Value && !item.Remove && !item.Dh.Remove);
         }
 
+        public List<CTDH_Product> SubmittedDineInItems(int? banId, string? guestId)
+        {
+            if (!banId.HasValue || string.IsNullOrWhiteSpace(guestId))
+            {
+                return new List<CTDH_Product>();
+            }
+
+            var customerMarker = $"\"g\":\"{guestId.Trim()}\"";
+            var result = from CTHD in _context.ChiTietHoaDons
+                         join product in _context.Products
+                         on CTHD.ProductId equals product.ProductId
+                         where CTHD.Dh.BanId == banId.Value
+                               && CTHD.Dh.VanChuyen != true
+                               && CTHD.Dh.TrangThai == true
+                               && !CTHD.Dh.Remove
+                               && !CTHD.Remove
+                               && CTHD.Dh.GhiChu != null
+                               && CTHD.Dh.GhiChu.Contains("\"t\":\"dinein\"")
+                               && CTHD.Dh.GhiChu.Contains(customerMarker)
+                         orderby CTHD.Dh.GioRa descending, CTHD.Dh.DhId descending, CTHD.CthdId
+                         select new CTDH_Product
+                         {
+                             ProductId = product.ProductId,
+                             DhId = CTHD.DhId,
+                             CthdId = CTHD.CthdId,
+                             PathPhoto = product.PathPhoto,
+                             SoLuong = CTHD.SoLuong,
+                             TenSanPham = product.TenSanPham,
+                             ThanhTien = CTHD.ThanhTien,
+                             Condition = CTHD.Ghichu
+                         };
+
+            return result.ToList();
+        }
+
         public OnlineCheckoutForm BuildCheckoutForm(int? DhId, int? customerId)
         {
             var order = DhId.HasValue

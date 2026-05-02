@@ -2,12 +2,16 @@
 @model WebQuanLyNhaHang.ViewModel.ViewModelMenu  // Đón class ViewModel đển nhận dữ liệu sử lý
 @{
     int? DhId = Context.Session.GetInt32("DhId");
+    int? BanId = Context.Session.GetInt32("BanId");
+    string? dineInCustomerId = Context.Session.GetString("DineInCustomerId");
 }
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
@@ -85,6 +89,62 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        .ordered-dinein-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 22px;
+            margin-top: 7px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: #fff2e0;
+            color: #f7941e;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .menu__product-plus {
+            width: 58px;
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        .menu-search-empty {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            margin: 22px 8px 90px;
+            padding: 34px 20px;
+            border-radius: 12px;
+            background: #fff;
+            color: #777;
+            text-align: center;
+            box-shadow: 0 8px 26px rgba(0, 0, 0, .08);
+        }
+
+        .menu-search-empty i {
+            color: #f7941e;
+            font-size: 24px;
+        }
+
+        .menu-search-empty__title {
+            color: #222;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .menu-search-empty__text {
+            max-width: 260px;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        #content.is-searching {
+            opacity: .58;
+            pointer-events: none;
+        }
     </style>
     <title>Kính chào quý khách</title>
 </head>
@@ -119,6 +179,7 @@
 
                 foreach (var product in Model.FindProductByCate(category.CateId))
                 {
+                    var submittedQuantity = Model.CountSubmittedDineInProduct(BanId, dineInCustomerId, product.ProductId);
                     <div class="menu-list local-menu-reveal">
                         <table>
                             <tr class="menu-item">
@@ -132,6 +193,10 @@
                                     <div class="menu__product-price" style="text-align: left; color:orange;">
                                         @String.Format("{0:N0}", product.GiaTien)đ
                                     </div>
+                                    @if (submittedQuantity > 0)
+                                    {
+                                        <div class="ordered-dinein-badge">Đã gọi @submittedQuantity</div>
+                                    }
                                 </td>
                                
                                 <td class="menu__product-plus">
@@ -207,35 +272,85 @@
 
         // chức năng tìm kiếm trong trang menu 
         $(document).ready(function () {
-            // Sự kiện input cho ô tìm kiếm
+            $(document).on('click', '.menu__product-plus > a', function () {
+                $(this).addClass('is-loading');
+            });
+
+            const $content = $("div#content");
+            const originalMenuHtml = $content.html();
+            let searchTimer = null;
+            let searchRequest = null;
+            let searchVersion = 0;
+
+            function refreshMenuReveal() {
+                const content = document.getElementById("content");
+                if (!content) {
+                    return;
+                }
+
+                prepareMenuReveal(content);
+                document.body.classList.remove("local-menu-ready");
+                requestAnimationFrame(function () {
+                    document.body.classList.add("local-menu-ready");
+                });
+            }
+
+            function normalizeClientSearch(value) {
+                return (value || "").replace(/\s+/g, " ").trim();
+            }
+
+            function restoreFullMenu() {
+                if (searchRequest) {
+                    searchRequest.abort();
+                    searchRequest = null;
+                }
+
+                searchVersion++;
+                $content.removeClass("is-searching").html(originalMenuHtml);
+                refreshMenuReveal();
+            }
+
             $('#txtSearchBox').on('input', function () {
-                var txtsearch = $(this).val(); // Lấy giá trị của ô tìm kiếm
-                console.log(txtsearch); // Kiểm tra giá trị khi người dùng nhập
-                // Kiểm tra nếu ô tìm kiếm không rỗng
-                if (txtsearch && txtsearch.length > 0) {
-                    $.ajax({
-                        url: '@Url.Action("GetName", "Home")', // Đường dẫn đến action
-                        data: { txtsearch: txtsearch }, // Dữ liệu gửi đi
+                const txtsearch = normalizeClientSearch($(this).val());
+                clearTimeout(searchTimer);
+
+                if (!txtsearch) {
+                    restoreFullMenu();
+                    return;
+                }
+
+                searchTimer = setTimeout(function () {
+                    const currentVersion = ++searchVersion;
+
+                    if (searchRequest) {
+                        searchRequest.abort();
+                    }
+
+                    $content.addClass("is-searching");
+                    searchRequest = $.ajax({
+                        url: '@Url.Action("GetName", "Home")',
+                        data: { txtsearch: txtsearch },
                         success: function (response) {
-                            // Cập nhật nội dung của phần tử có id là "content" bằng dữ liệu trả về
-                            $("div#content").html(response);
-                            const content = document.getElementById("content");
-                            if (content) {
-                                prepareMenuReveal(content);
-                                document.body.classList.remove("local-menu-ready");
-                                requestAnimationFrame(function () {
-                                    document.body.classList.add("local-menu-ready");
-                                });
+                            if (currentVersion !== searchVersion) {
+                                return;
+                            }
+
+                            $content.html(response);
+                            refreshMenuReveal();
+                        },
+                        error: function (xhr, status) {
+                            if (status !== "abort") {
+                                $content.html('<div class="menu-search-empty"><i class="fa-solid fa-triangle-exclamation"></i><div class="menu-search-empty__title">Chưa tìm được món</div><div class="menu-search-empty__text">Bạn thử nhập lại sau một chút nhé.</div></div>');
+                                refreshMenuReveal();
                             }
                         },
-                        error: function (xhr, status, error) {
-                            console.error('Error:', error);
+                        complete: function () {
+                            if (currentVersion === searchVersion) {
+                                $content.removeClass("is-searching");
+                            }
                         }
                     });
-                } else {
-                    // Nếu ô tìm kiếm rỗng, có thể xóa nội dung hoặc đặt lại
-                    // $("div#content").html(''); Hoặc làm gì đó khác nếu cần
-                }
+                }, 240);
             });
         });
 

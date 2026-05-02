@@ -39,6 +39,28 @@ namespace WebQuanLyNhaHang.ViewModel
             return slchiTietHoaDon; //
         }
 
+        public int CountSubmittedDineInProduct(int? banId, string? guestId, int productId)
+        {
+            if (!banId.HasValue || string.IsNullOrWhiteSpace(guestId))
+            {
+                return 0;
+            }
+
+            var customerMarker = $"\"g\":\"{guestId.Trim()}\"";
+            return _context.ChiTietHoaDons
+                .Where(item =>
+                    item.ProductId == productId &&
+                    !item.Remove &&
+                    !item.Dh.Remove &&
+                    item.Dh.BanId == banId.Value &&
+                    item.Dh.VanChuyen != true &&
+                    item.Dh.TrangThai == true &&
+                    item.Dh.GhiChu != null &&
+                    item.Dh.GhiChu.Contains("\"t\":\"dinein\"") &&
+                    item.Dh.GhiChu.Contains(customerMarker))
+                .Sum(item => item.SoLuong ?? 0);
+        }
+
             // Liệt kê ra category trong header menu
             public List<Category> Categories()
         {
@@ -72,27 +94,73 @@ namespace WebQuanLyNhaHang.ViewModel
 
             return result.ToList();
         }
-        public List<CategoryProduct> ProductsBySearch(string txtsearchName) // phục vụ chức năng tìm kiếm ở trang menu
+        public List<CategoryProduct> ProductsBySearch(string? txtsearchName) // phục vụ chức năng tìm kiếm ở trang menu
         {
-            string searchKey = StringUtils.ConvertToLowerAndRemoveDiacritics(txtsearchName);
-            // Truy vấn product
-            var result = _context.Products
-             .AsEnumerable() // Chuyển sang LINQ to Objects để dùng hàm tùy chỉnh
-             .Where(x =>
-                !x.Remove &&
-                StringUtils.ConvertToLowerAndRemoveDiacritics(x.TenSanPham)
-                .Contains(searchKey))
-             .Select(x => new CategoryProduct
-             {
-                 ProductId = x.ProductId,
-                 TenSanPham = x.TenSanPham,
-                 PathPhoto = x.PathPhoto,
-                 MoTa = x.MoTa,
-                 GiaTien = x.GiaTien
-             });
+            var searchKey = NormalizeSearchText(txtsearchName);
+            if (string.IsNullOrWhiteSpace(searchKey))
+            {
+                return new List<CategoryProduct>();
+            }
 
-            // Trả về danh sách kết quả
-            return result.ToList();
+            var searchWords = searchKey
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Distinct()
+                .ToList();
+
+            var products = from cate in _context.Categories
+                           join product in _context.Products on cate.CateId equals product.CateId
+                           where !product.Remove && !cate.Remove
+                           select new CategoryProduct
+                           {
+                               CateId = cate.CateId,
+                               ProductId = product.ProductId,
+                               TenLoaiSanPham = cate.TenLoaiSanPham,
+                               TenSanPham = product.TenSanPham,
+                               PathPhoto = product.PathPhoto,
+                               GiaTien = product.GiaTien,
+                               MoTa = product.MoTa
+                           };
+
+            return products
+                .AsEnumerable()
+                .Select(product => new
+                {
+                    Product = product,
+                    Name = NormalizeSearchText(product.TenSanPham),
+                    Category = NormalizeSearchText(product.TenLoaiSanPham),
+                    Description = NormalizeSearchText(product.MoTa),
+                    Price = NormalizeSearchText(product.GiaTien?.ToString("0"))
+                })
+                .Select(item => new
+                {
+                    item.Product,
+                    SearchText = $"{item.Name} {item.Category} {item.Description} {item.Price}",
+                    Score =
+                        (item.Name == searchKey ? 100 : 0) +
+                        (item.Name.StartsWith(searchKey) ? 70 : 0) +
+                        (item.Name.Contains(searchKey) ? 50 : 0) +
+                        (item.Category.Contains(searchKey) ? 25 : 0) +
+                        (item.Description.Contains(searchKey) ? 12 : 0) +
+                        (item.Price.Contains(searchKey) ? 10 : 0)
+                })
+                .Where(item =>
+                    searchWords.All(word => item.SearchText.Contains(word)) ||
+                    item.Score > 0)
+                .OrderByDescending(item => item.Score)
+                .ThenBy(item => item.Product.TenSanPham)
+                .Select(item => item.Product)
+                .ToList();
+        }
+
+        private static string NormalizeSearchText(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var normalized = StringUtils.ConvertToLowerAndRemoveDiacritics(value.Trim());
+            return string.Join(' ', normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         }
     }
 }

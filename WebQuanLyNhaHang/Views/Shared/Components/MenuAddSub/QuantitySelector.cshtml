@@ -65,6 +65,29 @@
             background-color: #d46a00;
         }
 
+        .ComponentProduct__quantity-selector.is-loading .quantity-btn,
+        .ComponentProduct__quantity-selector.is-loading .quantity-input {
+            pointer-events: none;
+            opacity: .58;
+        }
+
+        .ComponentProduct__quantity-selector .quantity-btn.is-loading::before {
+            content: "";
+            width: 11px;
+            height: 11px;
+            border: 2px solid rgba(255, 255, 255, .48);
+            border-top-color: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: cloudy-menu-spin .65s linear infinite;
+        }
+
+        @@keyframes cloudy-menu-spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
         .ComponentProduct__quantity-selector form {
             display: flex;
             align-items: center;
@@ -80,7 +103,7 @@
     }
 </style>
 @model WebQuanLyNhaHang.ViewModel.QuantitySelector // đón dữ liệu số lượng
-<div class="ComponentProduct__quantity-selector">
+<div class="ComponentProduct__quantity-selector" data-product-id="@Model.ProductId" data-dh-id="@Model.DhId">
     <form asp-controller="ChiTietHoaDons" asp-action="Decrease" method="post" id="quantityForm">
         <button type="button" class="quantity-btn decrease-btn" data-product-id="@Model.ProductId">−</button>
         <input type="number" name="Soluong" value="@Model.Soluong" class="quantity-input soluongInput">
@@ -93,29 +116,75 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+        (function () {
+            if (window.cloudyMenuQuantityReady) {
+                return;
+            }
 
-        // ==== ==== sử lý sự thay đổi của database
-        const connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+            window.cloudyMenuQuantityReady = true;
 
-        // Khởi tạo kết nối SignalR
-        connection.start().catch(err => console.error(err.toString()));
+            if (window.signalR && !window.cloudyMenuSignalRConnection) {
+                window.cloudyMenuSignalRConnection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+                window.cloudyMenuSignalRConnection.start().catch(function (err) {
+                    console.error(err.toString());
+                });
+            }
 
-       
+            function setLoading($selector, $button, isLoading) {
+                $selector.toggleClass("is-loading", isLoading);
+                $button.toggleClass("is-loading", isLoading);
+                $selector.find("button, input").prop("disabled", isLoading);
+            }
 
-        $(document).ready(function () {
-            // Sự kiện cho nút giảm số lượng
-            $('.decrease-btn').on('click', function (event) {
-                event.preventDefault(); // Ngăn nút thực hiện hành động mặc định
+            function updateFooterCount(delta) {
+                var $footerContent = $(".foodter__content");
 
-                var soluongInput = $(this).closest('form').find('.soluongInput'); // Lấy đúng input của dòng hiện tại
-                var soluong = parseInt(soluongInput.val());
-                var productId = $(this).data('product-id');
-                var dhId = $(this).closest('form').find('input[name="DhId"]').val();
+                if (!$footerContent.length) {
+                    return;
+                }
+
+                var currentText = $footerContent.text();
+                var currentCount = parseInt((currentText.match(/\d+/) || ["0"])[0], 10);
+                var nextCount = Math.max(0, currentCount + delta);
+
+                if (nextCount === 0) {
+                    $(".foodter").closest(".app__menu").fadeOut(180, function () {
+                        $(this).remove();
+                    });
+                    return;
+                }
+
+                $footerContent.text("Xem giỏ hàng(" + nextCount + " món)");
+            }
+
+            function renderAddButton($selector, productId) {
+                var addHtml = '<a href="/Home/ProductDetail?ProductID=' + productId + '"><button type="button">+</button></a>';
+                $selector.fadeOut(120, function () {
+                    $(this).replaceWith(addHtml);
+                });
+            }
+
+            $(document).on("click", ".ComponentProduct__quantity-selector .decrease-btn", function (event) {
+                event.preventDefault();
+
+                var $button = $(this);
+                var $selector = $button.closest(".ComponentProduct__quantity-selector");
+                var $form = $button.closest("form");
+                var $soluongInput = $form.find(".soluongInput");
+                var soluong = parseInt($soluongInput.val(), 10);
+                var productId = $button.data("product-id");
+                var dhId = $form.find('input[name="DhId"]').val();
+
+                if ($selector.hasClass("is-loading")) {
+                    return;
+                }
+
+                setLoading($selector, $button, true);
 
                 if (soluong > 1) {
                     $.ajax({
-                        url: '/ChiTietHoaDons/Decrease',
-                        type: 'POST',
+                        url: "/ChiTietHoaDons/Decrease",
+                        type: "POST",
                         data: {
                             Soluong: soluong,
                             ProductId: productId,
@@ -124,52 +193,65 @@
                         success: function (response) {
                             if (response.error) {
                                 console.error(response.error);
-                            } else {
-                                soluongInput.val(response.newQuantity); // Cập nhật giá trị mới vào input
+                                return;
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Có lỗi xảy ra:', error);
-                        }
-                    });
-                } else {
-                    // Xóa sản phẩm khi số lượng <= 1
-                    $.ajax({
-                        url: '/ChiTietHoaDons/DeleteProductDetail',
-                        type: 'POST',
-                        data: {
-                            ProductId: productId,
-                            DhId: dhId
-                        },
-                        success: function (response) {
-                            if (response.error) {
-                                console.error(response.error); // Xử lý khi có lỗi
-                            } else {
-                                console.log(response.success); // Xử lý khi thành công
-                                window.location.reload(); // Tải lại trang sau khi xóa thành công
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Có lỗi xảy ra khi gửi yêu cầu:', error);
-                        }
-                    });
-                }
-            });
-            //================== signalR  ====================================
-                      
-            //================================================================
-            // Sự kiện cho nút tăng số lượng
-            $('.increase-btn').on('click', function (event) {
-                event.preventDefault(); // Ngăn nút thực hiện hành động mặc định
 
-                var soluongInput = $(this).closest('form').find('.soluongInput'); // Lấy đúng input của dòng hiện tại
-                var soluong = parseInt(soluongInput.val());
-                var productId = $(this).data('product-id');
-                var dhId = $(this).closest('form').find('input[name="DhId"]').val();
+                            $soluongInput.val(response.newQuantity);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Có lỗi xảy ra:", error);
+                        },
+                        complete: function () {
+                            setLoading($selector, $button, false);
+                        }
+                    });
+                    return;
+                }
 
                 $.ajax({
-                    url: '/ChiTietHoaDons/Increase',
-                    type: 'POST',
+                    url: "/ChiTietHoaDons/DeleteProductDetail",
+                    type: "POST",
+                    data: {
+                        ProductId: productId,
+                        DhId: dhId
+                    },
+                    success: function (response) {
+                        if (response.error) {
+                            console.error(response.error);
+                            setLoading($selector, $button, false);
+                            return;
+                        }
+
+                        updateFooterCount(-1);
+                        renderAddButton($selector, productId);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Có lỗi xảy ra khi gửi yêu cầu:", error);
+                        setLoading($selector, $button, false);
+                    }
+                });
+            });
+
+            $(document).on("click", ".ComponentProduct__quantity-selector .increase-btn", function (event) {
+                event.preventDefault();
+
+                var $button = $(this);
+                var $selector = $button.closest(".ComponentProduct__quantity-selector");
+                var $form = $button.closest("form");
+                var $soluongInput = $form.find(".soluongInput");
+                var soluong = parseInt($soluongInput.val(), 10);
+                var productId = $button.data("product-id");
+                var dhId = $form.find('input[name="DhId"]').val();
+
+                if ($selector.hasClass("is-loading")) {
+                    return;
+                }
+
+                setLoading($selector, $button, true);
+
+                $.ajax({
+                    url: "/ChiTietHoaDons/Increase",
+                    type: "POST",
                     data: {
                         Soluong: soluong,
                         ProductId: productId,
@@ -178,18 +260,20 @@
                     success: function (response) {
                         if (response.error) {
                             console.error(response.error);
-                        } else {
-                            soluongInput.val(response.newQuantity); // Cập nhật giá trị mới vào input
+                            return;
                         }
+
+                        $soluongInput.val(response.newQuantity);
                     },
                     error: function (xhr, status, error) {
-                        console.error('Có lỗi xảy ra:', error);
+                        console.error("Có lỗi xảy ra:", error);
+                    },
+                    complete: function () {
+                        setLoading($selector, $button, false);
                     }
                 });
             });
-        });
-
-
+        })();
 </script>
 </div>
 

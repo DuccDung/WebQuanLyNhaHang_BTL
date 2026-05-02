@@ -39,12 +39,12 @@
                             </div>
                         </div>
                         <div class="item-inner--left">
-                            <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId">
+                            <div class="btn-remove" id="cart__btn-remove" data-id="@item.CthdId" data-name="@item.TenSanPham">
                                 <i class="fa-solid fa-xmark"></i>
                             </div>
-                            <div class="btn-edit">
+                            <a asp-controller="Home" asp-action="ProductDetail" asp-route-ProductID="@item.ProductId" asp-route-cthdId="@item.CthdId" class="btn-edit">
                                 <span>edit</span>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -54,13 +54,13 @@
 
     </div>
 
-     <div class="card__total-price">
-                <div>Tổng Tiền</div>
-                <div>@String.Format("{0:N0}", cartTotal)đ</div>
-     </div>
      @if(hasCartItems){
+          <div class="card__total-price">
+                    <div>Tổng Tiền</div>
+                    <div>@String.Format("{0:N0}", cartTotal)đ</div>
+          </div>
           <div class="btn-sumbit">
-                <a asp-controller="Home" asp-action="OrderSuccess">
+                <a asp-controller="Home" asp-action="OrderSuccess" class="cart-order-submit">
                     <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
                         Gửi yêu cầu gọi món
                     </button>

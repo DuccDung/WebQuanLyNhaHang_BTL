@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
+    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebQuanLyTuXa.styles.css" asp-append-version="true" />
@@ -11,7 +13,7 @@
     <link rel="stylesheet" href="~/asset/css/base.css">
     <link rel="stylesheet" href="~/asset/css/responsive.css">
     <link rel="stylesheet" type="text/css" href="btl.css">
-    <link rel="stylesheet" href="~/asset/css/productDetail.css">
+    <link rel="stylesheet" href="~/asset/css/productDetail.css" asp-append-version="true">
     <title>Kính chào quý khách</title>
 </head>
 <style>
@@ -31,9 +33,14 @@
         }
 </style>
 @model WebQuanLyNhaHang.Models.Product // Đón class ViewModel đển nhận dữ liệu sử lý
+@{
+    var editCthdId = ViewData["CthdId"] as int?;
+    var savedNote = ViewData["GhiChu"] as string;
+    var isEditingCartItem = editCthdId.HasValue;
+}
 
 <body>
-    <form asp-controller="Home" asp-action="CreateProductDetail" method="post">
+    <form asp-controller="Home" asp-action="CreateProductDetail" method="post" id="product-detail-form">
         <div class="app__product product-detail">
             <div class="container-fluid img-container bg-light p-0">
                 <img src="@Model.PathPhoto" class="img-fluid" alt="Responsive image">
@@ -48,13 +55,13 @@
                     </div>
                     <div class="bottom-box">
                         <div class="content-padding">
-                            @await Component.InvokeAsync("ProductCondition", new { ProductID = Model.ProductId })
+                            @await Component.InvokeAsync("ProductCondition", new { ProductID = Model.ProductId, selectedCondition = ViewData["SelectedCondition"] as string })
 
                             <div class="note-section">
                                 <div class="parent_note">
                                     <img src="/asset/img/imgWeb/note.svg" alt="note_icon" class="note_icon">
                                     <label class="input__decreption">
-                                        <textarea name="ghichu" placeholder="Do you have a message for the restaurant?"></textarea>
+                                        <textarea name="ghichu" placeholder="Do you have a message for the restaurant?">@savedNote</textarea>
                                     </label>
                                 </div>
                             </div>
@@ -72,13 +79,25 @@
                         <div class="input-group quantity-input">
                             <button class="btn btn-outline-secondary" type="button" id="button-minus">-</button>
                             <input type="text" value="@Model.ProductId" hidden name="ProductID">
+                            <input type="text" value="@editCthdId" hidden name="cthdId">
+                            @if (isEditingCartItem)
+                            {
+                                <input type="text" value="@Url.Action("Cart", "Home")" hidden name="returnUrl">
+                            }
                             <input type="text" name="soluong" class="form-control text-center" value="@ViewData["SoLuong"]" id="quantity"
                                    aria-label="Quantity">
                             <button class="btn btn-outline-secondary" type="button" id="button-plus">+</button>
                         </div>
                         <!-- Add to order button --> 
-                        <button type="submit" class="btn btn-secondary btn-lg add-to-order">
-                            Add to order <br><span class="small" id="Productdetail-price">(@String.Format("{0:N0}", Model.GiaTien)đ)</span>
+                        <button type="submit" class="btn btn-secondary btn-lg add-to-order" id="add-to-order-button">
+                            <span class="add-to-order__content">
+                                <span class="add-to-order__label">@(isEditingCartItem ? "Update order" : "Add to order")</span>
+                                <span class="small add-to-order__price" id="Productdetail-price">(@String.Format("{0:N0}", Model.GiaTien)đ)</span>
+                            </span>
+                            <span class="add-to-order__loading" aria-hidden="true">
+                                <span class="add-to-order__spinner"></span>
+                                <span>@(isEditingCartItem ? "Updating..." : "Adding...")</span>
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -105,6 +124,27 @@
                 quantityInput.value = currentValue - 1;
                     }
                 });
+
+        let isSubmittingOrder = false;
+        document.getElementById('product-detail-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            if (isSubmittingOrder) {
+                return;
+            }
+
+            isSubmittingOrder = true;
+            const addButton = document.getElementById('add-to-order-button');
+            if (addButton) {
+                addButton.classList.add('is-loading');
+                addButton.disabled = true;
+                addButton.setAttribute('aria-busy', 'true');
+            }
+
+            window.setTimeout(() => {
+                HTMLFormElement.prototype.submit.call(this);
+            }, 650);
+        });
     </script>
 
 </body>

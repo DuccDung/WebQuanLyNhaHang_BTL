@@ -1,224 +1,333 @@
-# WebQuanLyNhaHang Project Context
+# WebQuanLyNhaHang - System Context
 
-## Scope
+Cap nhat: 2026-05-02
 
-This file records the current understanding of the ASP.NET Core MVC restaurant project, especially the customer-facing online ordering flow.
+## 1. Tong Quan He Thong
 
-Main project folder:
+`WebQuanLyNhaHang` la ung dung ASP.NET Core MVC quan ly nha hang/quan cafe, target `.NET 8`.
 
-- `WebQuanLyNhaHang`
+He thong gom 2 vung chinh:
 
-Main online-ordering areas:
+- Website khach hang: trang chu, menu, chi tiet san pham, gio hang, dat mon online, lich su don hang, dang nhap/dang ky tai khoan khach.
+- Khu quan tri: dashboard, ban an, don hang, san pham, khach hang, nhan vien, cua hang, bai viet/chuyen nha.
 
-- `Controllers/HomeController.cs`
+Cong nghe chinh:
+
+- ASP.NET Core MVC + Razor Views.
+- Entity Framework Core 8 + SQL Server.
+- Session-based authentication cho admin/nhan vien va khach hang.
+- SignalR tai endpoint `/chatHub` de cap nhat realtime mot so UI.
+- Static assets trong `wwwroot`.
+
+Solution/project:
+
+- Solution: `WebQuanLyNhaHang.sln`
+- Project chinh: `WebQuanLyNhaHang/WebQuanLyNhaHang.csproj`
+- DbContext: `Models/QlnhaHangBtlContext.cs`
+- Default route: `{controller=TrangChu}/{action=Index}/{id?}`
+
+## 2. Cau Truc Thu Muc Quan Trong
+
+- `Controllers`: controller MVC cho website khach hang, admin, CRUD va API JSON phuc vu UI.
+- `Models`: entity EF Core, metadata helpers, cac class gan voi bang SQL.
+- `ViewModel`: model rieng cho tung man hinh Razor.
+- `Views`: Razor views theo controller.
+- `Views/Shared`: layout chung, sidebar admin, layout CloudyCafe, view components.
+- `Filters`: filter bao ve khu admin bang session.
+- `Hubs`: SignalR hub.
+- `wwwroot`: CSS/JS/image/vendor assets.
+
+File can nam:
+
+- `Program.cs`: dang ky MVC, session, SignalR, DbContext, route, middleware khoi phuc customer session tu cookie.
+- `Filters/AdminSessionAuthorizeAttribute.cs`: bao ve admin/staff action dua tren session `NhanVienId`.
+- `Hubs/ChatHub.cs`: gui su kien realtime nhu `ReceiveMessage`, `DatabaseUpdated`, `ProductDeleted`, `OderSuccess`.
+- `Models/OnlineOrderMetadata.cs`: helper doc/ghi JSON compact trong `DonHang.GhiChu` cho don online.
+- `Models/OnlineOrderInfo.cs`: thong tin giao hang da duoc normalize.
+- `Models/OnlineOrderStatusHistory.cs`: lich su thay doi trang thai giao hang.
+
+## 3. Startup Va Middleware
+
+`Program.cs` dang ky:
+
+- `AddControllersWithViews()`
+- `AddSession()` voi timeout 30 phut.
+- `AddSignalR()`
+- `AddDbContext<QlnhaHangBtlContext>()` dung connection string key `QlnhaHangBtlContext`.
+
+Pipeline:
+
+- Exception handler/HSTS khi khong phai development.
+- HTTPS redirection.
+- Static files.
+- Routing.
+- Session.
+- Middleware tu tao de khoi phuc `CustomerID` tu cookie `CloudyCafeCustomer`.
+- Cookie policy.
+- Authorization.
+- Default MVC route.
+- SignalR hub `/chatHub`.
+
+Cookie khach hang:
+
+- Ten cookie: `CloudyCafeCustomer`.
+- Purpose bao ve du lieu: `CloudyCafe.CustomerCookie.v1`.
+- Neu cookie hop le va khach con ton tai, middleware set lai session `CustomerID`.
+- Neu cookie loi hoac khach da bi soft-delete, cookie bi xoa.
+
+## 4. Database Va Entity Chinh
+
+DbContext: `QlnhaHangBtlContext`.
+
+Bang/entity nghiep vu chinh:
+
+- `Product`, `Category`, `ProductConditions`: san pham, nhom san pham, tuy chon san pham.
+- `DonHang`, `ChiTietHoaDon`: don hang va chi tiet don.
+- `Ban`: ban an tai quan.
+- `KhachHang`: tai khoan/thong tin khach hang.
+- `NhanVien`, `PhanQuyen`, `NvPq`, `NgayCong`, `NvNc`, `Thuong`: nhan vien, phan quyen va thong tin lien quan.
+- `NguyenLieu`, `CongThuc`, `NhaCungCap`, `HoaDonNhap`, `ChiTietHoaDonNhap`: nhap hang/nguyen lieu.
+- `CuaHang`: noi dung diem ban/cua hang hien thi public.
+- `BaiVietChuyenNha`: bai viet/chuyen nha/news hien thi public.
+- `OnlineOrderInfo`, `OnlineOrderStatusHistory`: thong tin va lich su giao hang online.
+
+Quy uoc soft delete:
+
+- Nhieu bang co cot `Remove`.
+- Code thuong loc `Remove == false` thay vi xoa cung.
+
+Luu y `DonHang`:
+
+- `VanChuyen = true`: dung cho don online/giao hang.
+- `TrangThai = false`: gio hang online dang active truoc checkout hoac don chua hoan tat tuy ngu canh.
+- `TrangThai = true`: don da submit/hoan tat thanh toan theo luong hien co.
+- `BanId = null`: don online khong gan ban.
+- `GhiChu`: vua la ghi chu, vua dang chua JSON compact cho online order metadata.
+
+## 5. Controllers Chinh
+
+### Public / Customer
+
+`TrangChuController`
+
+- `Index`: trang chu public, lay san pham noi bat/hot categories.
+- `Menu`: menu CloudyCafe cho khach hang.
+- `DoUong`, `Banh`: loc nhom san pham theo loai.
+- `ChuyenNha`: danh sach bai viet/chuyen nha dang hien thi.
+- `CuaHang`: danh sach cua hang dang hien thi.
+
+`HomeController`
+
+- Trang mac dinh cu, dang nhap/dang ky khach, tai khoan khach.
+- Flow order tai ban: `Client`, `ProductDetail`, `Cart`, `CreateProductDetail`, `OrderSuccess`.
+- Flow online: `CreateOnlineProductDetail`, `OnlineCart`, `CheckoutOnlineOrder`, `OrderHistory`.
+- Cart actions: remove, clear, update quantity, refresh partial.
+- Customer session: `CustomerLogin`, `CustomerRegister`, `CustomerLogout`.
+
+### Admin / Management
+
+`AdminController`
+
+- `Login`, `Logout`.
+- `Index`: dashboard thong ke doanh thu, don hang, khach, nhan vien, san pham, ban.
+- `Ban`: man hinh ban an.
+- `GetFormBuy`: partial form goi mon/thanh toan cho ban.
+- `ProcessPayment`: xu ly thanh toan ban, clear lien ket ban tren don active.
+
+`DonHangsController`
+
+- Danh sach don hang admin.
+- JSON detail endpoints: `DetailsData`, `DetailsDataV2`.
+- `UpdateDeliveryStatus`: cap nhat trang thai giao hang online, dong bo metadata, `OnlineOrderInfo`, ghi `OnlineOrderStatusHistory`, phat SignalR.
+- CRUD co ban cho `DonHang`.
+
+`ProductsController`
+
+- Quan ly san pham, tao/sua/xoa, upload anh, update qua modal.
+
+`KhachHangsController`
+
+- Quan ly khach hang, tao modal, lay detail JSON, soft delete.
+
+`NhanViensController`
+
+- Quan ly nhan vien, update/delete modal, upload anh.
+
+`ChiTietHoaDonsController`
+
+- CRUD chi tiet hoa don va cac action tang/giam/xoa nhanh dong san pham.
+
+`AdminCuaHangsController`
+
+- Quan ly noi dung cua hang public.
+
+`AdminBaiVietChuyenNhasController`
+
+- Quan ly bai viet/chuyen nha/news public.
+
+`ChartDataController`
+
+- Endpoint view du lieu bieu do.
+
+## 6. Authentication Va Session
+
+Admin/nhan vien:
+
+- Dang nhap qua `AdminController.Login`.
+- Session chinh:
+  - `NhanVienId`
+  - `NhanVienName`
+  - `NhanVienTaiKhoan`
+- Action admin can bao ve dung `[AdminSessionAuthorize]`.
+- Neu request la AJAX/JSON va chua login, filter tra `401` kem `redirectUrl`.
+- Neu nhan vien khong ton tai hoac da `Remove`, filter xoa session va redirect ve login.
+
+Khach hang:
+
+- Dang nhap qua `HomeController.CustomerLogin`.
+- Session chinh: `CustomerID`.
+- Cookie `CloudyCafeCustomer` giup khoi phuc login sau khi mat session.
+- Logout xoa `CustomerID`, xoa cookie, xoa `OnlineCartDhId`.
+
+## 7. Layout Va UI Chinh
+
+Layout public moi:
+
 - `Views/Shared/_CloudyCafeLayout.cshtml`
+- Dung cho cac trang CloudyCafe/menu/gio hang online/lich su don.
+- Header doc `CustomerID` tu session, hien avatar tu `KhachHang.PathPhoto` neu co.
+- Account hover menu link den account, order history, logout.
+- Cart badge dem item trong gio online active.
+- Co floating delivery button khi khach co don online dang xu ly.
+
+Layout admin:
+
+- `Views/Shared/_AdminContentLayout.cshtml`
+- `Views/Shared/_AdminSidebar.cshtml`
+- Cac trang admin quan ly bang layout/sidebar nay.
+
+Static UI dang dung:
+
+- Public CloudyCafe: `wwwroot/cloudycafe/css/styles.css`, `wwwroot/cloudycafe/js/product-modal.js`.
+- Public cu: `wwwroot/asset/css/*`, `wwwroot/asset/js/*`.
+- Admin: `wwwroot/assets/js/admin-*.js`, `wwwroot/assets/*`.
+
+## 8. Luong Dat Mon Online
+
+### Menu online
+
+View:
+
 - `Views/TrangChu/Menu.cshtml`
-- `Views/Home/OnlineCart.cshtml`
-- `Views/Home/OnlineCTDHTable.cshtml`
-- `Views/Home/OrderHistory.cshtml`
-- `Models/OnlineOrderMetadata.cs`
-- `Models/OnlineOrderInfo.cs`
-- `Models/OnlineOrderStatusHistory.cs`
-- `ViewModel/ViewModelCart.cs`
-- `ViewModel/OnlineCheckoutForm.cs`
-- `ViewModel/OnlineOrderHistoryViewModel.cs`
-- `Program.cs`
-
-## Customer Login
-
-Customer online login is handled in `HomeController.CustomerLogin`.
-
-Current behavior:
-
-- Finds `KhachHang` by `TaiKhoan`, `MatKhau`, and `Remove == false`.
-- On success, stores the customer id in session key `CustomerID`.
-- Also stores a protected cookie named `CloudyCafeCustomer`.
-- Redirects to `TrangChu/Index`.
-
-Persistent login:
-
-- `Program.cs` restores `CustomerID` from the protected `CloudyCafeCustomer` cookie when session is empty.
-- The cookie is protected with purpose `CloudyCafe.CustomerCookie.v1`.
-- Invalid or deleted customers cause the cookie to be removed.
-
-Logout:
-
-- `HomeController.CustomerLogout` clears `CustomerID`, deletes the cookie, removes `OnlineCartDhId`, and redirects to `TrangChu/Index`.
-
-## Header And Account Menu
-
-The online customer layout is `Views/Shared/_CloudyCafeLayout.cshtml`.
-
-Header behavior:
-
-- Reads `CustomerID` from session.
-- Loads the current `KhachHang`.
-- If `KhachHang.PathPhoto` exists, displays it as the user avatar.
-- Otherwise displays the default user icon.
-- Account hover menu links to:
-  - `Home/Account`
-  - `Home/OrderHistory`
-  - `Home/CustomerLogout`
-
-Cart count behavior:
-
-- Counts active online cart items for the logged-in customer.
-- Query condition:
-  - `ChiTietHoaDon.Remove == false`
-  - `DonHang.Remove == false`
-  - `DonHang.KhId == CustomerID`
-  - `DonHang.VanChuyen == true`
-  - `DonHang.TrangThai != true`
-  - `DonHang.GhiChu` contains `"t":"online"`
-  - `DonHang.GhiChu` contains `"s":"cart"`
-
-Floating delivery button:
-
-- Appears if the customer has an active online delivery order.
-- Uses recent online orders where status is not `delivered`, `cancelled`, or `cart`.
-- Links to `Home/OrderHistory`.
-
-## Product Menu
-
-Customer online menu is `Views/TrangChu/Menu.cshtml`.
 
 Behavior:
 
-- Uses `_CloudyCafeLayout`.
-- Displays product categories and products.
-- Product data is serialized into `ViewData["ProductModalJson"]`.
-- The layout reads this JSON and renders the online order product modal.
-- The product modal posts to `Home/CreateOnlineProductDetail`.
+- Lay category/san pham active.
+- San pham va option duoc serialize vao `ViewData["ProductModalJson"]`.
+- Layout doc JSON nay de render product modal.
+- Submit modal den `Home/CreateOnlineProductDetail`.
 
-Product options:
+Option san pham:
 
-- Quantity.
-- Product condition from `ProductConditions`.
+- So luong.
+- Product condition tu `ProductConditions`.
 - Size M/L.
-- Sugar level.
-- Ice/hot.
-- Toppings.
+- Muc duong.
+- Da/nong.
+- Topping.
 
-Pricing rule:
+Quy tac cong gia trong code:
 
-- Base price comes from `Product.GiaTien`.
-- `ResolveOptionExtra` adds:
-  - `Size L`: `+10000`
-  - `sua tuoi`: `+5000`
-  - `sua yen mach`: `+5000`
-  - `sua dac`: `+5000`
-  - `foam dua`: `+10000`
+- Base price tu `Product.GiaTien`.
+- `Size L`: +10000.
+- `sua tuoi`, `sua yen mach`, `sua dac`: +5000.
+- `foam dua`: +10000.
 
-## Online Cart Creation
+### Tao gio hang online
 
-Adding online items is handled by `HomeController.CreateOnlineProductDetail`.
+Action:
 
-Preconditions:
+- `HomeController.CreateOnlineProductDetail`
 
-- Requires `CustomerID` in session.
-- If no customer is logged in, redirects to `Home/Index` with an error.
-- Product must exist and `Remove == false`.
+Dieu kien:
 
-Order creation:
+- Phai co session `CustomerID`.
+- Product phai ton tai va `Remove == false`.
 
-- Uses `GetOrCreateOnlineCartOrder`.
-- If no active online cart exists, creates a new `DonHang`.
+Xu ly:
 
-New online cart `DonHang` values:
+- Goi `GetOrCreateOnlineCartOrder`.
+- Neu chua co cart active, tao `DonHang` moi.
+- `DonHang` cart online moi:
+  - `GioVao = DateTime.Now`
+  - `TongTien = 0`
+  - `KhId = CustomerID`
+  - `BanId = null`
+  - `GhiChu = OnlineOrderMetadata.CreateCart().ToJson()`
+  - `TrangThai = false`
+  - `VanChuyen = true`
+- Luu cart id vao session `OnlineCartDhId`.
+- Item nam trong `ChiTietHoaDon`.
+- Neu cung product va cung ghi chu option thi tang so luong; neu khac thi tao dong moi.
+- Sau moi thay doi goi `RefreshCartTotal`.
+- Phat SignalR `OnlineCartUpdated` theo code hien co.
 
-- `GioVao = DateTime.Now`
-- `TongTien = 0`
-- `KhId = CustomerID`
-- `BanId = null`
-- `GhiChu = OnlineOrderMetadata.CreateCart().ToJson()`
-- `TrangThai = false`
-- `VanChuyen = true`
+### Tim cart online active
 
-Session:
+Helper:
 
-- Active online cart id is stored in session key `OnlineCartDhId`.
+- `HomeController.GetActiveOnlineCartOrder`
 
-Cart item behavior:
+Thu tu:
 
-- Items are stored in `ChiTietHoaDon`.
-- If the same product with the same note already exists, quantity is increased.
-- Otherwise a new `ChiTietHoaDon` row is created.
-- `ThanhTien` is recalculated based on unit price and quantity.
-- `RefreshCartTotal(DH.DhId)` recalculates `DonHang.TongTien`.
-- SignalR event `OnlineCartUpdated` is sent.
+- Kiem tra session `OnlineCartDhId`.
+- Dam bao order thuoc dung customer, chua remove, la online cart.
+- Neu session cart khong hop le thi remove session key.
+- Tim trong database order online cart moi nhat.
 
-## Active Online Cart Detection
-
-The active cart is found by `HomeController.GetActiveOnlineCartOrder`.
-
-Rules:
-
-- Customer must be logged in.
-- First checks `OnlineCartDhId` from session.
-- The session order must belong to the current customer and not be removed.
-- The order must satisfy `OnlineOrderMetadata.IsOnlineCart`.
-- If session cart is invalid, session key is removed.
-- Then it searches the database for the latest matching online cart.
-
-Database search conditions:
+Dieu kien DB quan trong:
 
 - `KhId == CustomerID`
 - `Remove == false`
 - `VanChuyen == true`
 - `TrangThai != true`
-- `GhiChu` contains `"t":"online"`
-- `GhiChu` contains `"s":"cart"`
+- `GhiChu` co `"t":"online"`
+- `GhiChu` co `"s":"cart"`
 
-## Online Cart Page
+### Trang gio hang online
 
-Main page:
+View:
 
 - `Views/Home/OnlineCart.cshtml`
+- Partial: `Views/Home/OnlineCTDHTable.cshtml`
 
-Partial:
-
-- `Views/Home/OnlineCTDHTable.cshtml`
-
-Controller action:
+Controller:
 
 - `HomeController.OnlineCart`
+- `HomeController.GetOnlineCTHD`
+- `HomeController.RemoveOnlineItem`
+- `HomeController.UpdateOnlineItemQuantity`
 
 Behavior:
 
-- Loads the active online cart.
-- Sets `ViewData["OnlineCartId"]`.
-- Uses `ViewModelCart`.
-- Renders the online cart partial.
+- Load active cart cua customer.
+- Dung `ViewModelCart`.
+- Partial render danh sach item, tong tien va form checkout.
+- Empty cart hien link quay lai menu.
+- JS dung `fetch` de remove/update va thay `#online-cart-content`.
+- Cap nhat badge gio hang tu `data-cart-count`.
 
-Online cart partial:
+### Checkout online
 
-- Uses `Model.CTHD_PctByDh(DhId)` for cart items.
-- Uses `Model.TongtienById(DhId)` for total.
-- Uses `Model.BuildCheckoutForm(DhId, customerId)` to prefill checkout form.
-- Empty cart shows a link back to `TrangChu/Menu`.
+Action:
 
-Cart actions:
+- `HomeController.CheckoutOnlineOrder`
 
-- Remove item: `HomeController.RemoveOnlineItem`.
-- Update quantity: `HomeController.UpdateOnlineItemQuantity`.
-- Refresh partial: `HomeController.GetOnlineCTHD`.
-
-Frontend behavior:
-
-- Uses `fetch` to call remove/update actions.
-- Replaces `#online-cart-content` with returned partial HTML.
-- Updates `.cart-count` badges from `data-cart-count`.
-- Listens to SignalR event `OnlineCartUpdated`.
-
-## Checkout Online Order
-
-Checkout is handled by `HomeController.CheckoutOnlineOrder`.
-
-Input model:
+Input:
 
 - `ViewModel/OnlineCheckoutForm.cs`
 
-Fields:
+Field:
 
 - `HoTen`
 - `SoDienThoai`
@@ -230,69 +339,58 @@ Fields:
 
 Validation:
 
-- Requires recipient name.
-- Requires phone.
-- Phone digits must be from 9 to 11 digits.
-- Requires city/province.
-- Requires district.
-- Requires address line.
+- Bat buoc ten nguoi nhan.
+- Bat buoc so dien thoai.
+- So dien thoai chi lay digit va dai 9-11 so.
+- Bat buoc tinh/thanh, quan/huyen, dia chi.
 
-Checkout preconditions:
+Khi checkout thanh cong:
 
-- Active online cart must exist.
-- Cart must have at least one non-removed item.
-- Customer must be logged in.
-- Customer must exist and not be removed.
-
-On successful checkout:
-
-- Updates customer:
-  - `TenKhachHang`
-  - `SoDienThoai`
-  - `DiaChi`
-- Updates `DonHang`:
-  - `KhId = customer.KhId`
-  - `GhiChu = metadata.ToJson()`
+- Cap nhat thong tin customer.
+- Chuyen metadata tu `cart` sang `pending`.
+- Cap nhat `DonHang`:
+  - `KhId`
+  - `GhiChu`
   - `TrangThai = true`
   - `VanChuyen = true`
   - `BanId = null`
-  - `GioVao` set if null
+  - `GioVao` neu dang null
   - `GioRa = DateTime.Now`
-- Metadata status changes from `cart` to `pending`.
-- Creates or updates `OnlineOrderInfo`.
-- Sets `OnlineOrderInfo.TrangThaiGiaoHang = pending`.
-- Recalculates total with `RefreshCartTotal`.
-- Removes `OnlineCartDhId` session key.
-- Sends SignalR events:
+- Tao/cap nhat `OnlineOrderInfo`.
+- Set `OnlineOrderInfo.TrangThaiGiaoHang = pending`.
+- Tinh lai tong tien.
+- Xoa session `OnlineCartDhId`.
+- Phat SignalR:
   - `OderSuccess`
   - `OnlineOrderCreated`
-- Redirects back to `Home/OnlineCart`.
+- Redirect ve `Home/OnlineCart`.
 
-## Online Order Metadata
+## 9. Lich Su Don Online
 
-Class:
+Action:
 
-- `Models/OnlineOrderMetadata.cs`
+- `HomeController.OrderHistory`
 
-Purpose:
+View:
 
-- Stores compact JSON metadata inside `DonHang.GhiChu`.
-- Used to identify online orders and cart/order status.
+- `Views/Home/OrderHistory.cshtml`
 
-JSON fields:
+ViewModel:
 
-- `t`: type, expected `online`.
-- `s`: delivery status.
-- `n`: recipient name.
-- `p`: phone.
-- `c`: city.
-- `d`: district.
-- `w`: ward.
-- `a`: address line.
-- `note`: delivery note.
-- `at`: submitted date/time.
+- `ViewModel/OnlineOrderHistoryViewModel.cs`
 
-Statuses:
+Query:
+
+- Yeu cau customer logged in.
+- Lay `DonHang`:
+  - `KhId == CustomerID`
+  - `Remove == false`
+  - `VanChuyen == true`
+  - `GhiChu` co `"t":"online"`
+- Include `ChiTietHoaDons`, `Product`, `OnlineOrderInfo`.
+- Loai bo status `cart`.
+
+Trang thai online:
 
 - `cart`
 - `pending`
@@ -301,184 +399,141 @@ Statuses:
 - `delivered`
 - `cancelled`
 
-Important helpers:
+Nguon trang thai uu tien:
 
-- `CreateCart()`
-- `TryParse(string?)`
-- `IsOnlineOrder(DonHang)`
-- `IsOnlineCart(DonHang)`
-- `NormalizeStatus(string?)`
-- `ResolveStatusDisplay(string?)`
-- `ToJson()`
+1. `OnlineOrderInfo.TrangThaiGiaoHang`
+2. `OnlineOrderMetadata.DeliveryStatus`
 
-Note:
+Lich su trang thai:
 
-- `ToJson()` keeps the JSON under the `DonHang.GhiChu` max length by trimming fields.
+- Admin update delivery status se ghi `OnlineOrderStatusHistory`.
+- Checkout hien tai tao don pending nhung context cu ghi nhan checkout khong tao history row rieng.
 
-## Online Order Info
+## 10. Luong Ban An / Dine-in
 
-Model:
+Vung chinh:
 
-- `Models/OnlineOrderInfo.cs`
+- `HomeController.Client`
+- `HomeController.ProductDetail`
+- `HomeController.CreateProductDetail`
+- `HomeController.Cart`
+- `HomeController.OrderSuccess`
+- `AdminController.Ban`
+- `AdminController.GetFormBuy`
+- `AdminController.ProcessPayment`
 
-Purpose:
+Y nghia chung:
 
-- Stores normalized delivery information for online orders.
+- Khach/nhan vien chon ban va them mon vao don.
+- `ChiTietHoaDon` luu tung dong san pham.
+- Admin xem ban, lay form thanh toan, xu ly payment.
+- `ProcessPayment` clear `BanId` tren active orders cua ban de ban khong con bi chiem.
 
-Fields:
+Luu y:
 
-- `OnlineOrderInfoId`
-- `DhId`
-- `CuaHangId`
-- `TrangThaiGiaoHang`
-- `NguoiNhan`
-- `SoDienThoai`
-- `TinhThanh`
-- `QuanHuyen`
-- `PhuongXa`
-- `DiaChi`
-- `GhiChuGiaoHang`
-- `PhiGiaoHang`
-- `PhuongThucThanhToan`
-- `TrangThaiThanhToan`
-- `NgayDat`
-- `NgayCapNhat`
-- `Remove`
+- Trong `HomeController` co nested helper `DineInOrderMetadata` de serialize metadata order tai ban vao JSON.
+- Mot so UI cu van nam trong `Views/Home/*` va static assets `wwwroot/asset/*`.
 
-Relationship:
+## 11. SignalR
 
-- One `DonHang` has one `OnlineOrderInfo`.
+Hub:
 
-## Online Order Status History
+- `Hubs/ChatHub.cs`
 
-Model:
+Endpoint:
 
-- `Models/OnlineOrderStatusHistory.cs`
+- `/chatHub`
 
-Purpose:
+Server methods hien co:
 
-- Intended to track status changes of online orders.
+- `SendMessage`: broadcast `ReceiveMessage`.
+- `NotifyDatabaseChange`: broadcast `DatabaseUpdated`.
+- `NotifyProductDeleted`: broadcast `ProductDeleted`.
+- `NotifyOderSuccess`: broadcast `OderSuccess`.
 
-Fields:
+Controllers cung co the dung `IHubContext<ChatHub>` de gui event truc tiep, vi vay khi tim event can search trong controllers nua, khong chi trong `ChatHub.cs`.
 
-- `HistoryId`
-- `DhId`
-- `TrangThaiCu`
-- `TrangThaiMoi`
-- `NvId`
-- `GhiChu`
-- `CreatedAt`
+Event da thay trong context/code:
 
-Current observation:
+- `OderSuccess`
+- `OnlineCartUpdated`
+- `OnlineOrderCreated`
+- `OnlineOrderStatusUpdated`
+- `ProductDeleted`
+- `DatabaseUpdated`
 
-- The model and DbSet exist.
-- It is mapped in `QlnhaHangBtlContext`.
-- The customer history page listens to SignalR event `OnlineOrderStatusUpdated`.
-- The current customer checkout flow does not write status history.
-- Further admin/employee status update flow should write to this table.
+## 12. Noi Dung Public: Cua Hang Va Bai Viet
 
-## Online Order History
+`CuaHang`
 
-Controller action:
+- Quan ly trong `AdminCuaHangsController`.
+- Hien thi public qua `TrangChu/CuaHang`.
+- Field quan trong: ten, dia chi, tinh/thanh, quan/huyen, phuong/xa, phone, map url, lat/long, path photo, sap xep, hien thi, remove.
 
-- `HomeController.OrderHistory`
+`BaiVietChuyenNha`
 
-View:
+- Quan ly trong `AdminBaiVietChuyenNhasController`.
+- Hien thi public qua `TrangChu/ChuyenNha`.
+- Field quan trong: tieu de, slug, tom tat, noi dung, anh, tac gia, ngay dang, sap xep, noi bat, hien thi, remove.
 
-- `Views/Home/OrderHistory.cshtml`
+## 13. ViewModel Dang Chu Y
 
-View model:
+- `AdminDashboardViewModel`: payload dashboard admin.
+- `TrangChuMenuPageViewModel`: menu public CloudyCafe.
+- `ViewModelCart`: gio hang/don hang va helper tinh tong.
+- `OnlineCheckoutForm`: form checkout delivery.
+- `OnlineOrderHistoryViewModel`: lich su don online.
+- `ProductsIndexViewModel`, `CustomersIndexViewModel`, `EmployeesIndexViewModel`, `OrdersIndexViewModel`: danh sach admin co filter/paging theo tung module.
+- `ViewModelBan`, `ViewModelGetFormBuy`, `BanDonHang`: nghiep vu ban/don tai quan.
 
-- `ViewModel/OnlineOrderHistoryViewModel.cs`
+## 14. Diem Can Can Than Khi Sua Code
 
-Query conditions:
+- Repo dang co nhieu thay doi chua commit; can kiem tra diff truoc khi sua file lien quan.
+- `rg.exe` tren may hien tai co luc bi `Access is denied`; neu search loi thi dung PowerShell `Get-ChildItem`/`Select-String`.
+- Nhieu file co tieng Viet va mot so noi co dau bi mojibake trong tai lieu/cu; khi sua UI text can giu encoding dung UTF-8.
+- Luong online order dang dung 2 nguon trang thai:
+  - JSON trong `DonHang.GhiChu` qua `OnlineOrderMetadata`.
+  - Cot `OnlineOrderInfo.TrangThaiGiaoHang`.
+- Nen coi `OnlineOrderInfo.TrangThaiGiaoHang` la nguon chinh khi phat trien tiep, va chi giu `DonHang.GhiChu` de tuong thich nguoc.
+- Dung `Remove == false` khi query cac entity co soft delete.
+- Sau khi thay doi cart/order can tinh lai tong tien bang helper hien co, tranh chi update tung dong.
+- Khi them/sua luong realtime, can dong bo ca server event va JS listener trong view/layout.
+- Khong nen dua them logic quan trong vao `GhiChu.Contains(...)` neu co the them cot/index ro rang trong database.
 
-- Customer must be logged in.
-- Reads `DonHang` where:
-  - `KhId == CustomerID`
-  - `Remove == false`
-  - `VanChuyen == true`
-  - `GhiChu` contains `"t":"online"`
-- Includes:
-  - non-removed `ChiTietHoaDons`
-  - `Product`
-  - `OnlineOrderInfo`
-- Orders by `GioVao ?? GioRa`, then `DhId`.
-- Excludes metadata status `cart`.
+## 15. Database/SQL Files Trong Repo
 
-History row construction:
+File SQL can biet:
 
-- Uses `BuildOnlineOrderHistoryRow`.
-- Status source priority:
-  1. `OnlineOrderInfo.TrangThaiGiaoHang`
-  2. `OnlineOrderMetadata.DeliveryStatus`
-- Address source priority:
-  1. `OnlineOrderInfo`
-  2. `OnlineOrderMetadata.FullAddress`
-- Items are read from `ChiTietHoaDon`.
+- `data_system_restaurant_management.sql`: script du lieu/schema he thong lon.
+- `database_online_content_update.sql`: update lien quan online/content.
 
-Customer-facing status labels:
+Khi can cap nhat schema:
 
-- `pending`: `Chờ xác nhận`
-- `preparing`: `Đang chuẩn bị`
-- `shipping`: `Đang giao`
-- `delivered`: `Đã giao`
-- `cancelled`: `Đã hủy`
+- Kiem tra entity trong `Models`.
+- Kiem tra mapping trong `QlnhaHangBtlContext`.
+- Cap nhat SQL script tuong ung neu thay doi database.
 
-History UI:
+## 16. Build Note
 
-- Shows a progress indicator for active orders.
-- Delivered orders are compact and expandable.
-- Paginates client-side with page size `5`.
-- Reloads page when SignalR event `OnlineOrderStatusUpdated` arrives.
+Build thong thuong co the fail neu app dang chay va lock output.
 
-## Database Tables Used By Online Ordering
+Lenh build an toan hon:
 
-Main existing tables:
+```powershell
+dotnet build "WebQuanLyNhaHang\WebQuanLyNhaHang.csproj" -o "build-check\<name>" /p:UseAppHost=false
+```
 
-- `KhachHang`
-- `DonHang`
-- `ChiTietHoaDon`
-- `Product`
-- `ProductConditions`
-- `OnlineOrderInfo`
-- `OnlineOrderStatusHistory`
+Sau khi build xong co the xoa output tam:
 
-Important `DonHang` meaning in online flow:
+```powershell
+Remove-Item -LiteralPath "build-check\<name>" -Recurse -Force
+```
 
-- `VanChuyen = true`: online/delivery order.
-- `TrangThai = false`: active cart before checkout.
-- `TrangThai = true`: submitted order after checkout.
-- `BanId = null`: online order, not table order.
-- `GhiChu` contains compact online metadata JSON.
+## 17. Huong Cai Tien De Xuat
 
-Important `ChiTietHoaDon` meaning:
+Neu tiep tuc cai tien luong online order, nen giam phu thuoc vao JSON trong `DonHang.GhiChu`.
 
-- Each row is one product line.
-- `Ghichu` stores option text such as condition, size, sugar, ice, topping.
-- `ThanhTien` stores line total, not unit price.
-
-## Current Design Concern
-
-The online order flow currently uses two status sources:
-
-- `DonHang.GhiChu` JSON via `OnlineOrderMetadata`.
-- `OnlineOrderInfo.TrangThaiGiaoHang`.
-
-This works, but it is not ideal long term.
-
-Recommended direction:
-
-- Use `OnlineOrderInfo.TrangThaiGiaoHang` as the primary status source.
-- Keep `DonHang.GhiChu` only for backward compatibility or simple metadata.
-- Avoid relying on `GhiChu.Contains(...)` for important filtering if new SQL columns are available.
-- Always write status transitions to `OnlineOrderStatusHistory`.
-
-## Suggested SQL Direction For Cleaner Online Orders
-
-If continuing to improve online ordering, prefer adding explicit fields instead of relying on JSON inside `DonHang.GhiChu`.
-
-Suggested columns on `DonHang`:
+De xuat cot ro rang tren `DonHang`:
 
 ```sql
 ALTER TABLE DonHang
@@ -488,58 +543,21 @@ ADD
     NgayDatOnline DATETIME NULL;
 ```
 
-Suggested data meaning:
+Y nghia:
 
 - `LoaiDonHang = 'Online'`
 - `TrangThaiDon = 'Cart' | 'Pending' | 'Preparing' | 'Shipping' | 'Delivered' | 'Cancelled'`
-- `NgayDatOnline`: when the customer submitted checkout.
+- `NgayDatOnline`: thoi diem khach checkout.
 
-Suggested index:
+Index goi y:
 
 ```sql
 CREATE INDEX IX_DonHang_OnlineHistory
 ON DonHang (KhId, LoaiDonHang, TrangThaiDon, NgayDatOnline DESC);
-```
-
-If using the existing `OnlineOrderInfo` table only, then at minimum add/confirm indexes:
-
-```sql
-CREATE INDEX IX_DonHang_KhId_VanChuyen_TrangThai
-ON DonHang (KhId, VanChuyen, TrangThai, GioVao DESC, DH_ID DESC);
 
 CREATE INDEX IX_OnlineOrderInfo_DhId
 ON OnlineOrderInfo (DH_ID);
 
 CREATE INDEX IX_OnlineOrderInfo_Status
 ON OnlineOrderInfo (TrangThaiGiaoHang, NgayDat DESC);
-```
-
-## Known UI Behavior
-
-Online pages use `wwwroot/cloudycafe/css/styles.css`.
-
-Recent relevant UI expectations:
-
-- User avatar should be circular.
-- If `PathPhoto` exists, it replaces the default user icon.
-- Cart button text should be smaller and not too bold.
-- Online cart page inherits `_CloudyCafeLayout`.
-- Online cart quantity `+` and `-` buttons are clickable.
-- Menu category sidebar has active orange background while scrolling.
-- Product cards are compact with smaller plus button.
-
-## Build Note
-
-Normal build can fail if the running app locks output files.
-
-Safer build command:
-
-```powershell
-dotnet build "WebQuanLyNhaHang\WebQuanLyNhaHang.csproj" -o "build-check\<name>" /p:UseAppHost=false
-```
-
-After checking, remove the temporary output:
-
-```powershell
-Remove-Item -LiteralPath "build-check\<name>" -Recurse -Force
 ```

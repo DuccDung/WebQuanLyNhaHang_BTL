@@ -1,33 +1,27 @@
-﻿@model List<WebQuanLyNhaHang.Models.ProductConditions>
+@model List<WebQuanLyNhaHang.Models.ProductConditions>
+@{
+    var selectedCondition = ViewData["SelectedCondition"] as string;
+}
 
 <div class="component__product-selector flag__scroll">
     <div>
         <div class="item-selector-header">
             Loại
         </div>
-        @foreach(var item in Model)
+        @foreach (var item in Model)
         {
-            @* <div class="select-item">
-                <div class="component__cs-radio">
-                    <span class="component__cs-radio--border">
-                        <span class="radio-fill"></span>
-                    </span>
-                    <span class="radio-label">@item.Condition</span>
-                </div>
-                <span class="price_customize">0 đ</span>
-            </div> *@
-
+            var optionId = $"condition-{item.ProductConditionId}";
+            var isChecked = !string.IsNullOrWhiteSpace(selectedCondition)
+                ? string.Equals(item.Condition, selectedCondition, StringComparison.OrdinalIgnoreCase)
+                : item == Model.First();
 
             <div class="select-item">
                 <div class="component__cs-radio">
-                    <input class="component__cs-radio--border" type="radio" id="check" name="condition" value="@item.Condition" checked>
-                    <label class="radio-label" for="check">@item.Condition</label>
+                    <input class="component__cs-radio--border" type="radio" id="@optionId" name="condition" value="@item.Condition" checked="@isChecked">
+                    <label class="radio-label" for="@optionId">@item.Condition</label>
                     <span class="price_customize">0 đ</span>
                 </div>
-               
             </div>
-
         }
     </div>
 </div>
-
