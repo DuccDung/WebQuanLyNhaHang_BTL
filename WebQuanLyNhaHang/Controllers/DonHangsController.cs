@@ -34,18 +34,17 @@ namespace WebQuanLyNhaHang.Controllers
                 .AsNoTracking()
                 .Where(order =>
                     !order.Remove &&
-                    !(order.VanChuyen == true &&
-                      order.TrangThai != true &&
-                      order.GhiChu != null &&
-                      order.GhiChu.Contains("\"t\":\"online\"") &&
-                      order.GhiChu.Contains("\"s\":\"cart\"")))
+                    order.VanChuyen == true &&
+                    order.TrangThai == true &&
+                    order.GhiChu != null &&
+                    order.GhiChu.Contains("\"t\":\"online\""))
                 .Include(order => order.Ban)
                 .Include(order => order.Kh)
                 .Include(order => order.Km)
                 .Include(order => order.Nv)
                 .Include(order => order.OnlineOrderInfo)
                 .Include(order => order.ChiTietHoaDons.Where(item => !item.Remove))
-                .OrderByDescending(order => order.GioVao ?? order.GioRa)
+                .OrderByDescending(order => order.OnlineOrderInfo != null ? order.OnlineOrderInfo.NgayDat : order.GioRa ?? order.GioVao)
                 .ThenByDescending(order => order.DhId)
                 .ToListAsync();
 
@@ -55,7 +54,10 @@ namespace WebQuanLyNhaHang.Controllers
                 AdminAccount = HttpContext.Session.GetString("NhanVienTaiKhoan") ?? "admin",
                 AdminRoleLabel = "Quản trị vận hành",
                 Initials = BuildInitials(HttpContext.Session.GetString("NhanVienName") ?? "Admin"),
-                Orders = orders.Select(BuildOrderRow).ToList()
+                Orders = orders
+                    .Where(IsSubmittedOnlineOrder)
+                    .Select(BuildOrderRow)
+                    .ToList()
             };
 
             return View(model);
@@ -145,7 +147,7 @@ namespace WebQuanLyNhaHang.Controllers
                 ? metadata.FullAddress
                 : string.IsNullOrWhiteSpace(donHang.Kh?.DiaChi) ? "Chưa có địa chỉ" : donHang.Kh!.DiaChi!.Trim());
             var displayTableLabel = metadata != null ? "Giao hàng" : tableLabel;
-            var displayPaymentLabel = metadata != null ? "COD" : totalAmount > 0m ? "Tiền mặt" : "Chưa thanh toán";
+            var displayPaymentLabel = metadata != null ? ResolveOnlinePaymentLabel(onlineInfo) : totalAmount > 0m ? "Tiền mặt" : "Chưa thanh toán";
 
             return Json(new
             {
@@ -158,7 +160,7 @@ namespace WebQuanLyNhaHang.Controllers
                 timeIn = FormatDateTime(donHang.GioVao),
                 timeOut = FormatDateTime(donHang.GioRa),
                 totalAmount = FormatCurrency(totalAmount),
-                paymentLabel = totalAmount > 0m ? "Tiền mặt" : "Chưa thanh toán",
+                paymentLabel = displayPaymentLabel,
                 statusLabel = status.Label,
                 statusCssClass = status.CssClass,
                 employeeName = donHang.Nv == null || donHang.Nv.Remove || string.IsNullOrWhiteSpace(donHang.Nv.TenNhanVien)
@@ -185,7 +187,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             if (donHang == null)
             {
-                return NotFound(new { message = "Khong tim thay don hang." });
+                return NotFound(new { message = "Không tìm thấy đơn hàng." });
             }
 
             var metadata = OnlineOrderMetadata.TryParse(donHang.GhiChu);
@@ -202,12 +204,12 @@ namespace WebQuanLyNhaHang.Controllers
                     return new
                     {
                         productName = string.IsNullOrWhiteSpace(item.Product?.TenSanPham)
-                            ? "San pham chua dat ten"
+                            ? "Sản phẩm chưa đặt tên"
                             : item.Product!.TenSanPham!.Trim(),
                         quantity = quantity.ToString("N0", VietnameseCulture),
                         unitPrice = FormatCurrency(unitPrice),
                         total = FormatCurrency(lineTotal),
-                        note = string.IsNullOrWhiteSpace(item.Ghichu) ? "Khong co ghi chu" : item.Ghichu.Trim()
+                        note = string.IsNullOrWhiteSpace(item.Ghichu) ? "Không có ghi chú" : item.Ghichu.Trim()
                     };
                 })
                 .ToList();
@@ -219,18 +221,18 @@ namespace WebQuanLyNhaHang.Controllers
             var hasActiveCustomer = donHang.Kh != null && !donHang.Kh.Remove;
             var customerName = onlineInfo?.NguoiNhan ?? metadata?.RecipientName
                 ?? (!hasActiveCustomer || string.IsNullOrWhiteSpace(donHang.Kh?.TenKhachHang)
-                    ? "Khach le"
+                    ? "Khách lẻ"
                     : donHang.Kh!.TenKhachHang!.Trim());
             var customerPhone = onlineInfo?.SoDienThoai ?? metadata?.Phone
                 ?? (!hasActiveCustomer || string.IsNullOrWhiteSpace(donHang.Kh?.SoDienThoai)
-                    ? "Chua co SDT"
+                    ? "Chưa có SĐT"
                     : donHang.Kh!.SoDienThoai!.Trim());
             var customerAddress = BuildOnlineAddress(onlineInfo) ?? (!string.IsNullOrWhiteSpace(metadata?.FullAddress)
                 ? metadata.FullAddress
-                : string.IsNullOrWhiteSpace(donHang.Kh?.DiaChi) ? "Chua co dia chi" : donHang.Kh!.DiaChi!.Trim());
+                : string.IsNullOrWhiteSpace(donHang.Kh?.DiaChi) ? "Chưa có địa chỉ" : donHang.Kh!.DiaChi!.Trim());
             var tableLabel = metadata != null
-                ? "Giao hang"
-                : donHang.BanId.HasValue ? $"Ban {donHang.BanId.Value}" : "Mang ve";
+                ? "Giao hàng"
+                : donHang.BanId.HasValue ? $"Bàn {donHang.BanId.Value}" : "Mang về";
 
             return Json(new
             {
@@ -243,7 +245,7 @@ namespace WebQuanLyNhaHang.Controllers
                 timeIn = FormatDateTime(donHang.GioVao),
                 timeOut = FormatDateTime(donHang.GioRa),
                 totalAmount = FormatCurrency(totalAmount),
-                paymentLabel = metadata != null ? "COD" : totalAmount > 0m ? "Tien mat" : "Chua thanh toán",
+                paymentLabel = metadata != null ? ResolveOnlinePaymentLabel(onlineInfo) : totalAmount > 0m ? "Tiền mặt" : "Chưa thanh toán",
                 statusKey = status.Key,
                 statusLabel = status.Label,
                 statusCssClass = status.CssClass,
@@ -254,9 +256,9 @@ namespace WebQuanLyNhaHang.Controllers
                     ? BuildDeliveryStatusOptions()
                     : Array.Empty<object>(),
                 employeeName = donHang.Nv == null || donHang.Nv.Remove || string.IsNullOrWhiteSpace(donHang.Nv.TenNhanVien)
-                    ? "Chua phan cong"
+                    ? "Chưa phân công"
                     : donHang.Nv.TenNhanVien!.Trim(),
-                promotionName = string.IsNullOrWhiteSpace(donHang.Km?.TenKhuyenMai) ? "Khong ap dung" : donHang.Km!.TenKhuyenMai!.Trim(),
+                promotionName = string.IsNullOrWhiteSpace(donHang.Km?.TenKhuyenMai) ? "Không áp dụng" : donHang.Km!.TenKhuyenMai!.Trim(),
                 items = lineItems
             });
         }
@@ -266,7 +268,7 @@ namespace WebQuanLyNhaHang.Controllers
         {
             if (!OnlineOrderMetadata.IsValidStatus(status) || status == OnlineOrderMetadata.StatusCart)
             {
-                return BadRequest(new { message = "Trang thai giao hang khong hop le." });
+                return BadRequest(new { message = "Trạng thái giao hàng không hợp lệ." });
             }
 
             var donHang = await _context.DonHangs
@@ -275,13 +277,13 @@ namespace WebQuanLyNhaHang.Controllers
 
             if (donHang == null)
             {
-                return NotFound(new { message = "Khong tim thay don hang." });
+                return NotFound(new { message = "Không tìm thấy đơn hàng." });
             }
 
             var metadata = OnlineOrderMetadata.TryParse(donHang.GhiChu);
             if (metadata == null)
             {
-                return BadRequest(new { message = "Day khong phai don hang online." });
+                return BadRequest(new { message = "Đây không phải đơn hàng online." });
             }
 
             var oldStatus = donHang.OnlineOrderInfo?.TrangThaiGiaoHang ?? metadata.DeliveryStatus;
@@ -469,7 +471,6 @@ namespace WebQuanLyNhaHang.Controllers
             var lineItemCount = order.ChiTietHoaDons?.Count(item => !item.Remove) ?? 0;
             var status = ResolveOrderStatus(order, lineItemCount);
             var metadata = OnlineOrderMetadata.TryParse(order.GhiChu);
-            var orderTime = order.GioVao ?? order.GioRa;
             var hasActiveCustomer = order.Kh != null && !order.Kh.Remove;
             var customerName = !hasActiveCustomer || string.IsNullOrWhiteSpace(order.Kh?.TenKhachHang)
                 ? "Khách lẻ"
@@ -477,16 +478,17 @@ namespace WebQuanLyNhaHang.Controllers
             var customerPhone = !hasActiveCustomer || string.IsNullOrWhiteSpace(order.Kh?.SoDienThoai)
                 ? "Chưa có SĐT"
                 : order.Kh!.SoDienThoai!.Trim();
-            var tableLabel = order.BanId.HasValue
-                ? $"Bàn {order.BanId.Value}"
-                : "Mang về";
-
-            var displayCustomerName = metadata?.RecipientName ?? customerName;
-            var displayCustomerPhone = metadata?.Phone ?? customerPhone;
-            var displayTableLabel = metadata != null ? "Giao hang" : tableLabel;
-            var displayPaymentLabel = metadata != null
-                ? "COD"
-                : order.TongTien.HasValue && order.TongTien > 0m ? "Tien mat" : "Chua thanh toan";
+            var onlineInfo = order.OnlineOrderInfo;
+            var customerAddress = BuildOnlineAddress(onlineInfo) ?? (!string.IsNullOrWhiteSpace(metadata?.FullAddress)
+                ? metadata.FullAddress
+                : string.IsNullOrWhiteSpace(order.Kh?.DiaChi) ? "Chưa có địa chỉ" : order.Kh!.DiaChi!.Trim());
+            var displayCustomerName = onlineInfo?.NguoiNhan ?? metadata?.RecipientName ?? customerName;
+            var displayCustomerPhone = onlineInfo?.SoDienThoai ?? metadata?.Phone ?? customerPhone;
+            var displayTableLabel = "Giao hàng";
+            var displayPaymentLabel = ResolveOnlinePaymentLabel(onlineInfo);
+            var orderItems = order.ChiTietHoaDons ?? Enumerable.Empty<ChiTietHoaDon>();
+            var totalAmount = order.TongTien ?? orderItems.Where(item => !item.Remove).Sum(item => item.ThanhTien ?? 0m);
+            var submittedAt = onlineInfo?.NgayDat ?? metadata?.SubmittedAt ?? order.GioRa ?? order.GioVao;
 
             return new OrderIndexRowViewModel
             {
@@ -494,16 +496,35 @@ namespace WebQuanLyNhaHang.Controllers
                 OrderCode = $"DH{order.DhId:000}",
                 CustomerName = displayCustomerName,
                 CustomerPhone = displayCustomerPhone,
+                CustomerAddress = customerAddress,
                 TableLabel = displayTableLabel,
-                OrderTime = orderTime,
-                DateValue = orderTime?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty,
-                TotalAmount = order.TongTien ?? 0m,
-                PaymentLabel = order.TongTien.HasValue && order.TongTien > 0m ? "Tiền mặt" : "Chưa thanh toán",
+                OrderTime = submittedAt,
+                DateValue = submittedAt?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty,
+                TotalAmount = totalAmount,
+                PaymentLabel = displayPaymentLabel,
                 StatusKey = status.Key,
                 StatusLabel = status.Label,
                 StatusCssClass = status.CssClass,
-                SearchText = $"{order.DhId} DH{order.DhId:000} {displayCustomerName} {displayCustomerPhone} {displayTableLabel}".ToLowerInvariant()
+                SearchText = $"{order.DhId} DH{order.DhId:000} {displayCustomerName} {displayCustomerPhone} {customerAddress} {displayTableLabel}".ToLowerInvariant()
             };
+        }
+
+        private static bool IsSubmittedOnlineOrder(DonHang order)
+        {
+            var metadata = OnlineOrderMetadata.TryParse(order.GhiChu);
+            if (metadata == null || order.VanChuyen != true)
+            {
+                return false;
+            }
+
+            var deliveryStatus = !string.IsNullOrWhiteSpace(order.OnlineOrderInfo?.TrangThaiGiaoHang)
+                ? order.OnlineOrderInfo.TrangThaiGiaoHang
+                : metadata.DeliveryStatus;
+
+            return !string.Equals(
+                OnlineOrderMetadata.NormalizeStatus(deliveryStatus),
+                OnlineOrderMetadata.StatusCart,
+                StringComparison.OrdinalIgnoreCase);
         }
 
         private static (string Key, string Label, string CssClass) ResolveOrderStatus(DonHang order, int lineItemCount)
@@ -536,12 +557,18 @@ namespace WebQuanLyNhaHang.Controllers
         {
             return new object[]
             {
-                new { value = OnlineOrderMetadata.StatusPending, label = "Cho xac nhan" },
-                new { value = OnlineOrderMetadata.StatusPreparing, label = "Dang chuan bi" },
-                new { value = OnlineOrderMetadata.StatusShipping, label = "Dang giao" },
-                new { value = OnlineOrderMetadata.StatusDelivered, label = "Da giao" },
-                new { value = OnlineOrderMetadata.StatusCancelled, label = "Da huy" }
+                new { value = OnlineOrderMetadata.StatusPending, label = "Chờ xác nhận" },
+                new { value = OnlineOrderMetadata.StatusPreparing, label = "Đang chuẩn bị" },
+                new { value = OnlineOrderMetadata.StatusShipping, label = "Đang giao" },
+                new { value = OnlineOrderMetadata.StatusDelivered, label = "Đã giao" },
+                new { value = OnlineOrderMetadata.StatusCancelled, label = "Đã hủy" }
             };
+        }
+
+        private static string ResolveOnlinePaymentLabel(OnlineOrderInfo? info)
+        {
+            var payment = info?.PhuongThucThanhToan?.Trim();
+            return string.IsNullOrWhiteSpace(payment) ? "COD" : payment;
         }
 
         private static string? BuildOnlineAddress(OnlineOrderInfo? info)

@@ -283,8 +283,14 @@
 }
 
 .order-customer span,
-.order-time {
+.order-time,
+.order-address {
   color: #52627d;
+}
+
+.order-address {
+  max-width: 320px;
+  font-size: 14px;
 }
 
 .order-total {

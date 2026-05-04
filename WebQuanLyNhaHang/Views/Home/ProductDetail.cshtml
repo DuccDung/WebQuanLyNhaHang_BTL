@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="~/asset/css/responsive.css">
     <link rel="stylesheet" type="text/css" href="btl.css">
     <link rel="stylesheet" href="~/asset/css/productDetail.css" asp-append-version="true">
-    <title>Kính chào quý khách</title>
+    <title data-i18n="pageTitle">Kính chào quý khách</title>
 </head>
 <style>
     .product-detail {
@@ -42,7 +42,7 @@
 <body>
     <form asp-controller="Home" asp-action="CreateProductDetail" method="post" id="product-detail-form">
         <div class="app__product product-detail">
-            <button type="button" class="product-detail-back" id="product-detail-back" aria-label="Quay lại"></button>
+            <button type="button" class="product-detail-back" id="product-detail-back" aria-label="Quay lại" data-i18n-attr="aria-label:productBack"></button>
             <div class="container-fluid img-container bg-light p-0">
                 <img src="@Model.PathPhoto" class="img-fluid" alt="Responsive image">
             </div>
@@ -62,7 +62,7 @@
                                 <div class="parent_note">
                                     <img src="/asset/img/imgWeb/note.svg" alt="note_icon" class="note_icon">
                                     <label class="input__decreption">
-                                        <textarea name="ghichu" placeholder="Do you have a message for the restaurant?">@savedNote</textarea>
+                                        <textarea name="ghichu" placeholder="Bạn có ghi chú gì cho nhà hàng không?" data-i18n-attr="placeholder:productNotePlaceholder">@savedNote</textarea>
                                     </label>
                                 </div>
                             </div>
@@ -86,18 +86,18 @@
                                 <input type="text" value="@Url.Action("Cart", "Home")" hidden name="returnUrl">
                             }
                             <input type="text" name="soluong" class="form-control text-center" value="@ViewData["SoLuong"]" id="quantity"
-                                   aria-label="Quantity">
+                                   aria-label="Số lượng" data-i18n-attr="aria-label:quantity">
                             <button class="btn btn-outline-secondary" type="button" id="button-plus">+</button>
                         </div>
                         <!-- Add to order button --> 
                         <button type="submit" class="btn btn-secondary btn-lg add-to-order" id="add-to-order-button">
                             <span class="add-to-order__content">
-                                <span class="add-to-order__label">@(isEditingCartItem ? "Update order" : "Add to order")</span>
+                                <span class="add-to-order__label" data-i18n="@(isEditingCartItem ? "updateOrder" : "addToOrder")">@(isEditingCartItem ? "Cập nhật món" : "Thêm vào đơn")</span>
                                 <span class="small add-to-order__price" id="Productdetail-price">(@String.Format("{0:N0}", Model.GiaTien)đ)</span>
                             </span>
                             <span class="add-to-order__loading" aria-hidden="true">
                                 <span class="add-to-order__spinner"></span>
-                                <span>@(isEditingCartItem ? "Updating..." : "Adding...")</span>
+                                <span data-i18n="@(isEditingCartItem ? "updatingOrder" : "addingOrder")">@(isEditingCartItem ? "Đang cập nhật..." : "Đang thêm...")</span>
                             </span>
                         </button>
                     </div>
@@ -106,6 +106,7 @@
         </div>
     </form>
    
+    <script src="~/asset/js/dinein-language.js" asp-append-version="true"></script>
     <script>
         window.onload = function () {
             // Thêm lớp 'active' để chi tiết sản phẩm xuất hiện từ dưới lên

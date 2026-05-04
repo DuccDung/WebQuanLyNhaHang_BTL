@@ -120,12 +120,12 @@ public sealed class OnlineOrderMetadata
     {
         return NormalizeStatus(status) switch
         {
-            StatusPreparing => ("preparing", "Dang chuan bi", "is-processing"),
-            StatusShipping => ("shipping", "Dang giao", "is-shipping"),
-            StatusDelivered => ("delivered", "Da giao", "is-completed"),
-            StatusCancelled => ("cancelled", "Da huy", "is-cancelled"),
-            StatusCart => ("cart", "Gio hang", "is-pending"),
-            _ => ("pending", "Cho xac nhan", "is-pending")
+            StatusPreparing => ("preparing", "Đang chuẩn bị", "is-processing"),
+            StatusShipping => ("shipping", "Đang giao", "is-shipping"),
+            StatusDelivered => ("delivered", "Đã giao", "is-completed"),
+            StatusCancelled => ("cancelled", "Đã hủy", "is-cancelled"),
+            StatusCart => ("cart", "Giỏ hàng", "is-pending"),
+            _ => ("pending", "Chờ xác nhận", "is-pending")
         };
     }
 

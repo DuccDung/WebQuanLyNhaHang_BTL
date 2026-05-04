@@ -12,8 +12,8 @@
     {
         <div class="menu-search-empty">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <div class="menu-search-empty__title">Không tìm thấy món phù hợp</div>
-            <div class="menu-search-empty__text">Bạn thử nhập tên món khác, loại món hoặc mức giá nhé.</div>
+            <div class="menu-search-empty__title" data-i18n="searchEmptyTitle">Không tìm thấy món phù hợp</div>
+            <div class="menu-search-empty__text" data-i18n="searchEmptyText">Bạn thử nhập tên món khác, loại món hoặc mức giá nhé.</div>
         </div>
     }
     else
@@ -34,7 +34,7 @@
                             </div>
                             @if (submittedQuantity > 0)
                             {
-                                <div class="ordered-dinein-badge">Đã gọi @submittedQuantity</div>
+                                <div class="ordered-dinein-badge" data-i18n-template="orderedBadge" data-count="@submittedQuantity">Đã gọi @submittedQuantity</div>
                             }
                         </td>
                     <td class="menu__product-plus">

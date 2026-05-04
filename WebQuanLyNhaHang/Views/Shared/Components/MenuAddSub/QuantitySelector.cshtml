@@ -154,7 +154,12 @@
                     return;
                 }
 
-                $footerContent.text("Xem giỏ hàng(" + nextCount + " món)");
+                $footerContent
+                    .attr("data-count", nextCount)
+                    .attr("data-cart-count", nextCount)
+                    .text(window.CloudyDineInLanguage
+                        ? window.CloudyDineInLanguage.cartFooterText(nextCount)
+                        : "Xem giỏ hàng(" + nextCount + " món)");
             }
 
             function renderAddButton($selector, productId) {

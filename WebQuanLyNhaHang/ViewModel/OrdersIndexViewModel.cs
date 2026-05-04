@@ -36,7 +36,9 @@ public class OrderIndexRowViewModel
 
     public string CustomerPhone { get; set; } = string.Empty;
 
-    public string TableLabel { get; set; } = "Mang về";
+    public string CustomerAddress { get; set; } = "Chưa có địa chỉ";
+
+    public string TableLabel { get; set; } = "Giao hàng";
 
     public DateTime? OrderTime { get; set; }
 

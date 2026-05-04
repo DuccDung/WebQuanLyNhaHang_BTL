@@ -684,7 +684,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             customer.TenKhachHang = CleanText(form.HoTen, 100);
             customer.SoDienThoai = CleanText(form.SoDienThoai, 15);
-            customer.DiaChi = BuildFullAddress(form);
+            customer.DiaChi = CleanText(BuildFullAddress(form), 200);
             DH.KhId = customer.KhId;
 
             var metadata = OnlineOrderMetadata.TryParse(DH.GhiChu) ?? OnlineOrderMetadata.CreateCart();
@@ -728,7 +728,7 @@ namespace WebQuanLyNhaHang.Controllers
             onlineInfo.NgayCapNhat = DateTime.Now;
             onlineInfo.Remove = false;
 
-            RefreshCartTotal(DH.DhId);
+            RefreshCartTotal(DH.DhId, saveChanges: false);
             _qlnhaHangBtlContext.SaveChanges();
             HttpContext.Session.Remove(OnlineCartSessionKey);
             if (!HttpContext.Session.GetInt32("BanId").HasValue &&
@@ -1160,7 +1160,7 @@ namespace WebQuanLyNhaHang.Controllers
                 string.Equals(metadata.GuestId, customer.Id, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void RefreshCartTotal(int dhId)
+        private void RefreshCartTotal(int dhId, bool saveChanges = true)
         {
             var DH = _qlnhaHangBtlContext.DonHangs.FirstOrDefault(order => order.DhId == dhId && !order.Remove);
             if (DH == null)
@@ -1172,7 +1172,10 @@ namespace WebQuanLyNhaHang.Controllers
                 .Where(item => item.DhId == dhId && !item.Remove)
                 .Sum(item => item.ThanhTien ?? 0m);
 
-            _qlnhaHangBtlContext.SaveChanges();
+            if (saveChanges)
+            {
+                _qlnhaHangBtlContext.SaveChanges();
+            }
         }
 
         private decimal ResolveOptionExtra(string? condition, string? ghichu)

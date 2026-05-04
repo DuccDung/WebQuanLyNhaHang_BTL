@@ -9,6 +9,7 @@
     var currentHour = DateTime.Now.Hour;
     var isNightTime = currentHour >= 18 || currentHour < 5;
     var greetingText = isNightTime ? "Chào buổi tối" : "Chào buổi sáng";
+    var greetingTextEn = isNightTime ? "Good evening" : "Good morning";
     var greetingIcon = isNightTime ? "/asset/img/imgWeb/moon.svg" : "/asset/img/imgWeb/icons8-sun.gif";
     var tableCode = banId.HasValue ? $"A{banId.Value}" : "A--";
     var submittedItems = Model?.SubmittedDineInItems(banId, dineInCustomerId) ?? new List<WebQuanLyNhaHang.ViewModel.CTDH_Product>();
@@ -39,7 +40,7 @@
     <link rel="stylesheet" href="~/asset/css/responsive.css">
     <link rel="stylesheet" type="text/css" href="btl.css">
     <link rel="stylesheet" href="~/asset/css/index2.css">
-    <title>Kính chào quý khách</title>
+    <title data-i18n="pageTitle">Kính chào quý khách</title>
 </head>
 <style>
     .card-title {
@@ -63,6 +64,8 @@
     }
 
     .service-shop-header {
+        position: relative;
+        z-index: 1200;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -124,6 +127,12 @@
         box-shadow: 0 6px 18px rgba(17, 24, 39, .12);
     }
 
+    .service-language {
+        position: relative;
+        z-index: 1210;
+        flex: 0 0 auto;
+    }
+
     .service-language-button__flag {
         display: inline-flex;
         align-items: center;
@@ -137,8 +146,82 @@
         line-height: 1;
     }
 
+    .service-language-button__label {
+        color: #111827;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
     .service-language-button i {
         font-size: 11px;
+    }
+
+    .service-language-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 1220;
+        display: grid;
+        gap: 5px;
+        min-width: 154px;
+        padding: 7px;
+        border: 1px solid #eef2f7;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 16px 34px rgba(17, 24, 39, .16);
+    }
+
+    .service-header-layer {
+        position: relative;
+        z-index: 1200;
+        overflow: visible;
+    }
+
+    .service-language-menu[hidden] {
+        display: none;
+    }
+
+    .service-language-option {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        min-height: 38px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: #1f2937;
+        padding: 0 10px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .service-language-option.is-active {
+        background: #fff7ed;
+        color: #f05a00;
+    }
+
+    .service-language-option__flag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 17px;
+        border-radius: 4px;
+        background: #ef1c25;
+        color: #ffde59;
+        font-size: 11px;
+        line-height: 1;
+    }
+
+    .service-language-option__flag--en {
+        background: #1d4ed8;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 800;
     }
 
     .service-reveal {
@@ -1066,7 +1149,7 @@
 
 <body class="service-page" data-current-table-id="@(banId?.ToString() ?? string.Empty)">
 
-    <div class="container custom-padding service-reveal" style="--reveal-delay: 40ms;">
+    <div class="container custom-padding service-reveal service-header-layer" style="--reveal-delay: 40ms;">
         <div class="service-shop-header">
             <div class="service-shop-header__info">
                 <h1 class="service-shop-header__name">O2O Coffee - Chùa Láng</h1>
@@ -1075,10 +1158,23 @@
                     <span class="service-shop-header__address-text">137 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội, Việt Nam</span>
                 </p>
             </div>
-            <button type="button" class="service-language-button" aria-label="Ngôn ngữ tiếng Việt">
-                <span class="service-language-button__flag">★</span>
-                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-            </button>
+            <div class="service-language">
+                <button type="button" class="service-language-button" id="serviceLanguageButton" aria-label="Chọn ngôn ngữ" aria-expanded="false" aria-controls="serviceLanguageMenu" data-i18n-attr="aria-label:languageButton">
+                    <span class="service-language-button__flag" data-language-flag>★</span>
+                    <span class="service-language-button__label" data-language-label>VI</span>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </button>
+                <div class="service-language-menu" id="serviceLanguageMenu" hidden>
+                    <button type="button" class="service-language-option" data-language-option="vi">
+                        <span class="service-language-option__flag">★</span>
+                        <span>Tiếng Việt</span>
+                    </button>
+                    <button type="button" class="service-language-option" data-language-option="en">
+                        <span class="service-language-option__flag service-language-option__flag--en">EN</span>
+                        <span>English</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1104,11 +1200,11 @@
                 <div class="service-greeting">
                     <h1 class="service-greeting__title">
                         <img class="service-greeting__icon" src="@greetingIcon" alt="">
-                        <span>@greetingText <span class="service-greeting__name">@displayCustomerName</span></span>
+                        <span><span data-i18n="greeting"> @greetingText</span> <span class="service-greeting__name">@displayCustomerName</span></span>
                         <i class="fa-solid fa-pen service-greeting__edit" aria-hidden="true"></i>
                     </h1>
                     <p class="service-greeting__subtitle">
-                        <span>Chúng tôi sẽ trả đồ cho bạn tại bàn:</span>
+                        <span data-i18n="tableServe">Chúng tôi sẽ trả đồ cho bạn tại bàn:</span>
                         <span class="service-greeting__table">@tableCode</span>
                     </p>
                 </div>
@@ -1117,9 +1213,9 @@
 
         <div class="row service-reveal" style="--reveal-delay: 220ms;">
             <div class="col-12">
-                <a href="#" class="point-login-button" aria-label="Nhập số điện thoại để tích điểm">
+                <a href="#" class="point-login-button" aria-label="Nhập số điện thoại để tích điểm" data-i18n-attr="aria-label:pointLogin">
                     <img class="point-login-button__image" src="/asset/img/imgWeb/img-request-login.png" alt="">
-                    <span class="point-login-button__text">Nhập số điện thoại để tích điểm</span>
+                    <span class="point-login-button__text" data-i18n="pointLogin">Nhập số điện thoại để tích điểm</span>
                     <img class="point-login-button__next" src="/asset/img/imgWeb/next-icon.svg" alt="">
                 </a>
             </div>
@@ -1128,19 +1224,19 @@
         <div class="row my-3 justify-content-between service-reveal gx-2" style="--reveal-delay: 250ms;">
             <div class="col-4 col-md-4 col-lg-4 mb-2 d-flex justify-content-center">
                 <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                    <h5 class="service-action-title">Gọi thanh toán</h5>
+                    <h5 class="service-action-title" data-i18n="callPayment">Gọi thanh toán</h5>
                     <img class="service-action-image service-action-image--payment" src="/asset/img/imgWeb/request_payment_2.png" alt="">
                 </div>
             </div>
             <div class="col-4 col-md-4 col-lg-4 mb-2 d-flex justify-content-center">
                 <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#requestModal">
-                    <h5 class="service-action-title">Gọi nhân viên</h5>
+                    <h5 class="service-action-title" data-i18n="callStaff">Gọi nhân viên</h5>
                     <img class="service-action-image service-action-image--staff" src="/asset/img/imgWeb/bg-request_service.png" alt="">
                 </div>
             </div>
             <div class="col-4 col-md-4 col-lg-4 mb-2 d-flex justify-content-center">
                 <div class="card-custom card fixed-size service-soft-card" data-bs-toggle="modal" data-bs-target="#reviewModal">
-                    <h5 class="service-action-title">Đánh giá</h5>
+                    <h5 class="service-action-title" data-i18n="review">Đánh giá</h5>
                     <img class="service-action-image service-action-image--rate" src="/asset/img/imgWeb/bg-rate.png" alt="">
                 </div>
             </div>
@@ -1149,8 +1245,8 @@
 
         <div class="row mt-2 mb-3 service-reveal" style="--reveal-delay: 320ms;">
             <div class="col-12">
-                <a asp-controller="Home" asp-action="Menu" class="service-menu-button" aria-label="Xem Menu - Gọi món">
-                    <span class="service-menu-button__text">Xem Menu - Gọi món</span>
+                <a asp-controller="Home" asp-action="Menu" class="service-menu-button" aria-label="Xem Menu - Gọi món" data-i18n-attr="aria-label:menuButton">
+                    <span class="service-menu-button__text" data-i18n="menuButton">Xem Menu - Gọi món</span>
                     <span class="service-menu-button__arrow"><i class="fa-solid fa-chevron-right"></i></span>
                 </a>
             </div>
@@ -1158,10 +1254,10 @@
 
         <div class="submitted-orders service-reveal" style="--reveal-delay: 390ms;">
             <div class="submitted-orders__title">
-                <h2>Các món đã gọi</h2>
+                <h2 data-i18n="submittedTitle">Các món đã gọi</h2>
                 @if (submittedItems.Any())
                 {
-                    <span>@submittedItems.Sum(item => item.SoLuong ?? 0) món - @String.Format("{0:N0}", submittedTotal)đ</span>
+                    <span data-submitted-summary data-count="@submittedItems.Sum(item => item.SoLuong ?? 0)" data-total="@String.Format("{0:N0}", submittedTotal)">@submittedItems.Sum(item => item.SoLuong ?? 0) món - @String.Format("{0:N0}", submittedTotal)đ</span>
                 }
             </div>
             @if (submittedItems.Any())
@@ -1189,7 +1285,7 @@
             else
             {
                 <div class="submitted-orders__empty">
-                    Bạn chưa gửi món nào. Hãy vào menu để chọn món và gửi yêu cầu gọi món.
+                    <span data-i18n="submittedEmpty">Bạn chưa gửi món nào. Hãy vào menu để chọn món và gửi yêu cầu gọi món.</span>
                 </div>
             }
         </div>
@@ -1199,18 +1295,18 @@
             <div class="modal-dialog payment-bottom-modal modal-dialog-bottom">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="paymentModalLabel">Gọi thanh toán</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title" id="paymentModalLabel" data-i18n="callPayment">Gọi thanh toán</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:close"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="payment-sheet__subtitle">Bạn muốn thanh toán bằng ?</p>
+                        <p class="payment-sheet__subtitle" data-i18n="paymentQuestion">Bạn muốn thanh toán bằng hình thức nào?</p>
                         <div class="payment-methods">
                             <label class="payment-method">
                                 <input type="radio" name="paymentMethod" value="cash">
                                 <span class="payment-method__icon">
                                     <img src="/asset/img/imgWeb/cash.svg" alt="">
                                 </span>
-                                <span class="payment-method__name">Tiền mặt</span>
+                                <span class="payment-method__name" data-i18n="cash">Tiền mặt</span>
                                 <span class="payment-method__radio"></span>
                             </label>
                             <label class="payment-method">
@@ -1218,7 +1314,7 @@
                                 <span class="payment-method__icon">
                                     <img src="/asset/img/imgWeb/card_02.svg" alt="">
                                 </span>
-                                <span class="payment-method__name">Thẻ ngân hàng</span>
+                                <span class="payment-method__name" data-i18n="card">Thẻ ngân hàng</span>
                                 <span class="payment-method__radio"></span>
                             </label>
                             <label class="payment-method">
@@ -1226,13 +1322,13 @@
                                 <span class="payment-method__icon">
                                     <img src="/asset/img/imgWeb/app.svg" alt="">
                                 </span>
-                                <span class="payment-method__name">Ứng dụng điện thoại</span>
+                                <span class="payment-method__name" data-i18n="wallet">Ứng dụng điện thoại</span>
                                 <span class="payment-method__radio"></span>
                             </label>
                         </div>
-                        <button type="button" class="payment-sheet__submit" id="sendPaymentRequest">Gửi yêu cầu</button>
+                        <button type="button" class="payment-sheet__submit" id="sendPaymentRequest" data-i18n="sendRequest">Gửi yêu cầu</button>
                         <div class="payment-request-toast" id="paymentRequestToast">
-                            Đã gửi yêu cầu thanh toán. Nhân viên sẽ đến hỗ trợ bạn.
+                            <span data-i18n="paymentRequestSent">Đã gửi yêu cầu thanh toán. Nhân viên sẽ đến hỗ trợ bạn.</span>
                         </div>
                     </div>
                 </div>
@@ -1245,15 +1341,15 @@
                 <div class="modal-content">
                     <div class="request-sheet">
                         <div class="request-sheet__handle"></div>
-                        <h5 class="request-sheet__title" id="requestModalLabel">Gọi nhân viên</h5>
-                        <p class="request-sheet__subtitle">Bạn muốn yêu cầu nhân viên làm gì?</p>
+                        <h5 class="request-sheet__title" id="requestModalLabel" data-i18n="callStaff">Gọi nhân viên</h5>
+                        <p class="request-sheet__subtitle" data-i18n="staffQuestion">Bạn muốn yêu cầu nhân viên làm gì?</p>
                         <div class="request-input-wrap">
                             <i class="fa-solid fa-pen"></i>
-                            <textarea class="request-sheet__input" id="requestInput" rows="2"></textarea>
+                            <textarea class="request-sheet__input" id="requestInput" rows="2" placeholder="Nhập yêu cầu của bạn..." data-i18n-attr="placeholder:requestPlaceholder"></textarea>
                         </div>
-                        <button type="button" class="request-sheet__submit" id="sendStaffRequest">Gửi yêu cầu</button>
+                        <button type="button" class="request-sheet__submit" id="sendStaffRequest" data-i18n="sendRequest">Gửi yêu cầu</button>
                         <div class="request-toast" id="staffRequestToast">
-                            Đã gửi yêu cầu. Nhân viên sẽ đến hỗ trợ bạn.
+                            <span data-i18n="requestSent">Đã gửi yêu cầu. Nhân viên sẽ đến hỗ trợ bạn.</span>
                         </div>
                     </div>
                 </div>
@@ -1266,9 +1362,9 @@
                 <div class="modal-content">
                     <div class="review-sheet">
                         <div class="review-sheet__handle"></div>
-                        <button type="button" class="review-sheet__close" data-bs-dismiss="modal" aria-label="Close">×</button>
+                        <button type="button" class="review-sheet__close" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:close">×</button>
                         <div class="review-panel">
-                            <h5 class="review-sheet__title" id="reviewModalLabel">Trải nghiệm của bạn ở nhà hàng hôm nay thế nào?</h5>
+                            <h5 class="review-sheet__title" id="reviewModalLabel" data-i18n="reviewQuestion">Trải nghiệm của bạn ở nhà hàng hôm nay thế nào?</h5>
                             <div class="review-stars" id="reviewStars">
                                 <button type="button" class="review-star is-active" data-value="1">★</button>
                                 <button type="button" class="review-star is-active" data-value="2">★</button>
@@ -1278,29 +1374,29 @@
                             </div>
                             <p class="review-rating-label" id="reviewRatingLabel">Bình thường</p>
                             <div class="review-divider"></div>
-                            <p class="review-section-title">Bạn có điều gì chưa hài lòng phải không?</p>
+                            <p class="review-section-title" data-i18n="reviewIssueQuestion">Bạn có điều gì chưa hài lòng phải không?</p>
                             <div class="review-tags" id="reviewTags">
-                                <button type="button" class="review-tag">Vệ sinh không sạch sẽ</button>
-                                <button type="button" class="review-tag">Nhân viên không nhiệt tình</button>
-                                <button type="button" class="review-tag">Món ăn không ngon</button>
-                                <button type="button" class="review-tag">Món ăn phục vụ lâu</button>
-                                <button type="button" class="review-tag">Giá không phù hợp với chất lượng</button>
-                                <button type="button" class="review-tag">Không gian bất tiện</button>
-                                <button type="button" class="review-tag">Không gian ồn</button>
+                                <button type="button" class="review-tag" data-i18n="tagClean">Vệ sinh không sạch sẽ</button>
+                                <button type="button" class="review-tag" data-i18n="tagStaff">Nhân viên không nhiệt tình</button>
+                                <button type="button" class="review-tag" data-i18n="tagTaste">Món ăn không ngon</button>
+                                <button type="button" class="review-tag" data-i18n="tagSlow">Món ăn phục vụ lâu</button>
+                                <button type="button" class="review-tag" data-i18n="tagPrice">Giá không phù hợp với chất lượng</button>
+                                <button type="button" class="review-tag" data-i18n="tagSpace">Không gian bất tiện</button>
+                                <button type="button" class="review-tag" data-i18n="tagNoise">Không gian ồn</button>
                             </div>
-                            <textarea class="review-comment" id="reviewComment" placeholder="Viết góp ý cho nhà hàng..."></textarea>
+                            <textarea class="review-comment" id="reviewComment" placeholder="Viết góp ý cho nhà hàng..." data-i18n-attr="placeholder:reviewPlaceholder"></textarea>
                         </div>
                         <div class="review-foot">
-                            <p class="review-foot__text">Nhà hàng rất trân trọng và mong muốn phản hồi lại đánh giá trên, bạn vui lòng để lại số điện thoại nhé</p>
+                            <p class="review-foot__text" data-i18n="reviewPhoneText">Nhà hàng rất trân trọng và mong muốn phản hồi lại đánh giá trên, bạn vui lòng để lại số điện thoại nhé</p>
                             <div class="review-actions">
                                 <div class="review-phone-wrap">
                                     <i class="fa-solid fa-phone"></i>
-                                    <input class="review-phone" id="reviewPhone" type="tel" placeholder="Số điện thoại của bạn">
+                                    <input class="review-phone" id="reviewPhone" type="tel" placeholder="Số điện thoại của bạn" data-i18n-attr="placeholder:phonePlaceholder">
                                 </div>
-                                <button type="button" class="review-submit" id="sendReview">Gửi đánh giá</button>
+                                <button type="button" class="review-submit" id="sendReview" data-i18n="sendReview">Gửi đánh giá</button>
                             </div>
                             <div class="review-toast" id="reviewToast">
-                                Cảm ơn bạn đã gửi đánh giá.
+                                <span data-i18n="reviewThanks">Cảm ơn bạn đã gửi đánh giá.</span>
                             </div>
                         </div>
                     </div>
@@ -1313,17 +1409,18 @@
                 <div class="payment-complete-popup__icon" aria-hidden="true">
                     <i class="fa-solid fa-check"></i>
                 </div>
-                <h2 class="payment-complete-popup__title" id="paymentCompleteTitle">Thanh toán thành công</h2>
-                <p class="payment-complete-popup__message">Cảm ơn bạn đã dùng bữa tại nhà hàng.</p>
-                <p class="payment-complete-popup__meta" id="paymentCompleteMeta">Đang cập nhật lại đơn tại bàn...</p>
+                <h2 class="payment-complete-popup__title" id="paymentCompleteTitle" data-i18n="paymentCompleteTitle">Thanh toán thành công</h2>
+                <p class="payment-complete-popup__message" data-i18n="paymentCompleteMessage">Cảm ơn bạn đã dùng bữa tại nhà hàng.</p>
+                <p class="payment-complete-popup__meta" id="paymentCompleteMeta" data-i18n="paymentCompleteUpdating">Đang cập nhật lại đơn tại bàn...</p>
             </section>
         </div>
 
-        <audio id="paymentCompleteSound" src="/asset/sound/Thongbao1.mp3" preload="auto"></audio>
+        <audio id="paymentCompleteSound" src="/asset/sound/notify_sound.mp3" preload="auto"></audio>
 
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    <script src="~/asset/js/dinein-language.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             requestAnimationFrame(function () {
@@ -1352,15 +1449,208 @@
             const paymentCompletePopup = document.getElementById("paymentCompletePopup");
             const paymentCompleteMeta = document.getElementById("paymentCompleteMeta");
             const paymentCompleteSound = document.getElementById("paymentCompleteSound");
-            const reviewLabels = {
-                1: "Rất không hài lòng",
-                2: "Không hài lòng",
-                3: "Bình thường",
-                4: "Hài lòng",
-                5: "Rất hài lòng"
+            const languageButton = document.getElementById("serviceLanguageButton");
+            const languageMenu = document.getElementById("serviceLanguageMenu");
+            const languageFlag = document.querySelector("[data-language-flag]");
+            const languageLabel = document.querySelector("[data-language-label]");
+            const translations = {
+                vi: {
+                    pageTitle: "Kính chào quý khách",
+                    languageButton: "Chọn ngôn ngữ",
+                    greeting: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(greetingText)),
+                    tableServe: "Chúng tôi sẽ trả đồ cho bạn tại bàn:",
+                    pointLogin: "Nhập số điện thoại để tích điểm",
+                    callPayment: "Gọi thanh toán",
+                    callStaff: "Gọi nhân viên",
+                    review: "Đánh giá",
+                    menuButton: "Xem Menu - Gọi món",
+                    submittedTitle: "Các món đã gọi",
+                    submittedSummary: "{count} món - {total}đ",
+                    submittedEmpty: "Bạn chưa gửi món nào. Hãy vào menu để chọn món và gửi yêu cầu gọi món.",
+                    paymentQuestion: "Bạn muốn thanh toán bằng hình thức nào?",
+                    cash: "Tiền mặt",
+                    card: "Thẻ ngân hàng",
+                    wallet: "Ứng dụng điện thoại",
+                    sendRequest: "Gửi yêu cầu",
+                    sentRequest: "Đã gửi yêu cầu",
+                    sent: "Đã gửi",
+                    paymentRequestSent: "Đã gửi yêu cầu thanh toán. Nhân viên sẽ đến hỗ trợ bạn.",
+                    requestSent: "Đã gửi yêu cầu. Nhân viên sẽ đến hỗ trợ bạn.",
+                    staffQuestion: "Bạn muốn yêu cầu nhân viên làm gì?",
+                    requestPlaceholder: "Nhập yêu cầu của bạn...",
+                    reviewQuestion: "Trải nghiệm của bạn ở nhà hàng hôm nay thế nào?",
+                    reviewIssueQuestion: "Bạn có điều gì chưa hài lòng phải không?",
+                    tagClean: "Vệ sinh không sạch sẽ",
+                    tagStaff: "Nhân viên không nhiệt tình",
+                    tagTaste: "Món ăn không ngon",
+                    tagSlow: "Món ăn phục vụ lâu",
+                    tagPrice: "Giá không phù hợp với chất lượng",
+                    tagSpace: "Không gian bất tiện",
+                    tagNoise: "Không gian ồn",
+                    reviewPlaceholder: "Viết góp ý cho nhà hàng...",
+                    reviewPhoneText: "Nhà hàng rất trân trọng và mong muốn phản hồi lại đánh giá trên, bạn vui lòng để lại số điện thoại nhé",
+                    phonePlaceholder: "Số điện thoại của bạn",
+                    sendReview: "Gửi đánh giá",
+                    reviewThanks: "Cảm ơn bạn đã gửi đánh giá.",
+                    paymentCompleteTitle: "Thanh toán thành công",
+                    paymentCompleteMessage: "Cảm ơn bạn đã dùng bữa tại nhà hàng.",
+                    paymentCompleteUpdating: "Đang cập nhật lại đơn tại bàn...",
+                    close: "Đóng",
+                    paymentMethodCash: "Tiền mặt",
+                    paymentMethodCard: "Thẻ ngân hàng",
+                    paymentMethodWallet: "Ứng dụng điện thoại",
+                    reviewLabels: {
+                        1: "Rất không hài lòng",
+                        2: "Không hài lòng",
+                        3: "Bình thường",
+                        4: "Hài lòng",
+                        5: "Rất hài lòng"
+                    }
+                },
+                en: {
+                    pageTitle: "Welcome",
+                    languageButton: "Choose language",
+                    greeting: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(greetingTextEn)),
+                    tableServe: "We will serve your order at table:",
+                    pointLogin: "Enter phone number to earn points",
+                    callPayment: "Request payment",
+                    callStaff: "Call staff",
+                    review: "Review",
+                    menuButton: "View Menu - Order",
+                    submittedTitle: "Ordered items",
+                    submittedSummary: "{count} items - {total}đ",
+                    submittedEmpty: "You have not sent any items yet. Open the menu to choose items and submit your order.",
+                    paymentQuestion: "How would you like to pay?",
+                    cash: "Cash",
+                    card: "Bank card",
+                    wallet: "Mobile wallet",
+                    sendRequest: "Send request",
+                    sentRequest: "Request sent",
+                    sent: "Sent",
+                    paymentRequestSent: "Payment request sent. Staff will come to assist you.",
+                    requestSent: "Request sent. Staff will come to assist you.",
+                    staffQuestion: "What would you like staff to help with?",
+                    requestPlaceholder: "Type your request...",
+                    reviewQuestion: "How was your experience at the restaurant today?",
+                    reviewIssueQuestion: "Was there anything you were not satisfied with?",
+                    tagClean: "Cleanliness issue",
+                    tagStaff: "Staff not helpful",
+                    tagTaste: "Food did not taste good",
+                    tagSlow: "Food was served slowly",
+                    tagPrice: "Price did not match quality",
+                    tagSpace: "Space was inconvenient",
+                    tagNoise: "Space was noisy",
+                    reviewPlaceholder: "Write feedback for the restaurant...",
+                    reviewPhoneText: "We appreciate your feedback and may contact you about it. Please leave your phone number.",
+                    phonePlaceholder: "Your phone number",
+                    sendReview: "Send review",
+                    reviewThanks: "Thank you for your review.",
+                    paymentCompleteTitle: "Payment successful",
+                    paymentCompleteMessage: "Thank you for dining with us.",
+                    paymentCompleteUpdating: "Updating your table order...",
+                    close: "Close",
+                    paymentMethodCash: "Cash",
+                    paymentMethodCard: "Bank card",
+                    paymentMethodWallet: "Mobile wallet",
+                    reviewLabels: {
+                        1: "Very dissatisfied",
+                        2: "Dissatisfied",
+                        3: "Neutral",
+                        4: "Satisfied",
+                        5: "Very satisfied"
+                    }
+                }
             };
+            let currentLanguage = window.CloudyDineInLanguage
+                ? window.CloudyDineInLanguage.getLanguage()
+                : (localStorage.getItem("cloudyServiceLanguage") === "en" ? "en" : "vi");
             let selectedReviewRating = 3;
             let paymentCompleteReloadTimer = null;
+
+            function t(key) {
+                return (translations[currentLanguage] && translations[currentLanguage][key])
+                    || translations.vi[key]
+                    || key;
+            }
+
+            function applyLanguage(language) {
+                currentLanguage = language === "en" ? "en" : "vi";
+                if (window.CloudyDineInLanguage) {
+                    window.CloudyDineInLanguage.setLanguage(currentLanguage);
+                } else {
+                    localStorage.setItem("cloudyServiceLanguage", currentLanguage);
+                }
+                document.documentElement.lang = currentLanguage;
+
+                document.querySelectorAll("[data-i18n]").forEach(function (element) {
+                    element.textContent = t(element.dataset.i18n);
+                });
+
+                document.querySelectorAll("[data-i18n-attr]").forEach(function (element) {
+                    element.dataset.i18nAttr.split(",").forEach(function (entry) {
+                        const parts = entry.split(":");
+                        if (parts.length === 2) {
+                            element.setAttribute(parts[0].trim(), t(parts[1].trim()));
+                        }
+                    });
+                });
+
+                document.querySelectorAll("[data-submitted-summary]").forEach(function (element) {
+                    element.textContent = t("submittedSummary")
+                        .replace("{count}", element.dataset.count || "0")
+                        .replace("{total}", element.dataset.total || "0");
+                });
+
+                if (languageFlag) {
+                    languageFlag.textContent = currentLanguage === "en" ? "EN" : "★";
+                    languageFlag.style.background = currentLanguage === "en" ? "#1d4ed8" : "#ef1c25";
+                    languageFlag.style.color = currentLanguage === "en" ? "#fff" : "#ffde59";
+                }
+
+                if (languageLabel) {
+                    languageLabel.textContent = currentLanguage === "en" ? "EN" : "VI";
+                }
+
+                document.querySelectorAll("[data-language-option]").forEach(function (button) {
+                    button.classList.toggle("is-active", button.dataset.languageOption === currentLanguage);
+                });
+
+                if (sendPaymentRequest && !sendPaymentRequest.disabled) {
+                    sendPaymentRequest.textContent = t("sendRequest");
+                }
+
+                if (sendStaffRequest && !sendStaffRequest.disabled) {
+                    sendStaffRequest.textContent = t("sendRequest");
+                }
+
+                if (sendReview && !sendReview.disabled) {
+                    sendReview.textContent = t("sendReview");
+                }
+
+                setReviewRating(selectedReviewRating);
+            }
+
+            function resolvePaymentMethodLabel(payment) {
+                const paymentMethod = payment && payment.paymentMethod ? payment.paymentMethod : "";
+                const fallbackLabel = payment && payment.paymentMethodLabel ? payment.paymentMethodLabel : "";
+
+                if (window.CloudyDineInLanguage) {
+                    return window.CloudyDineInLanguage.paymentMethodLabel(paymentMethod, fallbackLabel);
+                }
+
+                const normalizedMethod = String(paymentMethod).trim().toLowerCase();
+                if (normalizedMethod === "cash") {
+                    return t("paymentMethodCash");
+                }
+                if (normalizedMethod === "card") {
+                    return t("paymentMethodCard");
+                }
+                if (normalizedMethod === "wallet") {
+                    return t("paymentMethodWallet");
+                }
+
+                return fallbackLabel;
+            }
 
             function setReviewRating(value) {
                 selectedReviewRating = value;
@@ -1370,7 +1660,7 @@
                 });
 
                 if (reviewRatingLabel) {
-                    reviewRatingLabel.textContent = reviewLabels[value] || "Bình thường";
+                    reviewRatingLabel.textContent = t("reviewLabels")[value] || t("reviewLabels")[3];
                 }
             }
 
@@ -1419,8 +1709,8 @@
 
                 if (paymentCompleteMeta) {
                     const totalLabel = payment && payment.totalLabel ? payment.totalLabel : "";
-                    const methodLabel = payment && payment.paymentMethodLabel ? payment.paymentMethodLabel : "";
-                    paymentCompleteMeta.textContent = [methodLabel, totalLabel].filter(Boolean).join(" - ") || "Đang cập nhật lại đơn tại bàn...";
+                    const methodLabel = resolvePaymentMethodLabel(payment);
+                    paymentCompleteMeta.textContent = [methodLabel, totalLabel].filter(Boolean).join(" - ") || t("paymentCompleteUpdating");
                 }
 
                 if (paymentCompletePopup) {
@@ -1472,7 +1762,7 @@
 
                     paymentRequestToast.classList.add("is-visible");
                     sendPaymentRequest.disabled = true;
-                    sendPaymentRequest.textContent = "Đã gửi yêu cầu";
+                    sendPaymentRequest.textContent = t("sentRequest");
 
                     setTimeout(function () {
                         if (paymentModal) {
@@ -1490,7 +1780,7 @@
 
                     if (sendPaymentRequest) {
                         sendPaymentRequest.disabled = false;
-                        sendPaymentRequest.textContent = "Gửi yêu cầu";
+                        sendPaymentRequest.textContent = t("sendRequest");
                     }
                 });
             }
@@ -1504,7 +1794,7 @@
 
                     staffRequestToast.classList.add("is-visible");
                     sendStaffRequest.disabled = true;
-                    sendStaffRequest.textContent = "Đã gửi yêu cầu";
+                    sendStaffRequest.textContent = t("sentRequest");
 
                     setTimeout(function () {
                         if (requestModal) {
@@ -1528,7 +1818,7 @@
 
                     if (sendStaffRequest) {
                         sendStaffRequest.disabled = false;
-                        sendStaffRequest.textContent = "Gửi yêu cầu";
+                        sendStaffRequest.textContent = t("sendRequest");
                     }
 
                     if (requestInput) {
@@ -1540,6 +1830,30 @@
             document.addEventListener("click", unlockPaymentCompleteSound, { once: true });
             document.addEventListener("keydown", unlockPaymentCompleteSound, { once: true });
             startPaymentRealtime();
+
+            if (languageButton && languageMenu) {
+                languageButton.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    const shouldOpen = languageMenu.hidden;
+                    languageMenu.hidden = !shouldOpen;
+                    languageButton.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+                });
+
+                languageMenu.querySelectorAll("[data-language-option]").forEach(function (button) {
+                    button.addEventListener("click", function () {
+                        applyLanguage(button.dataset.languageOption);
+                        languageMenu.hidden = true;
+                        languageButton.setAttribute("aria-expanded", "false");
+                    });
+                });
+
+                document.addEventListener("click", function (event) {
+                    if (!languageMenu.hidden && !languageButton.contains(event.target) && !languageMenu.contains(event.target)) {
+                        languageMenu.hidden = true;
+                        languageButton.setAttribute("aria-expanded", "false");
+                    }
+                });
+            }
 
             reviewStars.forEach(function (star) {
                 star.addEventListener("click", function () {
@@ -1569,7 +1883,7 @@
 
                     reviewToast.classList.add("is-visible");
                     sendReview.disabled = true;
-                    sendReview.textContent = "Đã gửi";
+                    sendReview.textContent = t("sent");
 
                     setTimeout(function () {
                         if (reviewModal) {
@@ -1600,10 +1914,12 @@
 
                     if (sendReview) {
                         sendReview.disabled = false;
-                        sendReview.textContent = "Gửi đánh giá";
+                        sendReview.textContent = t("sendReview");
                     }
                 });
             }
+
+            applyLanguage(currentLanguage);
         });
     </script>
 

@@ -14,7 +14,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Đơn hàng</title>
+    <title>Đơn mang về</title>
     <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
     <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
@@ -35,10 +35,10 @@
                 </button>
 
                 <div class="topbar__meta">
-                    <p class="topbar__eyebrow">Quản lý đơn hàng</p>
+                    <p class="topbar__eyebrow">Quản lý đơn mang về</p>
                     <div class="topbar__heading">
-                        <h1>Danh sách đơn hàng</h1>
-                        <p>Theo dõi trạng thái xử lý, thanh toán và lịch sử đơn trong hệ thống.</p>
+                        <h1>Danh sách đơn online</h1>
+                        <p>Theo dõi từng đơn giao hàng, người nhận, địa chỉ và trạng thái xử lý.</p>
                     </div>
                 </div>
 
@@ -79,32 +79,13 @@
 
             <main class="dashboard-scroll">
                 <div class="orders-page">
-                    <section class="order-stats-grid" aria-label="Thống kê đơn hàng">
-                        <article class="order-stat-card">
-                            <p>Tổng Đơn Hàng</p>
-                            <strong>@Model.TotalOrders.ToString("N0", culture)</strong>
-                        </article>
-                        <article class="order-stat-card">
-                            <p>Chờ Xử Lý</p>
-                            <strong class="is-pending">@Model.PendingOrders.ToString("N0", culture)</strong>
-                        </article>
-                        <article class="order-stat-card">
-                            <p>Đang Chế Biến</p>
-                            <strong class="is-processing">@Model.ProcessingOrders.ToString("N0", culture)</strong>
-                        </article>
-                        <article class="order-stat-card">
-                            <p>Hoàn Thành</p>
-                            <strong class="is-completed">@Model.CompletedOrders.ToString("N0", culture)</strong>
-                        </article>
-                    </section>
-
                     <section class="order-filter-card" aria-label="Bộ lọc đơn hàng">
                         <div class="order-search">
                             <svg viewBox="0 0 24 24" fill="none">
                                 <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
                                 <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
                             </svg>
-                            <input type="search" data-order-search placeholder="Tìm kiếm theo mã đơn, khách hàng..." />
+                            <input type="search" data-order-search placeholder="Tìm theo mã đơn, người nhận, SĐT, địa chỉ..." />
                         </div>
 
                         <label class="order-select">
@@ -113,13 +94,11 @@
                             </svg>
                             <select data-order-status-filter aria-label="Lọc theo trạng thái">
                                 <option value="">Tất Cả</option>
-                                <option value="pending">Chờ Xử Lý</option>
-                                <option value="processing">Đang Chế Biến</option>
-                                <option value="completed">Hoàn Thành</option>
-                                <option value="preparing">Dang chuan bi</option>
-                                <option value="shipping">Dang giao</option>
-                                <option value="delivered">Da giao</option>
-                                <option value="cancelled">Da huy</option>
+                                <option value="pending">Chờ xác nhận</option>
+                                <option value="preparing">Đang chuẩn bị</option>
+                                <option value="shipping">Đang giao</option>
+                                <option value="delivered">Đã giao</option>
+                                <option value="cancelled">Đã hủy</option>
                             </select>
                         </label>
 
@@ -146,9 +125,9 @@
                                 <thead>
                                     <tr>
                                         <th>Mã ĐH</th>
-                                        <th>Khách Hàng</th>
-                                        <th>Bàn</th>
-                                        <th>Thời Gian</th>
+                                        <th>Người nhận</th>
+                                        <th>Địa chỉ giao</th>
+                                        <th>Thời gian đặt</th>
                                         <th class="is-right">Tổng Tiền</th>
                                         <th>Thanh Toán</th>
                                         <th>Trạng Thái</th>
@@ -162,14 +141,14 @@
                                             <td data-label="Mã ĐH">
                                                 <strong class="order-code">@item.OrderCode</strong>
                                             </td>
-                                            <td data-label="Khách Hàng">
+                                            <td data-label="Người nhận">
                                                 <div class="order-customer">
                                                     <strong>@item.CustomerName</strong>
                                                     <span>@item.CustomerPhone</span>
                                                 </div>
                                             </td>
-                                            <td data-label="Bàn">@item.TableLabel</td>
-                                            <td data-label="Thời Gian" class="order-time">@FormatDateTime(item.OrderTime)</td>
+                                            <td data-label="Địa chỉ giao" class="order-address">@item.CustomerAddress</td>
+                                            <td data-label="Thời gian đặt" class="order-time">@FormatDateTime(item.OrderTime)</td>
                                             <td data-label="Tổng Tiền" class="is-right order-total">@FormatCurrency(item.TotalAmount)</td>
                                             <td data-label="Thanh Toán">
                                                 <span class="payment-pill">@item.PaymentLabel</span>
@@ -189,7 +168,7 @@
                                         </tr>
                                     }
                                     <tr class="order-empty-row" data-empty-row hidden>
-                                        <td colspan="8">Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.</td>
+                                        <td colspan="8">Không tìm thấy đơn online phù hợp với bộ lọc hiện tại.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -235,8 +214,8 @@
                         <small data-detail-phone>Chưa có SĐT</small>
                     </article>
                     <article>
-                        <span>Bàn</span>
-                        <strong data-detail-table>Mang về</strong>
+                        <span>Giao hàng</span>
+                        <strong data-detail-table>Giao hàng</strong>
                         <small data-detail-address>Chưa có địa chỉ</small>
                     </article>
                     <article>

@@ -1,4 +1,4 @@
-<html lang="en">
+<html lang="vi">
 
 <head>
         <meta charset="UTF-8">
@@ -20,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="~/asset/font/fontawesome-free-6.5.2-web/fontawesome-free-6.5.2-web/css/all.min.css">
-        <title>Kính chào quý khách</title>
+        <title data-i18n="pageTitle">Kính chào quý khách</title>
 </head>
 
 @model WebQuanLyNhaHang.ViewModel.ViewModelCart
@@ -44,14 +44,14 @@
                         </a>
                     </div>
                 </div>
-                <div class="page-title">
+                <div class="page-title" data-i18n="cartTitle">
                     Các món đang gọi
                 </div>
                 <div class="clear-button__container">
                     @if (hasCartItems)
                     {
-                        <div class="btn--clear-cart" role="button" tabindex="0">
-                            Clear
+                        <div class="btn--clear-cart" role="button" tabindex="0" data-i18n="clearCart">
+                            Xóa hết
                         </div>
                     }
                 </div>
@@ -63,9 +63,9 @@
                 @if (!hasCartItems)
                 {
                     <div class="cart-empty">
-                        <h2>Giỏ hàng đang trống</h2>
-                        <p>Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
-                        <a asp-controller="Home" asp-action="Menu">Xem menu</a>
+                        <h2 data-i18n="cartEmptyTitle">Giỏ hàng đang trống</h2>
+                        <p data-i18n="cartEmptyText">Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
+                        <a asp-controller="Home" asp-action="Menu" data-i18n="viewMenu">Xem menu</a>
                     </div>
                 }
                 else
@@ -95,7 +95,7 @@
                                             <i class="fa-solid fa-xmark"></i>
                                         </div>
                                         <a asp-controller="Home" asp-action="ProductDetail" asp-route-ProductID="@item.ProductId" asp-route-cthdId="@item.CthdId" class="btn-edit">
-                                            <span>edit</span>
+                                            <span data-i18n="edit">Sửa</span>
                                         </a>
                                     </div>
                                 </div>
@@ -108,13 +108,13 @@
             @if (hasCartItems)
             {
                 <div class="card__total-price">
-                    <div>Tổng Tiền</div>
+                    <div data-i18n="totalPrice">Tổng tiền</div>
                     <div>@String.Format("{0:N0}", cartTotal)đ</div>
                 </div>
                 <div class="btn-sumbit">
                     <a asp-controller="Home" asp-action="OrderSuccess" class="cart-order-submit">
                         <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
-                            Gửi yêu cầu gọi món
+                            <span data-i18n="submitOrder">Gửi yêu cầu gọi món</span>
                         </button>
                     </a>
                 </div>
@@ -127,11 +127,11 @@
         <div class="cart-confirm__backdrop" data-confirm-cancel></div>
         <div class="cart-confirm__dialog" role="dialog" aria-modal="true" aria-labelledby="cartRemoveConfirmTitle">
             <div class="cart-confirm__message" id="cartRemoveConfirmTitle">
-                Bạn có chắc muốn loại bỏ sản phẩm này khỏi giỏ hàng của mình không?
+                <span data-i18n="removeConfirmDefault">Bạn có chắc muốn loại bỏ sản phẩm này khỏi giỏ hàng của mình không?</span>
             </div>
             <div class="cart-confirm__actions">
-                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-confirm-cancel>Không</button>
-                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-confirm-agree>Đồng ý</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-confirm-cancel data-i18n="no">Không</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-confirm-agree data-i18n="agree">Đồng ý</button>
             </div>
         </div>
     </div>
@@ -139,11 +139,11 @@
         <div class="cart-confirm__backdrop" data-clear-cancel></div>
         <div class="cart-confirm__dialog" role="dialog" aria-modal="true" aria-labelledby="cartClearConfirmTitle">
             <div class="cart-confirm__message" id="cartClearConfirmTitle">
-                Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng của mình không?
+                <span data-i18n="clearConfirm">Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng của mình không?</span>
             </div>
             <div class="cart-confirm__actions">
-                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-clear-cancel>Không</button>
-                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-clear-agree>Đồng ý</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-clear-cancel data-i18n="no">Không</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-clear-agree data-i18n="agree">Đồng ý</button>
             </div>
         </div>
     </div>
@@ -151,11 +151,11 @@
         <div class="cart-confirm__backdrop" data-order-cancel></div>
         <div class="cart-confirm__dialog" role="dialog" aria-modal="true" aria-labelledby="cartOrderConfirmTitle">
             <div class="cart-confirm__message" id="cartOrderConfirmTitle">
-                Bạn có chắc muốn đặt những món đã chọn không?
+                <span data-i18n="orderConfirm">Bạn có chắc muốn đặt những món đã chọn không?</span>
             </div>
             <div class="cart-confirm__actions">
-                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-order-cancel>Không</button>
-                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-order-agree>Đồng ý</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--cancel" data-order-cancel data-i18n="no">Không</button>
+                <button type="button" class="cart-confirm__button cart-confirm__button--agree" data-order-agree data-i18n="agree">Đồng ý</button>
             </div>
         </div>
     </div>
@@ -165,17 +165,20 @@
             <div class="cart-success__icon" aria-hidden="true">
                 <span></span>
             </div>
-            <h2 id="cartOrderSuccessTitle">Gọi món thành công, vui lòng chờ nhân viên ra xác nhận!</h2>
+            <h2 id="cartOrderSuccessTitle" data-i18n="orderSuccessTitle">Gọi món thành công, vui lòng chờ nhân viên ra xác nhận!</h2>
             <div class="cart-success__note">
-                Lưu ý: Nếu đợi quá lâu hoặc có thay đổi về món đã gọi bạn có thể dùng chức năng <strong>Gọi nhân viên</strong> ở màn hình chính
+                <span data-i18n="orderSuccessNoteBefore">Lưu ý: Nếu đợi quá lâu hoặc có thay đổi về món đã gọi bạn có thể dùng chức năng</span>
+                <strong data-i18n="orderSuccessNoteAction">Gọi nhân viên</strong>
+                <span data-i18n="orderSuccessNoteAfter">ở màn hình chính</span>
             </div>
             <div class="cart-success__actions">
-                <button type="button" class="cart-success__button" data-success-ok>Đồng ý</button>
+                <button type="button" class="cart-success__button" data-success-ok data-i18n="agree">Đồng ý</button>
             </div>
         </div>
     </div>
     <!-- Thêm SignalR script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    <script src="~/asset/js/dinein-language.js" asp-append-version="true"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -193,6 +196,9 @@
                 cartContent.addClass('is-refreshing');
                 setTimeout(function () {
                     cartContent.html(response);
+                    if (window.CloudyDineInLanguage) {
+                        window.CloudyDineInLanguage.apply(cartContent[0]);
+                    }
                     syncCartHeaderActions();
                     requestAnimationFrame(function () {
                         cartContent.removeClass('is-refreshing');
@@ -206,12 +212,16 @@
             }
 
             function openRemoveConfirm(removeButton) {
-                const productName = removeButton.data('name') || 'sản phẩm này';
+                const productName = removeButton.data('name');
                 pendingRemove = {
                     id: removeButton.data('id'),
                     item: removeButton.closest('.bought--item')
                 };
-                confirmMessage.text('Bạn có chắc muốn loại bỏ sản phẩm ' + productName + ' khỏi giỏ hàng của mình không?');
+                confirmMessage.text(window.CloudyDineInLanguage
+                    ? (productName
+                        ? window.CloudyDineInLanguage.t('removeConfirmProduct', { name: productName })
+                        : window.CloudyDineInLanguage.t('removeConfirmDefault'))
+                    : 'Bạn có chắc muốn loại bỏ sản phẩm ' + (productName || 'này') + ' khỏi giỏ hàng của mình không?');
                 confirmModal.addClass('is-open').attr('aria-hidden', 'false');
                 $('body').addClass('cart-confirm-open');
                 setTimeout(function () {
@@ -427,6 +437,9 @@
             $.get('/Home/GetCTHD', function (data) {
                 const content = document.getElementById("cart__content_");
                 content.innerHTML = data; //Thay thế nội dung của danh sách bằng HTML từ partial view
+                if (window.CloudyDineInLanguage) {
+                    window.CloudyDineInLanguage.apply(content);
+                }
                 $('.btn--clear-cart').toggle($("div#cart__content_ .bought--item").length > 0);
             });
         });

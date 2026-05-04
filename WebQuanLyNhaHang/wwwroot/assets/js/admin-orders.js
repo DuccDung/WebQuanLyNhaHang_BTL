@@ -184,7 +184,7 @@
     trigger.addEventListener("click", () => {
       const rows = Array.from(document.querySelectorAll("[data-order-row]")).filter((row) => !row.hidden);
       const csvRows = [
-        ["Mã ĐH", "Khách hàng", "Bàn", "Thời gian", "Tổng tiền", "Thanh toán", "Trạng thái"]
+        ["Mã ĐH", "Người nhận", "Địa chỉ giao", "Thời gian đặt", "Tổng tiền", "Thanh toán", "Trạng thái"]
       ];
 
       rows.forEach((row) => {
@@ -393,7 +393,7 @@
             });
 
             if (!response.ok) {
-              throw new Error("Khong cap nhat duoc trang thai.");
+              throw new Error("Không cập nhật được trạng thái.");
             }
 
             const result = await response.json();

@@ -11,9 +11,9 @@
     @if (!hasCartItems)
     {
         <div class="cart-empty">
-            <h2>Giỏ hàng đang trống</h2>
-            <p>Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
-            <a asp-controller="Home" asp-action="Menu">Xem menu</a>
+            <h2 data-i18n="cartEmptyTitle">Giỏ hàng đang trống</h2>
+            <p data-i18n="cartEmptyText">Bạn chưa chọn món nào. Hãy quay lại menu để thêm đồ uống hoặc bánh yêu thích.</p>
+            <a asp-controller="Home" asp-action="Menu" data-i18n="viewMenu">Xem menu</a>
         </div>
     }
     else
@@ -43,7 +43,7 @@
                                 <i class="fa-solid fa-xmark"></i>
                             </div>
                             <a asp-controller="Home" asp-action="ProductDetail" asp-route-ProductID="@item.ProductId" asp-route-cthdId="@item.CthdId" class="btn-edit">
-                                <span>edit</span>
+                                <span data-i18n="edit">Sửa</span>
                             </a>
                         </div>
                     </div>
@@ -56,13 +56,13 @@
 
      @if(hasCartItems){
           <div class="card__total-price">
-                    <div>Tổng Tiền</div>
+                    <div data-i18n="totalPrice">Tổng tiền</div>
                     <div>@String.Format("{0:N0}", cartTotal)đ</div>
           </div>
           <div class="btn-sumbit">
                 <a asp-controller="Home" asp-action="OrderSuccess" class="cart-order-submit">
                     <button class="buy__item outline" style="background-color: rgb(247, 148, 30); height: 44px;">
-                        Gửi yêu cầu gọi món
+                        <span data-i18n="submitOrder">Gửi yêu cầu gọi món</span>
                     </button>
                 </a>
             </div>

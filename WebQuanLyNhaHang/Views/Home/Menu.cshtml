@@ -5,7 +5,7 @@
     int? BanId = Context.Session.GetInt32("BanId");
     string? dineInCustomerId = Context.Session.GetString("DineInCustomerId");
 }
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
@@ -146,7 +146,7 @@
             pointer-events: none;
         }
     </style>
-    <title>Kính chào quý khách</title>
+    <title data-i18n="pageTitle">Kính chào quý khách</title>
 </head>
 <body class="local-menu-page">
     <div class="app__menu">
@@ -160,7 +160,7 @@
                 <div class="header-area__search-form">
                     <div class="header-area__search-form--inner">
                         <div class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                        <input type="text" id="txtSearchBox" placeholder="Bạn muốn tìm món gì ?" class="input-text--search">
+                        <input type="text" id="txtSearchBox" placeholder="Bạn muốn tìm món gì?" class="input-text--search" data-i18n-attr="placeholder:searchPlaceholder">
                     </div>
                 </div>
             </div>
@@ -195,7 +195,7 @@
                                     </div>
                                     @if (submittedQuantity > 0)
                                     {
-                                        <div class="ordered-dinein-badge">Đã gọi @submittedQuantity</div>
+                                        <div class="ordered-dinein-badge" data-i18n-template="orderedBadge" data-count="@submittedQuantity">Đã gọi @submittedQuantity</div>
                                     }
                                 </td>
                                
@@ -225,7 +225,7 @@
                             <div class="foodter__icon-left foodter__icon">
                                 <i class="fa-solid fa-cart-plus"></i>
                             </div>
-                            <div class="foodter__content">Xem giỏ hàng(@soluong món)</div>
+                            <div class="foodter__content" data-cart-count="@soluong" data-i18n-template="cartFooter" data-count="@soluong">Xem giỏ hàng(@soluong món)</div>
                             <div class="foodter__icon-right foodter__icon">
                                 <i class="fa-solid fa-angle-right"></i>
                             </div>
@@ -235,6 +235,7 @@
             }
         }
     </div>
+    <script src="~/asset/js/dinein-language.js" asp-append-version="true"></script>
     <script src="~/js/scripts.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
@@ -426,6 +427,10 @@
                     return;
                 }
 
+                if (window.CloudyDineInLanguage) {
+                    window.CloudyDineInLanguage.apply(content);
+                }
+
                 prepareMenuReveal(content);
                 document.body.classList.remove("local-menu-ready");
                 requestAnimationFrame(function () {
@@ -479,7 +484,9 @@
                         },
                         error: function (xhr, status) {
                             if (status !== "abort") {
-                                $content.html('<div class="menu-search-empty"><i class="fa-solid fa-triangle-exclamation"></i><div class="menu-search-empty__title">Chưa tìm được món</div><div class="menu-search-empty__text">Bạn thử nhập lại sau một chút nhé.</div></div>');
+                                const title = window.CloudyDineInLanguage ? window.CloudyDineInLanguage.t("searchErrorTitle") : "Chưa tìm được món";
+                                const text = window.CloudyDineInLanguage ? window.CloudyDineInLanguage.t("searchErrorText") : "Bạn thử nhập lại sau một chút nhé.";
+                                $content.html('<div class="menu-search-empty"><i class="fa-solid fa-triangle-exclamation"></i><div class="menu-search-empty__title">' + title + '</div><div class="menu-search-empty__text">' + text + '</div></div>');
                                 refreshMenuReveal();
                             }
                         },
