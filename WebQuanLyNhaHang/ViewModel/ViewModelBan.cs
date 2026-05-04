@@ -39,16 +39,30 @@ namespace WebQuanLyNhaHang.ViewModel
 
         public List<TableCardViewModel> TableCards()
         {
-            var activeOrders = _context.DonHangs
+            var activeOrderRows = _context.DonHangs
                 .AsNoTracking()
-                .Where(order => !order.Remove && order.BanId.HasValue)
-                .GroupBy(order => order.BanId!.Value)
+                .Where(order =>
+                    !order.Remove
+                    && order.BanId.HasValue
+                    && order.ChiTietHoaDons.Any(item => !item.Remove && item.Product != null && !item.Product.Remove))
+                .Select(order => new
+                {
+                    TableId = order.BanId!.Value,
+                    LatestTime = order.GioVao ?? order.GioRa,
+                    LineTotal = order.ChiTietHoaDons
+                        .Where(item => !item.Remove && item.Product != null && !item.Product.Remove)
+                        .Sum(item => item.ThanhTien ?? 0m)
+                })
+                .ToList();
+
+            var activeOrders = activeOrderRows
+                .GroupBy(order => order.TableId)
                 .Select(group => new
                 {
                     TableId = group.Key,
                     OrderCount = group.Count(),
-                    LatestTime = group.Max(order => order.GioVao ?? order.GioRa),
-                    TotalAmount = group.Sum(order => order.TongTien ?? 0m)
+                    LatestTime = group.Max(order => order.LatestTime),
+                    TotalAmount = group.Sum(order => order.LineTotal)
                 })
                 .ToDictionary(order => order.TableId);
 

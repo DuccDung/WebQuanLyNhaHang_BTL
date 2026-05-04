@@ -325,7 +325,7 @@ body::-webkit-scrollbar,
     margin: 0 0 4px;
     color: #ff5a00;
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0;
     text-transform: uppercase;
 }
@@ -333,9 +333,9 @@ body::-webkit-scrollbar,
 .order-alert__title {
     margin: 0;
     color: #111827;
-    font-size: 22px;
-    font-weight: 800;
-    line-height: 1.18;
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.22;
 }
 
 .order-alert__close {
@@ -375,14 +375,14 @@ body::-webkit-scrollbar,
 .order-alert__item span {
     color: #64748b;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.2;
 }
 
 .order-alert__location strong {
     color: #ff4b00;
     font-size: 18px;
-    font-weight: 850;
+    font-weight: 600;
     line-height: 1.25;
 }
 
@@ -408,7 +408,7 @@ body::-webkit-scrollbar,
     overflow: hidden;
     color: #1f2937;
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -424,7 +424,7 @@ body::-webkit-scrollbar,
     min-height: 54px;
     border: 0;
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 600;
     cursor: pointer;
 }
 

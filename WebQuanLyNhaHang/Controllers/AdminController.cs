@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text.Json;
 using WebQuanLyNhaHang.Filters;
+using WebQuanLyNhaHang.Hubs;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
 
@@ -12,10 +14,12 @@ namespace WebQuanLyNhaHang.Controllers
     {
         private static readonly CultureInfo VietnameseCulture = new("vi-VN");
         private readonly QlnhaHangBtlContext _context;
+        private readonly IHubContext<ChatHub> _hubContext;
 
-        public AdminController(QlnhaHangBtlContext context)
+        public AdminController(QlnhaHangBtlContext context, IHubContext<ChatHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [AdminSessionAuthorize]
@@ -305,26 +309,71 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound(new { message = "Không tìm thấy đơn hàng mới." });
             }
 
-            var payload = BuildOrderNotificationPayload(order);
+            var tableTotalAmount = order.BanId.HasValue
+                ? await GetTableLineTotal(order.BanId.Value)
+                : (decimal?)null;
+            var payload = BuildOrderNotificationPayload(order, tableTotalAmount);
             return Json(payload);
         }
 
         [HttpGet]
         [AdminSessionAuthorize]
-        public IActionResult ProcessPayment(int BanId)
+        public async Task<IActionResult> ProcessPayment(int BanId, string? paymentMethod)
         {
-            var donHangList = _context.DonHangs.Where(e => e.BanId == BanId && !e.Remove).ToList();
+            var donHangList = await _context.DonHangs
+                .Include(order => order.ChiTietHoaDons.Where(item => !item.Remove))
+                .Where(e => e.BanId == BanId && !e.Remove)
+                .ToListAsync();
+
+            var totalAmount = donHangList.Sum(order =>
+                order.TongTien ?? order.ChiTietHoaDons.Where(item => !item.Remove).Sum(item => item.ThanhTien ?? 0m));
+            var paymentMethodLabel = ResolvePaymentMethodLabel(paymentMethod);
 
             foreach (var donHang in donHangList)
             {
                 donHang.BanId = null;
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("DineInPaymentCompleted", new
+            {
+                tableId = BanId,
+                tableCode = $"A{BanId}",
+                totalLabel = FormatOrderAlertCurrency(totalAmount),
+                paymentMethod = paymentMethod?.Trim(),
+                paymentMethodLabel,
+                paidAt = DateTime.Now.ToString("HH:mm dd/MM/yyyy", VietnameseCulture)
+            });
+
             return NoContent();
         }
 
-        private static object BuildOrderNotificationPayload(DonHang order)
+        private static string ResolvePaymentMethodLabel(string? paymentMethod)
+        {
+            return paymentMethod?.Trim().ToLowerInvariant() switch
+            {
+                "cash" => "Tiền mặt",
+                "card" => "Thẻ ngân hàng",
+                "wallet" => "Ứng dụng điện thoại",
+                _ => "Tiền mặt"
+            };
+        }
+
+        private async Task<decimal> GetTableLineTotal(int tableId)
+        {
+            return await _context.ChiTietHoaDons
+                .AsNoTracking()
+                .Where(item =>
+                    !item.Remove
+                    && !item.Dh.Remove
+                    && item.Dh.BanId == tableId
+                    && item.Product != null
+                    && !item.Product.Remove)
+                .SumAsync(item => item.ThanhTien ?? 0m);
+        }
+
+        private static object BuildOrderNotificationPayload(DonHang order, decimal? tableTotalAmount = null)
         {
             var onlineMetadata = OnlineOrderMetadata.TryParse(order.GhiChu);
             var dineInMetadata = TryParseDineInOrderMetadata(order.GhiChu);
@@ -334,6 +383,7 @@ namespace WebQuanLyNhaHang.Controllers
             var locationLabel = ResolveOrderLocation(order, onlineMetadata);
             var orderTime = order.GioRa ?? order.GioVao;
             var totalAmount = order.TongTien ?? order.ChiTietHoaDons.Where(item => !item.Remove).Sum(item => item.ThanhTien ?? 0m);
+            var resolvedTableTotal = tableTotalAmount ?? totalAmount;
 
             return new
             {
@@ -343,7 +393,7 @@ namespace WebQuanLyNhaHang.Controllers
                 customerName,
                 customerPhone,
                 totalLabel = totalAmount > 0m ? FormatOrderAlertCurrency(totalAmount) : "Chưa tính",
-                tableAmountLabel = totalAmount > 0m ? FormatShortOrderAlertCurrency(totalAmount) : string.Empty,
+                tableAmountLabel = resolvedTableTotal > 0m ? FormatShortOrderAlertCurrency(resolvedTableTotal) : string.Empty,
                 itemCount = order.ChiTietHoaDons.Count(item => !item.Remove),
                 orderTime = FormatDateTime(orderTime),
                 tableTimeLabel = FormatTime(orderTime),

@@ -337,6 +337,39 @@ namespace WebQuanLyNhaHang.Controllers
             ViewModelCart viewModelCart = new ViewModelCart(_qlnhaHangBtlContext);
             return View(viewModelCart);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SendDineInServiceRequest([FromBody] DineInServiceRequestForm? form)
+        {
+            var banId = HttpContext.Session.GetInt32("BanId");
+            var sessionCustomerName = HttpContext.Session.GetString(DineInCustomerSessionKey);
+            var customerName = string.IsNullOrWhiteSpace(sessionCustomerName)
+                ? string.Empty
+                : CleanDineInCustomerName(sessionCustomerName);
+            var requestType = NormalizeDineInServiceRequestType(form?.Type);
+            var createdAt = DateTime.Now;
+
+            var payload = new
+            {
+                type = requestType,
+                typeLabel = ResolveDineInServiceRequestLabel(requestType),
+                tableId = banId,
+                tableCode = banId.HasValue ? $"A{banId.Value}" : "A--",
+                customerName = string.IsNullOrWhiteSpace(customerName) ? "Quý khách" : customerName,
+                paymentMethod = form?.PaymentMethod?.Trim(),
+                paymentMethodLabel = ResolvePaymentMethodLabel(form?.PaymentMethod),
+                message = form?.Message?.Trim(),
+                rating = form?.Rating,
+                ratingLabel = ResolveReviewRatingLabel(form?.Rating),
+                tags = form?.Tags?.Where(tag => !string.IsNullOrWhiteSpace(tag)).Select(tag => tag.Trim()).ToArray() ?? Array.Empty<string>(),
+                phone = form?.Phone?.Trim(),
+                createdAt = createdAt.ToString("HH:mm dd/MM/yyyy")
+            };
+
+            await _hubContext.Clients.All.SendAsync("DineInServiceRequested", payload);
+
+            return Json(new { success = true });
+        }
         // Từ trang Client gửi tên và số bàn tới đây để thêm dữ liệu khách hàng vào bàn
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1362,6 +1395,51 @@ namespace WebQuanLyNhaHang.Controllers
             };
         }
 
+        private static string NormalizeDineInServiceRequestType(string? type)
+        {
+            return type?.Trim().ToLowerInvariant() switch
+            {
+                "payment" => "payment",
+                "staff" => "staff",
+                "review" => "review",
+                _ => "staff"
+            };
+        }
+
+        private static string ResolveDineInServiceRequestLabel(string type)
+        {
+            return type switch
+            {
+                "payment" => "Gọi thanh toán",
+                "review" => "Đánh giá",
+                _ => "Gọi nhân viên"
+            };
+        }
+
+        private static string? ResolvePaymentMethodLabel(string? method)
+        {
+            return method?.Trim().ToLowerInvariant() switch
+            {
+                "cash" => "Tiền mặt",
+                "card" => "Thẻ ngân hàng",
+                "wallet" => "Ứng dụng điện thoại",
+                _ => null
+            };
+        }
+
+        private static string? ResolveReviewRatingLabel(int? rating)
+        {
+            return rating switch
+            {
+                1 => "Rất không hài lòng",
+                2 => "Không hài lòng",
+                3 => "Bình thường",
+                4 => "Hài lòng",
+                5 => "Rất hài lòng",
+                _ => null
+            };
+        }
+
 
         // ================================= trang Login =====================================================================
         [HttpPost]
@@ -1434,6 +1512,21 @@ namespace WebQuanLyNhaHang.Controllers
             public string? Id { get; set; }
 
             public string? Name { get; set; }
+        }
+
+        public sealed class DineInServiceRequestForm
+        {
+            public string? Type { get; set; }
+
+            public string? PaymentMethod { get; set; }
+
+            public string? Message { get; set; }
+
+            public int? Rating { get; set; }
+
+            public string[]? Tags { get; set; }
+
+            public string? Phone { get; set; }
         }
 
         private sealed class DineInOrderMetadata

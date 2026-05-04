@@ -301,7 +301,7 @@
             const activeId = String(categoryId);
             const categoryItems = getMenuCategoryItems();
 
-            if (categoryItems.length === 0 || currentActiveCategoryId === activeId) {
+            if (categoryItems.length === 0) {
                 return;
             }
 
@@ -347,6 +347,7 @@
                 }
 
                 scrollToCategory(item.dataset.categoryId);
+                item.blur();
             });
 
             categoryNav.addEventListener('keydown', function (event) {
@@ -362,6 +363,7 @@
 
                 event.preventDefault();
                 scrollToCategory(item.dataset.categoryId);
+                item.blur();
             });
 
             updateActiveCategoryFromScroll = function () {

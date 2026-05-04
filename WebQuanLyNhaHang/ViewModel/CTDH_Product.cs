@@ -22,5 +22,7 @@
         // DonHang
         public int BanId { get; set; }
         public decimal? TongTien { get; set; }
+        public string? CustomerGroupKey { get; set; }
+        public string? CustomerName { get; set; }
     }
 }

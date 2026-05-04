@@ -25,5 +25,15 @@ namespace WebQuanLyNhaHang.Hubs
             Console.WriteLine("Phát sự kiện OderSuccess");
             await Clients.All.SendAsync("OderSuccess");
         }
+
+        public async Task NotifyDineInServiceRequest(object request)
+        {
+            await Clients.All.SendAsync("DineInServiceRequested", request);
+        }
+
+        public async Task NotifyDineInPaymentCompleted(object payment)
+        {
+            await Clients.All.SendAsync("DineInPaymentCompleted", payment);
+        }
     }
 }

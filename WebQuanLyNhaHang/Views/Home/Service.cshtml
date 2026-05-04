@@ -629,6 +629,77 @@
         display: block;
     }
 
+    .payment-complete-popup {
+        position: fixed;
+        inset: 0;
+        z-index: 1090;
+        display: grid;
+        place-items: center;
+        padding: 22px;
+        background: rgba(17, 24, 39, .38);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .22s ease, visibility .22s ease;
+    }
+
+    .payment-complete-popup.is-visible {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .payment-complete-popup__card {
+        width: min(100%, 360px);
+        border-radius: 18px;
+        background: #fff;
+        padding: 26px 22px 22px;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(17, 24, 39, .24);
+        transform: translateY(10px) scale(.98);
+        transition: transform .22s ease;
+    }
+
+    .payment-complete-popup.is-visible .payment-complete-popup__card {
+        transform: translateY(0) scale(1);
+    }
+
+    .payment-complete-popup__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        height: 58px;
+        margin-bottom: 14px;
+        border-radius: 50%;
+        background: #ecfdf3;
+        color: #16a34a;
+        font-size: 28px;
+    }
+
+    .payment-complete-popup__title {
+        margin: 0 0 8px;
+        color: #111827;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .payment-complete-popup__message {
+        margin: 0;
+        color: #4b5563;
+        font-size: 15px;
+        line-height: 1.45;
+    }
+
+    .payment-complete-popup__meta {
+        margin: 14px 0 0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
     .request-bottom-modal {
         position: fixed;
         right: 0;
@@ -993,7 +1064,7 @@
     }
 </style>
 
-<body class="service-page">
+<body class="service-page" data-current-table-id="@(banId?.ToString() ?? string.Empty)">
 
     <div class="container custom-padding service-reveal" style="--reveal-delay: 40ms;">
         <div class="service-shop-header">
@@ -1237,8 +1308,22 @@
             </div>
         </div>
 
+        <div class="payment-complete-popup" id="paymentCompletePopup" aria-hidden="true">
+            <section class="payment-complete-popup__card" role="dialog" aria-modal="true" aria-labelledby="paymentCompleteTitle">
+                <div class="payment-complete-popup__icon" aria-hidden="true">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2 class="payment-complete-popup__title" id="paymentCompleteTitle">Thanh toán thành công</h2>
+                <p class="payment-complete-popup__message">Cảm ơn bạn đã dùng bữa tại nhà hàng.</p>
+                <p class="payment-complete-popup__meta" id="paymentCompleteMeta">Đang cập nhật lại đơn tại bàn...</p>
+            </section>
+        </div>
+
+        <audio id="paymentCompleteSound" src="/asset/sound/Thongbao1.mp3" preload="auto"></audio>
+
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             requestAnimationFrame(function () {
@@ -1263,6 +1348,10 @@
             const reviewToast = document.getElementById("reviewToast");
             const reviewComment = document.getElementById("reviewComment");
             const reviewPhone = document.getElementById("reviewPhone");
+            const currentTableId = Number(document.body.dataset.currentTableId || 0);
+            const paymentCompletePopup = document.getElementById("paymentCompletePopup");
+            const paymentCompleteMeta = document.getElementById("paymentCompleteMeta");
+            const paymentCompleteSound = document.getElementById("paymentCompleteSound");
             const reviewLabels = {
                 1: "Rất không hài lòng",
                 2: "Không hài lòng",
@@ -1270,8 +1359,11 @@
                 4: "Hài lòng",
                 5: "Rất hài lòng"
             };
+            let selectedReviewRating = 3;
+            let paymentCompleteReloadTimer = null;
 
             function setReviewRating(value) {
+                selectedReviewRating = value;
                 reviewStars.forEach(function (star) {
                     const starValue = Number(star.dataset.value);
                     star.classList.toggle("is-active", starValue <= value);
@@ -1282,8 +1374,102 @@
                 }
             }
 
+            function sendServiceRequest(payload) {
+                return fetch("@Url.Action("SendDineInServiceRequest", "Home")", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                }).catch(function (error) {
+                    console.error("Không gửi được yêu cầu realtime tới admin.", error);
+                });
+            }
+
+            function unlockPaymentCompleteSound() {
+                if (!paymentCompleteSound) {
+                    return;
+                }
+
+                paymentCompleteSound.volume = 0.9;
+                paymentCompleteSound.play().then(function () {
+                    paymentCompleteSound.pause();
+                    paymentCompleteSound.currentTime = 0;
+                }).catch(function () {
+                    // Trình duyệt có thể yêu cầu khách chạm trang trước khi phát âm thanh.
+                });
+            }
+
+            function playPaymentCompleteSound() {
+                if (!paymentCompleteSound) {
+                    return;
+                }
+
+                paymentCompleteSound.currentTime = 0;
+                paymentCompleteSound.volume = 0.9;
+                paymentCompleteSound.play().catch(function () {
+                    unlockPaymentCompleteSound();
+                });
+            }
+
+            function showPaymentCompletePopup(payment) {
+                if (paymentModal) {
+                    paymentModal.hide();
+                }
+
+                if (paymentCompleteMeta) {
+                    const totalLabel = payment && payment.totalLabel ? payment.totalLabel : "";
+                    const methodLabel = payment && payment.paymentMethodLabel ? payment.paymentMethodLabel : "";
+                    paymentCompleteMeta.textContent = [methodLabel, totalLabel].filter(Boolean).join(" - ") || "Đang cập nhật lại đơn tại bàn...";
+                }
+
+                if (paymentCompletePopup) {
+                    paymentCompletePopup.classList.add("is-visible");
+                    paymentCompletePopup.setAttribute("aria-hidden", "false");
+                }
+
+                playPaymentCompleteSound();
+
+                window.clearTimeout(paymentCompleteReloadTimer);
+                paymentCompleteReloadTimer = window.setTimeout(function () {
+                    window.location.reload();
+                }, 2400);
+            }
+
+            function startPaymentRealtime() {
+                if (!window.signalR || window.cloudyServicePaymentConnection) {
+                    return;
+                }
+
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/chatHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("DineInPaymentCompleted", function (payment) {
+                    const paidTableId = Number(payment && payment.tableId ? payment.tableId : 0);
+                    if (!currentTableId || paidTableId !== currentTableId) {
+                        return;
+                    }
+
+                    showPaymentCompletePopup(payment);
+                });
+
+                connection.start().catch(function (error) {
+                    console.error("Không kết nối được thông báo thanh toán realtime.", error);
+                });
+
+                window.cloudyServicePaymentConnection = connection;
+            }
+
             if (sendPaymentRequest && paymentRequestToast) {
                 sendPaymentRequest.addEventListener("click", function () {
+                    const selectedPaymentMethod = document.querySelector("input[name='paymentMethod']:checked");
+                    sendServiceRequest({
+                        type: "payment",
+                        paymentMethod: selectedPaymentMethod ? selectedPaymentMethod.value : null
+                    });
+
                     paymentRequestToast.classList.add("is-visible");
                     sendPaymentRequest.disabled = true;
                     sendPaymentRequest.textContent = "Đã gửi yêu cầu";
@@ -1311,6 +1497,11 @@
 
             if (sendStaffRequest && staffRequestToast) {
                 sendStaffRequest.addEventListener("click", function () {
+                    sendServiceRequest({
+                        type: "staff",
+                        message: requestInput ? requestInput.value : ""
+                    });
+
                     staffRequestToast.classList.add("is-visible");
                     sendStaffRequest.disabled = true;
                     sendStaffRequest.textContent = "Đã gửi yêu cầu";
@@ -1346,6 +1537,10 @@
                 });
             }
 
+            document.addEventListener("click", unlockPaymentCompleteSound, { once: true });
+            document.addEventListener("keydown", unlockPaymentCompleteSound, { once: true });
+            startPaymentRealtime();
+
             reviewStars.forEach(function (star) {
                 star.addEventListener("click", function () {
                     setReviewRating(Number(star.dataset.value));
@@ -1360,6 +1555,18 @@
 
             if (sendReview && reviewToast) {
                 sendReview.addEventListener("click", function () {
+                    sendServiceRequest({
+                        type: "review",
+                        rating: selectedReviewRating,
+                        tags: reviewTags.filter(function (tag) {
+                            return tag.classList.contains("is-selected");
+                        }).map(function (tag) {
+                            return tag.textContent.trim();
+                        }),
+                        message: reviewComment ? reviewComment.value : "",
+                        phone: reviewPhone ? reviewPhone.value : ""
+                    });
+
                     reviewToast.classList.add("is-visible");
                     sendReview.disabled = true;
                     sendReview.textContent = "Đã gửi";
