@@ -23,10 +23,6 @@
   const mobileNavTrigger = document.getElementById("mobile-nav-trigger");
   const mobileNavBackdrop = document.getElementById("mobile-nav-backdrop");
   const dashboardSidebar = document.getElementById("dashboard-sidebar");
-
-  setupAccountMenu();
-  setupMobileNav();
-  setupSalesMenu();
   setupRevenuePanel();
   setupOrdersPanel();
   setupComparisonPanel();

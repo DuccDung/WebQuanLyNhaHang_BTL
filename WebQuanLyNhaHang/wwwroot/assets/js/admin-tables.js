@@ -3,10 +3,6 @@
   const mobileNavBackdrop = document.getElementById("mobile-nav-backdrop");
   const dashboardSidebar = document.getElementById("dashboard-sidebar");
   const loadingOverlay = document.getElementById("tableLoadingOverlay");
-
-  setupMobileNav();
-  setupAccountMenu();
-  setupSalesMenu();
   setupTableCards();
   setupTableQr();
   setupOrderNotification();

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
+using WebQuanLyNhaHang.Authorization;
 using WebQuanLyNhaHang.Models;
 
 namespace WebQuanLyNhaHang.Filters;
@@ -10,7 +11,7 @@ public sealed class AdminSessionAuthorizeAttribute : ActionFilterAttribute
 {
     public override void OnActionExecuting(ActionExecutingContext context)
     {
-        var employeeId = context.HttpContext.Session.GetInt32("NhanVienId");
+        var employeeId = context.HttpContext.Session.GetInt32(SessionKeys.EmployeeId);
 
         if (!employeeId.HasValue)
         {
@@ -27,9 +28,11 @@ public sealed class AdminSessionAuthorizeAttribute : ActionFilterAttribute
             return;
         }
 
-        context.HttpContext.Session.Remove("NhanVienId");
-        context.HttpContext.Session.Remove("NhanVienName");
-        context.HttpContext.Session.Remove("NhanVienTaiKhoan");
+        context.HttpContext.Session.Remove(SessionKeys.EmployeeId);
+        context.HttpContext.Session.Remove(SessionKeys.EmployeeName);
+        context.HttpContext.Session.Remove(SessionKeys.EmployeeAccount);
+        context.HttpContext.Session.Remove(SessionKeys.RoleKey);
+        context.HttpContext.Session.Remove(SessionKeys.RolePermissionId);
         context.Result = BuildUnauthorizedResult(context);
     }
 

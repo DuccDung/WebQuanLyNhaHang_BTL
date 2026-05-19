@@ -1,12 +1,7 @@
 (function () {
   const mobileNavTrigger = document.getElementById("mobile-nav-trigger");
   const mobileNavBackdrop = document.getElementById("mobile-nav-backdrop");
-  const dashboardSidebar = document.getElementById("dashboard-sidebar");
-
-  setupMobileNav();
-  setupAccountMenu();
-  setupSalesMenu();
-  setupEmployeeFilters();
+  const dashboardSidebar = document.getElementById("dashboard-sidebar");  setupEmployeeFilters();
   setupColumnMenu();
   setupExport();
   setupEmployeeModals();

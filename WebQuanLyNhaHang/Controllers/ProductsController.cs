@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
@@ -14,6 +15,7 @@ using WebQuanLyNhaHang.ViewModel;
 namespace WebQuanLyNhaHang.Controllers
 {
     [AdminSessionAuthorize]
+    [RoleAuthorize(PermissionModules.Products, PermissionActions.View)]
     public class ProductsController : Controller
     {
         private readonly QlnhaHangBtlContext _context;
@@ -50,6 +52,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: Products/Create
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Create)]
         public IActionResult Create()
         {
             ViewData["CateId"] = new SelectList(_context.Categories, "CateId", "TenLoaiSanPham");
@@ -59,6 +62,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Create)]
         public async Task<IActionResult> Create([Bind("ProductId,CateId,TenSanPham,MoTa,GiaTien,SoLuong")] Product product, IFormFile FileInterface, bool returnToIndexModal = false)
         {
             if (ModelState.IsValid)
@@ -94,6 +98,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: Products/Edit/5
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -114,6 +119,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int id, [Bind("ProductId,CateId,TenSanPham,MoTa,GiaTien,SoLuong")] Product product, IFormFile? FileInterface)
         {
             if (id != product.ProductId)
@@ -154,6 +160,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: Products/EditFromModal/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Edit)]
         public async Task<IActionResult> EditFromModal(int id, [Bind("ProductId,CateId,TenSanPham,MoTa,GiaTien,SoLuong")] Product product, IFormFile? FileInterface)
         {
             var isAjaxRequest = string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
@@ -223,6 +230,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: Products/Delete/5
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Delete)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -244,6 +252,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: Products/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Products, PermissionActions.Delete)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var isAjaxRequest = string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);

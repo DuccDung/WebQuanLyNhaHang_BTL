@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
+using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Hubs;
 using WebQuanLyNhaHang.Models;
 
@@ -84,6 +86,8 @@ namespace WebQuanLyNhaHang.Controllers
 
 
         // GET: ChiTietHoaDons
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.View)]
         public async Task<IActionResult> Index()
         {
             var qlnhaHangBtlContext = _context.ChiTietHoaDons.Where(c => !c.Remove && !c.Dh.Remove).Include(c => c.Dh).Include(c => c.Product);
@@ -91,6 +95,8 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: ChiTietHoaDons/Details/5
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Details)]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -111,6 +117,8 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: ChiTietHoaDons/Create
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Create)]
         public IActionResult Create()
         {
             ViewData["DhId"] = new SelectList(_context.DonHangs.Where(item => !item.Remove), "DhId", "DhId");
@@ -123,6 +131,8 @@ namespace WebQuanLyNhaHang.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Create)]
         public async Task<IActionResult> Create([Bind("CthdId,SoLuong,ThanhTien,DhId,ProductId,Ghichu")] ChiTietHoaDon chiTietHoaDon)
         {
             if (ModelState.IsValid)
@@ -139,6 +149,8 @@ namespace WebQuanLyNhaHang.Controllers
 
 
         // GET: ChiTietHoaDons/Edit/5
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -161,6 +173,8 @@ namespace WebQuanLyNhaHang.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int id, [Bind("CthdId,SoLuong,ThanhTien,DhId,ProductId,Ghichu")] ChiTietHoaDon chiTietHoaDon)
         {
             if (id != chiTietHoaDon.CthdId)
@@ -194,6 +208,8 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: ChiTietHoaDons/Delete/5
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Delete)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -216,6 +232,8 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: ChiTietHoaDons/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OrderDetails, PermissionActions.Delete)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var chiTietHoaDon = await _context.ChiTietHoaDons.FindAsync(id);

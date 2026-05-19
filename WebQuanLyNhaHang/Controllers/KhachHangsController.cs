@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
@@ -13,6 +14,7 @@ using WebQuanLyNhaHang.ViewModel;
 namespace WebQuanLyNhaHang.Controllers
 {
     [AdminSessionAuthorize]
+    [RoleAuthorize(PermissionModules.Customers, PermissionActions.View)]
     public class KhachHangsController : Controller
     {
         private readonly QlnhaHangBtlContext _context;
@@ -122,6 +124,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: KhachHangs/Create
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Create)]
         public IActionResult Create()
         {
             return View();
@@ -130,6 +133,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: KhachHangs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Create)]
         public async Task<IActionResult> Create([Bind("KhId,TenKhachHang,DiaChi,SoDienThoai,TaiKhoan,MatKhau,PathPhoto")] KhachHang khachHang)
         {
             if (ModelState.IsValid)
@@ -144,6 +148,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Create)]
         public async Task<IActionResult> CreateFromModal([Bind("KhId,TenKhachHang,DiaChi,SoDienThoai,TaiKhoan,MatKhau,PathPhoto")] KhachHang khachHang)
         {
             if (string.IsNullOrWhiteSpace(khachHang.TenKhachHang))
@@ -220,6 +225,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: KhachHangs/Edit/5
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -239,6 +245,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: KhachHangs/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int id, [Bind("KhId,TenKhachHang,DiaChi,SoDienThoai,TaiKhoan,MatKhau,PathPhoto")] KhachHang khachHang)
         {
             if (id != khachHang.KhId)
@@ -284,6 +291,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: KhachHangs/Delete/5
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Delete)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -304,6 +312,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: KhachHangs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Customers, PermissionActions.Delete)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var khachHang = await _context.KhachHangs

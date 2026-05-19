@@ -2,7 +2,11 @@
 @using System.Globalization
 @using Microsoft.AspNetCore.Http
 @{
-    Layout = null;
+    Layout = "_AdminContentLayout";
+    ViewData["Title"] = "Sản phẩm";
+    ViewData["ActiveAdminNav"] = "Products";
+    ViewData["AdminTopbarClass"] = "topbar--products";
+    ViewData["ShowAdminTopbarMeta"] = false;
     var products = Model?.Products?.ToList() ?? new List<WebQuanLyNhaHang.Models.Product>();
     var createProduct = Model?.CreateProduct ?? new WebQuanLyNhaHang.Models.Product();
     var createCategoryOptions = Model?.CategoryOptions ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
@@ -12,6 +16,9 @@
     var culture = CultureInfo.GetCultureInfo("vi-VN");
     var adminName = Context.Session.GetString("NhanVienName") ?? "Admin";
     var adminAccount = Context.Session.GetString("NhanVienTaiKhoan") ?? "admin";
+    var canCreateProduct = Context.CanCreate(PermissionModules.Products);
+    var canEditProduct = Context.CanEdit(PermissionModules.Products);
+    var canDeleteProduct = Context.CanDelete(PermissionModules.Products);
     var initials = string.Concat(
         adminName
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -87,493 +94,440 @@
     string NormalizeValue(string? value) =>
         (value ?? string.Empty).Trim().ToLowerInvariant();
 }
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sản phẩm</title>
-    <link rel="icon" type="image/svg+xml" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
-    <link rel="shortcut icon" href="~/assets/images/admin-favicon.svg" asp-append-version="true" />
-    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+
+@section Styles
+{
     <link rel="stylesheet" href="~/assets/css/admin-products.css" asp-append-version="true" />
-</head>
-<body>
-    <div class="dashboard-app">
-        @await Html.PartialAsync("_AdminSidebar")
+}
 
-        <button class="mobile-nav-backdrop" id="mobile-nav-backdrop" type="button" aria-label="Đóng menu" hidden></button>
 
-        <div class="main-shell">
-            <header class="topbar topbar--products">
-                <button class="icon-button mobile-nav-trigger" id="mobile-nav-trigger" type="button" aria-label="Mở menu" aria-controls="dashboard-sidebar" aria-expanded="false">
+<div class="page-stack">
+    <section class="mini-stats-grid">
+        <article class="card mini-stat">
+            <p class="mini-stat__label">Tổng sản phẩm</p>
+            <h2 class="mini-stat__value">@totalProducts.ToString("N0", culture)</h2>
+        </article>
+        <article class="card mini-stat">
+            <p class="mini-stat__label">Danh mục đang có</p>
+            <h2 class="mini-stat__value is-blue">@totalCategories.ToString("N0", culture)</h2>
+        </article>
+        <article class="card mini-stat">
+            <p class="mini-stat__label">Sản phẩm co anh</p>
+            <h2 class="mini-stat__value is-green">@productsWithImage.ToString("N0", culture)</h2>
+        </article>
+        <article class="card mini-stat">
+            <p class="mini-stat__label">Giá trung bình</p>
+            <h2 class="mini-stat__value is-purple">@FormatCurrency(averagePrice)</h2>
+        </article>
+    </section>
+
+    <section class="card toolbar-card">
+        <div class="toolbar-row">
+            <div class="search-input toolbar-grow">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                    <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                <input type="search" data-product-search placeholder="Tìm kiếm theo tên sản phẩm..." />
+            </div>
+
+            <label class="select-shell">
+                <select data-category-filter>
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var categoryName in filterCategoryOptions)
+                    {
+                        <option value="@NormalizeValue(categoryName)">@categoryName</option>
+                    }
+                </select>
+            </label>
+
+            @if (canCreateProduct)
+            {
+            <div class="toolbar-actions">
+                <a class="button-primary toolbar-action-button" href="@Url.Action("Create", "Products")" data-open-create-modal>
                     <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
                     </svg>
-                </button>
+                    Thêm sản phẩm
+                </a>
+            </div>
+            }
+        </div>
+    </section>
 
-                <div class="topbar__actions">
-                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M15 17H5.6a1 1 0 0 1-.8-1.6L6 14V10a6 6 0 1 1 12 0v4l1.2 1.4a1 1 0 0 1-.8 1.6H15ZM10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </svg>
-                        <span class="notification-dot"></span>
-                    </button>
-
-                    <div class="account-menu">
-                        <button class="account-trigger" id="account-trigger" type="button" aria-expanded="false">
-                            <span class="account-trigger__avatar">@initials</span>
-                            <span class="account-trigger__copy">
-                                <strong>@adminName</strong>
-                                <small>@adminAccount</small>
-                            </span>
-                            <span class="account-trigger__chevron" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none">
-                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </span>
-                        </button>
-
-                        <div class="account-dropdown" id="account-dropdown" hidden>
-                            <div class="account-dropdown__header">
-                                <strong>@adminName</strong>
-                                <span>@adminAccount</span>
-                            </div>
-                            <a class="account-dropdown__item" href="@Url.Action("Index", "Admin")">Dashboard tổng quan</a>
-                            <a class="account-dropdown__item" href="@Url.Action("Index", "Products")">Danh sách sản phẩm</a>
-                            <a class="account-dropdown__item is-danger" href="@Url.Action("Logout", "Admin")">Đăng xuất</a>
-                        </div>
-                    </div>
+    <section class="card table-card">
+        <div class="table-toolbar table-toolbar--products">
+            <div class="table-toolbar__summary">
+                <div class="table-toolbar__headline">
+                    <h2>Danh sách sản phẩm</h2>
                 </div>
-            </header>
+                <div class="muted-note">
+                    Hiển thị <span data-visible-count>@totalProducts</span> / <span data-total-count>@totalProducts</span> sản phẩm từ bảng dữ liệu hiện tại
+                </div>
+            </div>
 
-            <main class="dashboard-scroll">
-                <div class="page-stack">
-                    <section class="mini-stats-grid">
-                        <article class="card mini-stat">
-                            <p class="mini-stat__label">Tổng sản phẩm</p>
-                            <h2 class="mini-stat__value">@totalProducts.ToString("N0", culture)</h2>
-                        </article>
-                        <article class="card mini-stat">
-                            <p class="mini-stat__label">Danh mục đang có</p>
-                            <h2 class="mini-stat__value is-blue">@totalCategories.ToString("N0", culture)</h2>
-                        </article>
-                        <article class="card mini-stat">
-                            <p class="mini-stat__label">Sản phẩm co anh</p>
-                            <h2 class="mini-stat__value is-green">@productsWithImage.ToString("N0", culture)</h2>
-                        </article>
-                        <article class="card mini-stat">
-                            <p class="mini-stat__label">Giá trung bình</p>
-                            <h2 class="mini-stat__value is-purple">@FormatCurrency(averagePrice)</h2>
-                        </article>
-                    </section>
+            <div class="table-toolbar__stats">
+                <span class="table-toolbar__pill">
+                    <strong>@productsWithImage</strong>
+                    Có ảnh
+                </span>
+                <span class="table-toolbar__pill">
+                    <strong>@totalCategories</strong>
+                    Danh mục
+                </span>
+                <span class="table-toolbar__pill is-green">
+                    <strong>@readyProducts</strong>
+                    Sẵn sàng
+                </span>
+            </div>
+        </div>
 
-                    <section class="card toolbar-card">
-                        <div class="toolbar-row">
-                            <div class="search-input toolbar-grow">
-                                <svg viewBox="0 0 24 24" fill="none">
-                                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
-                                    <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                                </svg>
-                                <input type="search" data-product-search placeholder="Tìm kiếm theo tên sản phẩm..." />
-                            </div>
-
-                            <label class="select-shell">
-                                <select data-category-filter>
-                                    <option value="">Tất cả danh mục</option>
-                                    @foreach (var categoryName in filterCategoryOptions)
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th class="is-right">Giá bán</th>
+                        <th>Loại</th>
+                        <th>Trạng thái</th>
+                        <th class="is-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in products)
+                    {
+                        var status = ResolveStatus(item);
+                        var categoryName = item.Cate?.TenLoaiSanPham ?? "Chưa phân loại";
+                        var typeLabel = ResolveTypeLabel(item);
+                        var nameValue = NormalizeValue(item.TenSanPham);
+                        var categoryValue = NormalizeValue(categoryName);
+                        <tr class="data-row" data-product-row data-product-id="@item.ProductId" data-name="@nameValue" data-category="@categoryValue">
+                            <td class="data-cell data-cell--product">
+                                <div class="thumb-cell" data-product-thumb-cell>
+                                    @if (!string.IsNullOrWhiteSpace(item.PathPhoto))
                                     {
-                                        <option value="@NormalizeValue(categoryName)">@categoryName</option>
+                                        <img class="product-thumb" src="@item.PathPhoto" alt="@item.TenSanPham" />
                                     }
-                                </select>
-                            </label>
-
-                            <div class="toolbar-actions">
-                                <a class="button-primary toolbar-action-button" href="@Url.Action("Create", "Products")" data-open-create-modal>
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                                    </svg>
-                                    Thêm sản phẩm
-                                </a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="card table-card">
-                        <div class="table-toolbar table-toolbar--products">
-                            <div class="table-toolbar__summary">
-                                <div class="table-toolbar__headline">
-                                    <h2>Danh sách sản phẩm</h2>
-                                </div>
-                                <div class="muted-note">
-                                    Hiển thị <span data-visible-count>@totalProducts</span> / <span data-total-count>@totalProducts</span> sản phẩm từ bảng dữ liệu hiện tại
-                                </div>
-                            </div>
-
-                            <div class="table-toolbar__stats">
-                                <span class="table-toolbar__pill">
-                                    <strong>@productsWithImage</strong>
-                                    Có ảnh
-                                </span>
-                                <span class="table-toolbar__pill">
-                                    <strong>@totalCategories</strong>
-                                    Danh mục
-                                </span>
-                                <span class="table-toolbar__pill is-green">
-                                    <strong>@readyProducts</strong>
-                                    Sẵn sàng
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Sản phẩm</th>
-                                        <th>Danh mục</th>
-                                        <th class="is-right">Giá bán</th>
-                                        <th>Loại</th>
-                                        <th>Trạng thái</th>
-                                        <th class="is-right">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in products)
+                                    else
                                     {
-                                        var status = ResolveStatus(item);
-                                        var categoryName = item.Cate?.TenLoaiSanPham ?? "Chưa phân loại";
-                                        var typeLabel = ResolveTypeLabel(item);
-                                        var nameValue = NormalizeValue(item.TenSanPham);
-                                        var categoryValue = NormalizeValue(categoryName);
-                                        <tr class="data-row" data-product-row data-product-id="@item.ProductId" data-name="@nameValue" data-category="@categoryValue">
-                                            <td class="data-cell data-cell--product">
-                                                <div class="thumb-cell" data-product-thumb-cell>
-                                                    @if (!string.IsNullOrWhiteSpace(item.PathPhoto))
-                                                    {
-                                                        <img class="product-thumb" src="@item.PathPhoto" alt="@item.TenSanPham" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="table-avatar">@((item.TenSanPham ?? "SP").Substring(0, 1).ToUpperInvariant())</span>
-                                                    }
-                                                    <div class="person-cell__meta">
-                                                        <div class="person-cell__heading">
-                                                            <strong data-product-name>@(item.TenSanPham ?? "Sản phẩm chưa đặt tên")</strong>
-                                                            <span class="product-id-chip">ID #@item.ProductId</span>
-                                                        </div>
-                                                        <span data-product-description>@(string.IsNullOrWhiteSpace(item.MoTa) ? "Chưa có mô tả cho sản phẩm này." : item.MoTa)</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="data-cell" data-label="Danh mục">
-                                                <div class="table-field">
-                                                    <span class="table-field__tag" data-product-category-label>@categoryName</span>
-                                                </div>
-                                            </td>
-                                            <td class="is-right data-cell" data-label="Giá bán">
-                                                <div class="price-stack">
-                                                    <span class="table-price" data-product-price>@FormatCurrency(item.GiaTien)</span>
-                                                </div>
-                                            </td>
-                                            <td class="data-cell" data-label="Loại">
-                                                <div class="table-field">
-                                                    <span class="table-field__value--soft" data-product-type-label>@typeLabel</span>
-                                                </div>
-                                            </td>
-                                            <td class="data-cell" data-label="Trạng thái"><span class="status-badge @status.CssClass" data-product-status>@status.Label</span></td>
-                                            <td class="is-right data-cell" data-label="Thao tác">
-                                                <span class="inline-actions">
-                                                    <button class="icon-action" type="button" title="Xem chi tiết" aria-label="Xem chi tiết @item.TenSanPham" data-open-modal="product-preview-@item.ProductId">
-                                                        <svg viewBox="0 0 24 24" fill="none">
-                                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
-                                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
-                                                        </svg>
-                                                    </button>
-                                                    <button class="icon-action" type="button" title="Chỉnh sửa" aria-label="Chỉnh sửa @item.TenSanPham" data-open-modal="product-edit-@item.ProductId">
-                                                        <svg viewBox="0 0 24 24" fill="none">
-                                                            <path d="M4 20h4l10.5-10.5-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
-                                                            <path d="m12.5 6.5 4 4" stroke="currentColor" stroke-width="2"></path>
-                                                        </svg>
-                                                    </button>
-                                                    <button class="icon-action icon-action--danger" type="button" title="Xóa" aria-label="Xóa @item.TenSanPham" data-open-modal="product-delete-@item.ProductId">
-                                                        <svg viewBox="0 0 24 24" fill="none">
-                                                            <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                        </svg>
-                                                    </button>
-                                                </span>
-                                            </td>
-                                        </tr>
+                                        <span class="table-avatar">@((item.TenSanPham ?? "SP").Substring(0, 1).ToUpperInvariant())</span>
                                     }
-                                    <tr class="table-empty" data-empty-row hidden>
-                                        <td colspan="6">Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="pagination-row">
-                            <span class="muted-note">Trang 1 / 1</span>
-                            <div class="pagination-actions">
-                                <span class="pagination-page is-active">1</span>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </main>
+                                    <div class="person-cell__meta">
+                                        <div class="person-cell__heading">
+                                            <strong data-product-name>@(item.TenSanPham ?? "Sản phẩm chưa đặt tên")</strong>
+                                            <span class="product-id-chip">ID #@item.ProductId</span>
+                                        </div>
+                                        <span data-product-description>@(string.IsNullOrWhiteSpace(item.MoTa) ? "Chưa có mô tả cho sản phẩm này." : item.MoTa)</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="data-cell" data-label="Danh mục">
+                                <div class="table-field">
+                                    <span class="table-field__tag" data-product-category-label>@categoryName</span>
+                                </div>
+                            </td>
+                            <td class="is-right data-cell" data-label="Giá bán">
+                                <div class="price-stack">
+                                    <span class="table-price" data-product-price>@FormatCurrency(item.GiaTien)</span>
+                                </div>
+                            </td>
+                            <td class="data-cell" data-label="Loại">
+                                <div class="table-field">
+                                    <span class="table-field__value--soft" data-product-type-label>@typeLabel</span>
+                                </div>
+                            </td>
+                            <td class="data-cell" data-label="Trạng thái"><span class="status-badge @status.CssClass" data-product-status>@status.Label</span></td>
+                            <td class="is-right data-cell" data-label="Thao tác">
+                                <span class="inline-actions">
+                                    <button class="icon-action" type="button" title="Xem chi tiết" aria-label="Xem chi tiết @item.TenSanPham" data-open-modal="product-preview-@item.ProductId">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"></path>
+                                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                                        </svg>
+                                    </button>
+                                    <button class="icon-action" type="button" title="Chỉnh sửa" aria-label="Chỉnh sửa @item.TenSanPham" data-open-modal="product-edit-@item.ProductId">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 20h4l10.5-10.5-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                                            <path d="m12.5 6.5 4 4" stroke="currentColor" stroke-width="2"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="icon-action icon-action--danger" type="button" title="Xóa" aria-label="Xóa @item.TenSanPham" data-open-modal="product-delete-@item.ProductId">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </button>
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    <tr class="table-empty" data-empty-row hidden>
+                        <td colspan="6">Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    @foreach (var item in products)
-    {
-        var status = ResolveStatus(item);
-        var categoryName = item.Cate?.TenLoaiSanPham ?? "Chưa phân loại";
-        var typeLabel = ResolveTypeLabel(item);
-        var isEditModalOpen = openEditProductId == item.ProductId;
-        var modalEditProduct = isEditModalOpen && editProduct != null
-            ? editProduct
-            : item;
-
-        <div class="modal-shell product-action-modal" id="product-preview-@item.ProductId" aria-hidden="true">
-            <div class="modal-backdrop" data-close-modal></div>
-            <div class="modal-card modal-card--preview" role="dialog" aria-modal="true" aria-labelledby="product-preview-title-@item.ProductId">
-                <div class="modal-card__header modal-card__header--compact">
-                    <div>
-                        <p class="modal-card__eyebrow">Xem trước</p>
-                        <h2 id="product-preview-title-@item.ProductId" data-preview-name>@item.TenSanPham</h2>
-                        <span>Xem nhanh thông tin sản phẩm theo giao diện gần với phần người dùng.</span>
-                    </div>
-                    <button class="modal-close" type="button" aria-label="Đóng popup" data-close-modal>
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="product-preview">
-                    <div class="product-preview__media" data-preview-media>
-                        @if (!string.IsNullOrWhiteSpace(item.PathPhoto))
-                        {
-                            <img src="@item.PathPhoto" alt="@item.TenSanPham" />
-                        }
-                        else
-                        {
-                            <span>@((item.TenSanPham ?? "SP").Substring(0, 1).ToUpperInvariant())</span>
-                        }
-                    </div>
-                    <div class="product-preview__content">
-                        <div class="product-preview__chips">
-                            <span data-preview-category>@categoryName</span>
-                            <span data-preview-type>@typeLabel</span>
-                            <span class="@status.CssClass" data-preview-status>@status.Label</span>
-                        </div>
-                        <h3 data-preview-name>@(item.TenSanPham ?? "Sản phẩm chưa đặt tên")</h3>
-                        <p data-preview-description>@(string.IsNullOrWhiteSpace(item.MoTa) ? "Chưa có mô tả cho sản phẩm này." : item.MoTa)</p>
-                        <div class="product-preview__footer">
-                            <strong data-preview-price>@FormatCurrency(item.GiaTien)</strong>
-                            <span>ID #@item.ProductId</span>
-                        </div>
-                    </div>
-                </div>
+        <div class="pagination-row">
+            <span class="muted-note">Trang 1 / 1</span>
+            <div class="pagination-actions">
+                <span class="pagination-page is-active">1</span>
             </div>
         </div>
+    </section>
+</div>
 
-        <div class="modal-shell product-action-modal @(isEditModalOpen ? "is-open" : string.Empty)" id="product-edit-@item.ProductId" aria-hidden="@(!isEditModalOpen).ToString().ToLowerInvariant()">
-            <div class="modal-backdrop" data-close-modal></div>
-            <div class="modal-card" role="dialog" aria-modal="true" aria-label="Chỉnh sửa sản phẩm">
-                <div class="modal-card__header modal-card__header--actions-only">
-                    <button class="modal-close" type="button" aria-label="Đóng popup" data-close-modal>
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                        </svg>
-                    </button>
-                </div>
+@foreach (var item in products)
+{
+    var status = ResolveStatus(item);
+    var categoryName = item.Cate?.TenLoaiSanPham ?? "Chưa phân loại";
+    var typeLabel = ResolveTypeLabel(item);
+    var isEditModalOpen = openEditProductId == item.ProductId;
+    var modalEditProduct = isEditModalOpen && editProduct != null
+        ? editProduct
+        : item;
 
-                <form class="product-form" asp-action="EditFromModal" asp-route-id="@item.ProductId" method="post" enctype="multipart/form-data" data-edit-modal-form>
-                    <input type="hidden" name="ProductId" value="@item.ProductId" />
-
-                    <div class="validation-summary @(isEditModalOpen && !ViewData.ModelState.IsValid ? "is-visible" : string.Empty)" data-edit-modal-message role="alert" aria-live="polite">
-                        @Html.ValidationSummary(true, null, new { @class = "validation-summary__list" })
-                    </div>
-
-                    <div class="product-form__grid">
-                        <div class="field-group">
-                            <label for="edit-cate-id-@item.ProductId">Danh mục</label>
-                            <div class="field-control">
-                                <label class="select-shell">
-                                    <select id="edit-cate-id-@item.ProductId" name="CateId">
-                                        <option value="">Chọn danh mục</option>
-                                        @foreach (var option in createCategoryOptions)
-                                        {
-                                            var isSelected = option.Value == modalEditProduct.CateId?.ToString();
-                                            <option value="@option.Value" selected="@(isSelected ? "selected" : null)">@option.Text</option>
-                                        }
-                                    </select>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label for="edit-product-name-@item.ProductId">Tên sản phẩm</label>
-                            <div class="field-control">
-                                <input id="edit-product-name-@item.ProductId" class="form-input" type="text" name="TenSanPham" value="@modalEditProduct.TenSanPham" />
-                            </div>
-                            @Html.ValidationMessage("TenSanPham", null, new { @class = "validation-error" })
-                        </div>
-
-                        <div class="field-group field-group--full">
-                            <label for="edit-product-description-@item.ProductId">Mô tả</label>
-                            <div class="field-control">
-                                <textarea id="edit-product-description-@item.ProductId" class="form-textarea" name="MoTa" rows="4">@modalEditProduct.MoTa</textarea>
-                            </div>
-                            @Html.ValidationMessage("MoTa", null, new { @class = "validation-error" })
-                        </div>
-
-                        <div class="field-group">
-                            <label for="edit-product-price-@item.ProductId">Giá bán</label>
-                            <div class="field-control">
-                                <input id="edit-product-price-@item.ProductId" class="form-input" type="number" step="1000" min="0" name="GiaTien" value="@modalEditProduct.GiaTien?.ToString("0.##", CultureInfo.InvariantCulture)" />
-                            </div>
-                            @Html.ValidationMessage("GiaTien", null, new { @class = "validation-error" })
-                        </div>
-
-                        <div class="field-group">
-                            <label for="edit-product-file-@item.ProductId">Ảnh sản phẩm</label>
-                            <div class="field-control field-control--file">
-                                <input id="edit-product-file-@item.ProductId" class="file-input" type="file" name="FileInterface" accept="image/*" data-file-input />
-                                <span class="file-input__text" data-file-input-label>@(string.IsNullOrWhiteSpace(modalEditProduct.PathPhoto) ? "Chưa chọn tệp ảnh" : "Đang dùng ảnh hiện tại")</span>
-                            </div>
-                            <p class="field-hint">Bỏ trống nếu muốn giữ ảnh hiện tại.</p>
-                        </div>
-                    </div>
-
-                    <div class="modal-actions">
-                        <button class="button-outline" type="button" data-close-modal>Hủy</button>
-                        <button class="button-primary" type="submit">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M5 12.5 10 17 19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                            Lưu thay đổi
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="modal-shell product-action-modal" id="product-delete-@item.ProductId" aria-hidden="true">
-            <div class="modal-backdrop" data-close-modal></div>
-            <div class="modal-card modal-card--confirm" role="dialog" aria-modal="true" aria-labelledby="product-delete-title-@item.ProductId">
-                <div class="delete-confirm">
-                    <div class="delete-confirm__icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </svg>
-                    </div>
-                    <h2 id="product-delete-title-@item.ProductId">Xóa sản phẩm này?</h2>
-                    <p>Bạn sắp xóa sản phẩm <strong data-delete-product-name>@item.TenSanPham</strong> khỏi danh sách hiển thị. Sau khi xác nhận, sản phẩm này sẽ không còn xuất hiện trong khu vực quản lý và bán hàng.</p>
-
-                    <form asp-action="Delete" asp-route-id="@item.ProductId" method="post" data-delete-modal-form>
-                        <input type="hidden" name="id" value="@item.ProductId" />
-                        <div class="modal-actions modal-actions--center">
-                            <button class="button-outline" type="button" data-close-modal>Hủy</button>
-                            <button class="button-danger" type="submit">Xác nhận xóa</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    }
-
-    <div class="modal-shell @(createModalOpen ? "is-open" : string.Empty)" id="create-product-modal" data-open-on-load="@createModalOpen.ToString().ToLowerInvariant()" aria-hidden="@(!createModalOpen).ToString().ToLowerInvariant()">
-        <div class="modal-backdrop" data-close-create-modal data-close-modal></div>
-        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-product-title">
-            <div class="modal-card__header">
+    <div class="modal-shell product-action-modal" id="product-preview-@item.ProductId" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card modal-card--preview" role="dialog" aria-modal="true" aria-labelledby="product-preview-title-@item.ProductId">
+            <div class="modal-card__header modal-card__header--compact">
                 <div>
-                    <p class="modal-card__eyebrow">Tạo nhanh</p>
-                    <h2 id="create-product-title">Thêm sản phẩm moi</h2>
-                    <span>Form này gửi trực tiếp về <code>/Products/Create</code> và giữ nguyên logic upload, lưu và chuyển hướng.</span>
+                    <p class="modal-card__eyebrow">Xem trước</p>
+                    <h2 id="product-preview-title-@item.ProductId" data-preview-name>@item.TenSanPham</h2>
+                    <span>Xem nhanh thông tin sản phẩm theo giao diện gần với phần người dùng.</span>
                 </div>
-                <button class="modal-close" type="button" aria-label="Đóng popup" data-close-create-modal>
+                <button class="modal-close" type="button" aria-label="Đóng popup" data-close-modal>
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
                     </svg>
                 </button>
             </div>
 
-            <form class="product-form" asp-action="Create" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="returnToIndexModal" value="true" />
+            <div class="product-preview">
+                <div class="product-preview__media" data-preview-media>
+                    @if (!string.IsNullOrWhiteSpace(item.PathPhoto))
+                    {
+                        <img src="@item.PathPhoto" alt="@item.TenSanPham" />
+                    }
+                    else
+                    {
+                        <span>@((item.TenSanPham ?? "SP").Substring(0, 1).ToUpperInvariant())</span>
+                    }
+                </div>
+                <div class="product-preview__content">
+                    <div class="product-preview__chips">
+                        <span data-preview-category>@categoryName</span>
+                        <span data-preview-type>@typeLabel</span>
+                        <span class="@status.CssClass" data-preview-status>@status.Label</span>
+                    </div>
+                    <h3 data-preview-name>@(item.TenSanPham ?? "Sản phẩm chưa đặt tên")</h3>
+                    <p data-preview-description>@(string.IsNullOrWhiteSpace(item.MoTa) ? "Chưa có mô tả cho sản phẩm này." : item.MoTa)</p>
+                    <div class="product-preview__footer">
+                        <strong data-preview-price>@FormatCurrency(item.GiaTien)</strong>
+                        <span>ID #@item.ProductId</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="validation-summary @(ViewData.ModelState.IsValid ? string.Empty : "is-visible")">
+    <div class="modal-shell product-action-modal @(isEditModalOpen ? "is-open" : string.Empty)" id="product-edit-@item.ProductId" aria-hidden="@(!isEditModalOpen).ToString().ToLowerInvariant()">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-label="Chỉnh sửa sản phẩm">
+            <div class="modal-card__header modal-card__header--actions-only">
+                <button class="modal-close" type="button" aria-label="Đóng popup" data-close-modal>
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form class="product-form" asp-action="EditFromModal" asp-route-id="@item.ProductId" method="post" enctype="multipart/form-data" data-edit-modal-form>
+                <input type="hidden" name="ProductId" value="@item.ProductId" />
+
+                <div class="validation-summary @(isEditModalOpen && !ViewData.ModelState.IsValid ? "is-visible" : string.Empty)" data-edit-modal-message role="alert" aria-live="polite">
                     @Html.ValidationSummary(true, null, new { @class = "validation-summary__list" })
                 </div>
 
                 <div class="product-form__grid">
                     <div class="field-group">
-                        <label for="create-cate-id">Danh mục</label>
+                        <label for="edit-cate-id-@item.ProductId">Danh mục</label>
                         <div class="field-control">
                             <label class="select-shell">
-                                <select id="create-cate-id" name="CateId">
+                                <select id="edit-cate-id-@item.ProductId" name="CateId">
                                     <option value="">Chọn danh mục</option>
                                     @foreach (var option in createCategoryOptions)
                                     {
-                                        var isSelected = option.Selected || option.Value == createProduct.CateId?.ToString();
+                                        var isSelected = option.Value == modalEditProduct.CateId?.ToString();
                                         <option value="@option.Value" selected="@(isSelected ? "selected" : null)">@option.Text</option>
                                     }
                                 </select>
                             </label>
                         </div>
-                        @Html.ValidationMessage("CateId", null, new { @class = "validation-error" })
                     </div>
 
                     <div class="field-group">
-                        <label for="create-product-name">Tên sản phẩm</label>
+                        <label for="edit-product-name-@item.ProductId">Tên sản phẩm</label>
                         <div class="field-control">
-                            <input id="create-product-name" class="form-input" type="text" name="TenSanPham" value="@createProduct.TenSanPham" placeholder="Ví dụ: Trà đào cam sả" />
+                            <input id="edit-product-name-@item.ProductId" class="form-input" type="text" name="TenSanPham" value="@modalEditProduct.TenSanPham" />
                         </div>
                         @Html.ValidationMessage("TenSanPham", null, new { @class = "validation-error" })
                     </div>
 
                     <div class="field-group field-group--full">
-                        <label for="create-product-description">Mô tả</label>
+                        <label for="edit-product-description-@item.ProductId">Mô tả</label>
                         <div class="field-control">
-                            <textarea id="create-product-description" class="form-textarea" name="MoTa" rows="4" placeholder="Mô tả ngắn gọn về món, thành phần hoặc điểm nhấn sản phẩm.">@createProduct.MoTa</textarea>
+                            <textarea id="edit-product-description-@item.ProductId" class="form-textarea" name="MoTa" rows="4">@modalEditProduct.MoTa</textarea>
                         </div>
                         @Html.ValidationMessage("MoTa", null, new { @class = "validation-error" })
                     </div>
 
                     <div class="field-group">
-                        <label for="create-product-price">Giá bán</label>
+                        <label for="edit-product-price-@item.ProductId">Giá bán</label>
                         <div class="field-control">
-                            <input id="create-product-price" class="form-input" type="number" step="1000" min="0" name="GiaTien" value="@createProduct.GiaTien?.ToString("0.##", CultureInfo.InvariantCulture)" placeholder="Nhập giá bán" />
+                            <input id="edit-product-price-@item.ProductId" class="form-input" type="number" step="1000" min="0" name="GiaTien" value="@modalEditProduct.GiaTien?.ToString("0.##", CultureInfo.InvariantCulture)" />
                         </div>
                         @Html.ValidationMessage("GiaTien", null, new { @class = "validation-error" })
                     </div>
 
                     <div class="field-group">
-                        <label for="create-product-file">Ảnh sản phẩm</label>
+                        <label for="edit-product-file-@item.ProductId">Ảnh sản phẩm</label>
                         <div class="field-control field-control--file">
-                            <input id="create-product-file" class="file-input" type="file" name="FileInterface" accept="image/*" data-file-input />
-                            <span class="file-input__text" data-file-input-label>Chưa chọn tệp ảnh</span>
+                            <input id="edit-product-file-@item.ProductId" class="file-input" type="file" name="FileInterface" accept="image/*" data-file-input />
+                            <span class="file-input__text" data-file-input-label>@(string.IsNullOrWhiteSpace(modalEditProduct.PathPhoto) ? "Chưa chọn tệp ảnh" : "Đang dùng ảnh hiện tại")</span>
                         </div>
-                        <p class="field-hint">Nếu bỏ trống, sản phẩm vẫn được tạo như trang <code>Create</code> cũ.</p>
+                        <p class="field-hint">Bỏ trống nếu muốn giữ ảnh hiện tại.</p>
                     </div>
                 </div>
 
                 <div class="modal-actions">
-                    <button class="button-outline" type="button" data-close-create-modal>Hủy</button>
+                    <button class="button-outline" type="button" data-close-modal>Hủy</button>
                     <button class="button-primary" type="submit">
                         <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            <path d="M5 12.5 10 17 19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                         </svg>
-                        Lưu sản phẩm
+                        Lưu thay đổi
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div class="modal-shell product-action-modal" id="product-delete-@item.ProductId" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card modal-card--confirm" role="dialog" aria-modal="true" aria-labelledby="product-delete-title-@item.ProductId">
+            <div class="delete-confirm">
+                <div class="delete-confirm__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7h16M9 7V4h6v3M8 7l1 12h6l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </div>
+                <h2 id="product-delete-title-@item.ProductId">Xóa sản phẩm này?</h2>
+                <p>Bạn sắp xóa sản phẩm <strong data-delete-product-name>@item.TenSanPham</strong> khỏi danh sách hiển thị. Sau khi xác nhận, sản phẩm này sẽ không còn xuất hiện trong khu vực quản lý và bán hàng.</p>
+
+                <form asp-action="Delete" asp-route-id="@item.ProductId" method="post" data-delete-modal-form>
+                    <input type="hidden" name="id" value="@item.ProductId" />
+                    <div class="modal-actions modal-actions--center">
+                        <button class="button-outline" type="button" data-close-modal>Hủy</button>
+                        <button class="button-danger" type="submit">Xác nhận xóa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="modal-shell @(createModalOpen ? "is-open" : string.Empty)" id="create-product-modal" data-open-on-load="@createModalOpen.ToString().ToLowerInvariant()" aria-hidden="@(!createModalOpen).ToString().ToLowerInvariant()">
+    <div class="modal-backdrop" data-close-create-modal data-close-modal></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-product-title">
+        <div class="modal-card__header">
+            <div>
+                <p class="modal-card__eyebrow">Tạo nhanh</p>
+                <h2 id="create-product-title">Thêm sản phẩm moi</h2>
+                <span>Form này gửi trực tiếp về <code>/Products/Create</code> và giữ nguyên logic upload, lưu và chuyển hướng.</span>
+            </div>
+            <button class="modal-close" type="button" aria-label="Đóng popup" data-close-create-modal>
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+            </button>
+        </div>
+
+        <form class="product-form" asp-action="Create" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="returnToIndexModal" value="true" />
+
+            <div class="validation-summary @(ViewData.ModelState.IsValid ? string.Empty : "is-visible")">
+                @Html.ValidationSummary(true, null, new { @class = "validation-summary__list" })
+            </div>
+
+            <div class="product-form__grid">
+                <div class="field-group">
+                    <label for="create-cate-id">Danh mục</label>
+                    <div class="field-control">
+                        <label class="select-shell">
+                            <select id="create-cate-id" name="CateId">
+                                <option value="">Chọn danh mục</option>
+                                @foreach (var option in createCategoryOptions)
+                                {
+                                    var isSelected = option.Selected || option.Value == createProduct.CateId?.ToString();
+                                    <option value="@option.Value" selected="@(isSelected ? "selected" : null)">@option.Text</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+                    @Html.ValidationMessage("CateId", null, new { @class = "validation-error" })
+                </div>
+
+                <div class="field-group">
+                    <label for="create-product-name">Tên sản phẩm</label>
+                    <div class="field-control">
+                        <input id="create-product-name" class="form-input" type="text" name="TenSanPham" value="@createProduct.TenSanPham" placeholder="Ví dụ: Trà đào cam sả" />
+                    </div>
+                    @Html.ValidationMessage("TenSanPham", null, new { @class = "validation-error" })
+                </div>
+
+                <div class="field-group field-group--full">
+                    <label for="create-product-description">Mô tả</label>
+                    <div class="field-control">
+                        <textarea id="create-product-description" class="form-textarea" name="MoTa" rows="4" placeholder="Mô tả ngắn gọn về món, thành phần hoặc điểm nhấn sản phẩm.">@createProduct.MoTa</textarea>
+                    </div>
+                    @Html.ValidationMessage("MoTa", null, new { @class = "validation-error" })
+                </div>
+
+                <div class="field-group">
+                    <label for="create-product-price">Giá bán</label>
+                    <div class="field-control">
+                        <input id="create-product-price" class="form-input" type="number" step="1000" min="0" name="GiaTien" value="@createProduct.GiaTien?.ToString("0.##", CultureInfo.InvariantCulture)" placeholder="Nhập giá bán" />
+                    </div>
+                    @Html.ValidationMessage("GiaTien", null, new { @class = "validation-error" })
+                </div>
+
+                <div class="field-group">
+                    <label for="create-product-file">Ảnh sản phẩm</label>
+                    <div class="field-control field-control--file">
+                        <input id="create-product-file" class="file-input" type="file" name="FileInterface" accept="image/*" data-file-input />
+                        <span class="file-input__text" data-file-input-label>Chưa chọn tệp ảnh</span>
+                    </div>
+                    <p class="field-hint">Nếu bỏ trống, sản phẩm vẫn được tạo như trang <code>Create</code> cũ.</p>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="button-outline" type="button" data-close-create-modal>Hủy</button>
+                <button class="button-primary" type="submit">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                    Lưu sản phẩm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+{
     <script src="~/assets/js/admin-products.js" asp-append-version="true"></script>
-    <script src="~/assets/js/admin-service-notifications.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
-</body>
-</html>
+}
+

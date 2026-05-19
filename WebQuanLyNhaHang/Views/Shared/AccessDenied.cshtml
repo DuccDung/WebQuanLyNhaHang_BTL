@@ -1,0 +1,87 @@
+@{
+    Layout = null;
+    var fallbackAction = Context.CanAccessModule(PermissionModules.Dashboard)
+        ? "Index"
+        : Context.CanAccessModule(PermissionModules.DineIn)
+            ? "Ban"
+            : "Index";
+    var fallbackController = Context.CanAccessModule(PermissionModules.Dashboard) || Context.CanAccessModule(PermissionModules.DineIn)
+        ? "Admin"
+        : "Products";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Khong co quyen truy cap</title>
+    <link rel="stylesheet" href="~/assets/css/admin-dashboard.css" asp-append-version="true" />
+    <style>
+        .access-denied-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .access-denied-content {
+            text-align: center;
+            max-width: 500px;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .access-denied-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            color: #ef4444;
+        }
+        .access-denied-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        .access-denied-content h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .access-denied-content p {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-denied-page">
+        <div class="access-denied-content">
+            <div class="access-denied-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
+                    <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <h1>Khong co quyen truy cap</h1>
+            <p>Ban khong co quyen de truy cap trang nay. Vui long lien he quan tri vien neu ban cho rang day la loi.</p>
+            <a href="@Url.Action(fallbackAction, fallbackController)" class="btn">
+                Quay lai trang cho phep
+            </a>
+        </div>
+    </div>
+</body>
+</html>

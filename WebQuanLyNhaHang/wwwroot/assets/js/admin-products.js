@@ -7,13 +7,10 @@
   let applyProductFilters = () => {};
 
   setupLoadingUi();
-  setupMobileNav();
   setupCreateModal();
   setupActionModals();
   setupModalEditForms();
   setupModalDeleteForms();
-  setupAccountMenu();
-  setupSalesMenu();
   setupProductFilters();
   restoreProductsScrollPosition();
 

@@ -1,6 +1,8 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
+using WebQuanLyNhaHang.Extensions;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
@@ -8,6 +10,7 @@ using WebQuanLyNhaHang.ViewModel;
 namespace WebQuanLyNhaHang.Controllers
 {
     [AdminSessionAuthorize]
+    [RoleAuthorize(PermissionModules.Employees, PermissionActions.View)]
     public class NhanViensController : Controller
     {
         private static readonly CultureInfo VietnameseCulture = CultureInfo.GetCultureInfo("vi-VN");
@@ -66,9 +69,14 @@ namespace WebQuanLyNhaHang.Controllers
                 return NotFound(new { message = "Không tìm thấy nhân viên." });
             }
 
-            return Json(BuildEmployeeDetailPayload(employee, await BuildRoleOptionsAsync()));
+            var roles = HttpContext.CanAssignEmployeeRoles()
+                ? await BuildRoleOptionsAsync()
+                : new List<EmployeeRoleOptionPayload>();
+
+            return Json(BuildEmployeeDetailPayload(employee, roles));
         }
 
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Create)]
         public IActionResult Create()
         {
             return View();
@@ -76,6 +84,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Create)]
         public async Task<IActionResult> Create([Bind("NvId,TenNhanVien,NgaySinh,DiaChi,HeSoLuong,PathPhoto,TaiKhoan,MatKhau")] NhanVien nhanVien)
         {
             if (ModelState.IsValid)
@@ -91,6 +100,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Edit)]
         public async Task<IActionResult> Edit([Bind("NvId,TenNhanVien,NgaySinh,DiaChi,HeSoLuong,TaiKhoan,MatKhau")] NhanVien nhanVien, IFormFile? fileImg)
         {
             var employee = await _context.NhanViens.FirstOrDefaultAsync(item => item.NvId == nhanVien.NvId && !item.Remove);
@@ -125,6 +135,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         [HttpPost]
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Edit)]
         public async Task<IActionResult> UpdateFromModal(EmployeeModalUpdateRequest request)
         {
             if (request.EmployeeId <= 0)
@@ -158,7 +169,11 @@ namespace WebQuanLyNhaHang.Controllers
             employee.TaiKhoan = request.Account.Trim();
             employee.MatKhau = string.IsNullOrWhiteSpace(request.Password) ? employee.MatKhau : request.Password.Trim();
 
-            await SyncEmployeeRoleAsync(employee, request.RoleId);
+            if (HttpContext.CanAssignEmployeeRoles())
+            {
+                await SyncEmployeeRoleAsync(employee, request.RoleId);
+            }
+
             await _context.SaveChangesAsync();
 
             var refreshedEmployee = await LoadEmployeeAsync(employee.NvId);
@@ -175,11 +190,16 @@ namespace WebQuanLyNhaHang.Controllers
                 success = true,
                 message = "Đã cập nhật nhân viên.",
                 row = BuildEmployeeRowPayload(row),
-                details = BuildEmployeeDetailPayload(refreshedEmployee, await BuildRoleOptionsAsync())
+                details = BuildEmployeeDetailPayload(
+                    refreshedEmployee,
+                    HttpContext.CanAssignEmployeeRoles()
+                        ? await BuildRoleOptionsAsync()
+                        : new List<EmployeeRoleOptionPayload>())
             });
         }
 
         [HttpGet]
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var employee = await _context.NhanViens
@@ -191,6 +211,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Delete)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var employee = await SoftDeleteEmployeeAsync(id);
@@ -199,6 +220,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         [HttpPost]
+        [RoleAuthorize(PermissionModules.Employees, PermissionActions.Delete)]
         public async Task<IActionResult> DeleteFromModal(int id)
         {
             var employee = await SoftDeleteEmployeeAsync(id);

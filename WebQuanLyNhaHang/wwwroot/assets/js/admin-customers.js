@@ -3,10 +3,6 @@
   const mobileNavBackdrop = document.getElementById("mobile-nav-backdrop");
   const dashboardSidebar = document.getElementById("dashboard-sidebar");
   let applyCustomerSearch = () => {};
-
-  setupMobileNav();
-  setupAccountMenu();
-  setupSalesMenu();
   setupCustomerSearch();
   setupCreateCustomerModal();
   setupCustomerDetailModal();

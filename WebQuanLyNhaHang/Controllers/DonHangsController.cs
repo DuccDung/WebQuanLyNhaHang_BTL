@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
+using WebQuanLyNhaHang.Extensions;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Hubs;
 using WebQuanLyNhaHang.Models;
@@ -16,6 +18,7 @@ using WebQuanLyNhaHang.ViewModel;
 namespace WebQuanLyNhaHang.Controllers
 {
     [AdminSessionAuthorize]
+    [RoleAuthorize(PermissionModules.OnlineOrders, PermissionActions.View)]
     public class DonHangsController : Controller
     {
         private static readonly CultureInfo VietnameseCulture = CultureInfo.GetCultureInfo("vi-VN");
@@ -253,7 +256,7 @@ namespace WebQuanLyNhaHang.Controllers
                     ? Url.Action(nameof(UpdateDeliveryStatus), "DonHangs", new { id = donHang.DhId })
                     : null,
                 statusOptions = metadata != null
-                    ? BuildDeliveryStatusOptions()
+                    ? BuildDeliveryStatusOptions(HttpContext.GetUserRole())
                     : Array.Empty<object>(),
                 employeeName = donHang.Nv == null || donHang.Nv.Remove || string.IsNullOrWhiteSpace(donHang.Nv.TenNhanVien)
                     ? "Chưa phân công"
@@ -264,11 +267,17 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         [HttpPost]
+        [RoleAuthorize(PermissionModules.OnlineOrders, PermissionActions.UpdateStatusLimited)]
         public async Task<IActionResult> UpdateDeliveryStatus(int id, string status)
         {
             if (!OnlineOrderMetadata.IsValidStatus(status) || status == OnlineOrderMetadata.StatusCart)
             {
                 return BadRequest(new { message = "Trạng thái giao hàng không hợp lệ." });
+            }
+
+            if (!HttpContext.CanUpdateDeliveryStatus(status))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Ban khong co quyen cap nhat trang thai nay." });
             }
 
             var donHang = await _context.DonHangs
@@ -340,6 +349,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: DonHangs/Create
+        [RoleAuthorize(PermissionModules.Orders, PermissionActions.Create)]
         public IActionResult Create()
         {
             ViewData["BanId"] = new SelectList(_context.Bans.Where(item => !item.Remove), "BanId", "BanId");
@@ -352,6 +362,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: DonHangs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Orders, PermissionActions.Create)]
         public async Task<IActionResult> Create([Bind("DhId,KhId,BanId,KmId,GioVao,GioRa,TongTien,NvId")] DonHang donHang)
         {
             if (ModelState.IsValid)
@@ -368,6 +379,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: DonHangs/Edit/5
+        [RoleAuthorize(PermissionModules.Orders, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -390,6 +402,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: DonHangs/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.Orders, PermissionActions.Edit)]
         public async Task<IActionResult> Edit(int id, [Bind("DhId,KhId,BanId,KmId,GioVao,GioRa,TongTien,NvId")] DonHang donHang)
         {
             if (id != donHang.DhId)
@@ -425,6 +438,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         // GET: DonHangs/Delete/5
+        [RoleAuthorize(PermissionModules.OnlineOrders, PermissionActions.Delete)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -449,6 +463,7 @@ namespace WebQuanLyNhaHang.Controllers
         // POST: DonHangs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize(PermissionModules.OnlineOrders, PermissionActions.Delete)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var donHang = await _context.DonHangs.FindAsync(id);
@@ -553,7 +568,7 @@ namespace WebQuanLyNhaHang.Controllers
             return ("pending", "Chờ xử lý", "is-pending");
         }
 
-        private static object[] BuildDeliveryStatusOptions()
+        private static object[] BuildDeliveryStatusOptions(string? role = null)
         {
             return new object[]
             {

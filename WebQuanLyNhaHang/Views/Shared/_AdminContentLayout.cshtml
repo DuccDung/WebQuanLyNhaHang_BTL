@@ -2,14 +2,24 @@
 @{
     Layout = null;
     var title = ViewData["Title"]?.ToString() ?? "Admin";
-    var activeNav = ViewData["ActiveAdminNav"]?.ToString() ?? string.Empty;
+    var topbarClass = ViewData["AdminTopbarClass"]?.ToString();
+    var topbarEyebrow = ViewData["AdminTopbarEyebrow"]?.ToString() ?? "Cloudy Cafe Admin";
+    var topbarTitle = ViewData["AdminTopbarTitle"]?.ToString() ?? title;
+    var topbarSubtitle = ViewData["AdminTopbarSubtitle"]?.ToString();
+    var showTopbarMeta = !string.Equals(ViewData["ShowAdminTopbarMeta"]?.ToString(), "false", StringComparison.OrdinalIgnoreCase);
     var adminName = Context.Session.GetString("NhanVienName") ?? "Admin";
     var adminAccount = Context.Session.GetString("NhanVienTaiKhoan") ?? "admin";
+    var adminRoleLabel = Context.GetUserRoleLabel();
     var initials = string.Concat(
         adminName
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Take(2)
             .Select(part => char.ToUpperInvariant(part[0])));
+
+    if (string.IsNullOrWhiteSpace(initials))
+    {
+        initials = "A";
+    }
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -26,13 +36,61 @@
     <div class="dashboard-app">
         @await Html.PartialAsync("_AdminSidebar")
 
+        <button class="mobile-nav-backdrop" id="mobile-nav-backdrop" type="button" aria-label="Đóng menu" hidden></button>
+
         <div class="main-shell">
-            <header class="topbar">
-                <div class="topbar__meta">
-                    <p class="topbar__eyebrow">Cloudy Café Admin</p>
-                    <div class="topbar__heading">
-                        <h1>@title</h1>
-                        <p>@adminAccount</p>
+            <header class="topbar @topbarClass">
+                <button class="icon-button mobile-nav-trigger" id="mobile-nav-trigger" type="button" aria-label="Mở menu" aria-controls="dashboard-sidebar" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+
+                @if (showTopbarMeta)
+                {
+                    <div class="topbar__meta">
+                        <p class="topbar__eyebrow">@topbarEyebrow</p>
+                        <div class="topbar__heading">
+                            <h1>@topbarTitle</h1>
+                            @if (!string.IsNullOrWhiteSpace(topbarSubtitle))
+                            {
+                                <p>@topbarSubtitle</p>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="topbar__actions">
+                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M15 17H5.6a1 1 0 0 1-.8-1.6L6 14V10a6 6 0 1 1 12 0v4l1.2 1.4a1 1 0 0 1-.8 1.6H15ZM10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    <div class="account-menu">
+                        <button class="account-trigger" id="account-trigger" type="button" aria-expanded="false">
+                            <span class="account-trigger__avatar">@initials</span>
+                            <span class="account-trigger__copy">
+                                <strong>@adminName</strong>
+                                <small>@adminAccount</small>
+                            </span>
+                            <span class="account-trigger__chevron" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </span>
+                        </button>
+
+                        <div class="account-dropdown" id="account-dropdown" hidden>
+                            <div class="account-dropdown__header">
+                                <strong>@adminName</strong>
+                                <span>@adminRoleLabel</span>
+                            </div>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Admin")">Dashboard tổng quan</a>
+                            <a class="account-dropdown__item" href="@Url.Action("Index", "Products")">Danh sách sản phẩm</a>
+                            <a class="account-dropdown__item is-danger" href="@Url.Action("Logout", "Admin")">Đăng xuất</a>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -43,6 +101,7 @@
         </div>
     </div>
 
+    <script src="~/assets/js/admin-layout.js" asp-append-version="true"></script>
     <script src="~/assets/js/admin-service-notifications.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

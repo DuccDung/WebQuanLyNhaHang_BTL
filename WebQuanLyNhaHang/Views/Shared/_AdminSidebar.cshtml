@@ -22,6 +22,15 @@
     }
 
     var adminName = Context.Session.GetString("NhanVienName") ?? "Admin";
+    var canViewDashboard = Context.CanAccessModule(PermissionModules.Reports);
+    var canViewProducts = Context.CanAccessModule(PermissionModules.Products);
+    var canViewOrders = Context.CanAccessModule(PermissionModules.OnlineOrders);
+    var canViewOrderDetails = Context.CanAccessModule(PermissionModules.OrderDetails);
+    var canViewCustomers = Context.CanAccessModule(PermissionModules.Customers);
+    var canViewEmployees = Context.CanAccessModule(PermissionModules.Employees);
+    var canViewStores = Context.CanAccessModule(PermissionModules.Stores);
+    var canViewStories = Context.CanAccessModule(PermissionModules.Stories);
+    var canViewDineIn = Context.CanAccessModule(PermissionModules.DineIn);
     var adminRoleLabel = "Quản trị vận hành";
     var initials = string.Concat(
         adminName

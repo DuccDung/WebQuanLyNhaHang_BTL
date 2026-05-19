@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
@@ -7,6 +8,7 @@ using WebQuanLyNhaHang.ViewModel;
 namespace WebQuanLyNhaHang.Controllers;
 
 [AdminSessionAuthorize]
+[RoleAuthorize(PermissionModules.Stores, PermissionActions.View)]
 public class AdminCuaHangsController : Controller
 {
     private readonly QlnhaHangBtlContext _context;
@@ -23,6 +25,7 @@ public class AdminCuaHangsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize(PermissionModules.Stores, PermissionActions.Create)]
     public async Task<IActionResult> Create(CuaHang form)
     {
         Normalize(form);
@@ -40,6 +43,7 @@ public class AdminCuaHangsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [RoleAuthorize(PermissionModules.Stores, PermissionActions.Edit)]
     public async Task<IActionResult> Edit(int id)
     {
         var store = await _context.CuaHangs.FirstOrDefaultAsync(item => item.CuaHangId == id && !item.Remove);
@@ -53,6 +57,7 @@ public class AdminCuaHangsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize(PermissionModules.Stores, PermissionActions.Edit)]
     public async Task<IActionResult> Edit(int id, CuaHang form)
     {
         var store = await _context.CuaHangs.FirstOrDefaultAsync(item => item.CuaHangId == id && !item.Remove);
@@ -92,6 +97,7 @@ public class AdminCuaHangsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize(PermissionModules.Stores, PermissionActions.HideShow)]
     public async Task<IActionResult> Delete(int id)
     {
         var store = await _context.CuaHangs.FirstOrDefaultAsync(item => item.CuaHangId == id && !item.Remove);

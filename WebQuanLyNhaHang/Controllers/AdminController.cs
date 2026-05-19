@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text.Json;
+using WebQuanLyNhaHang.Authorization;
+using WebQuanLyNhaHang.Extensions;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Hubs;
 using WebQuanLyNhaHang.Models;
@@ -23,6 +25,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.Reports, PermissionActions.View)]
         public async Task<IActionResult> Index()
         {
             var orders = await _context.DonHangs
@@ -198,7 +201,7 @@ namespace WebQuanLyNhaHang.Controllers
                     }
                 },
                 DashboardPayloadJson = JsonSerializer.Serialize(
-                    payload,
+                    BuildAuthorizedDashboardPayload(payload),
                     new JsonSerializerOptions
                     {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -214,7 +217,7 @@ namespace WebQuanLyNhaHang.Controllers
 
             if (employeeId.HasValue && _context.NhanViens.Any(employee => employee.NvId == employeeId.Value && !employee.Remove))
             {
-                return RedirectToAction(nameof(Index));
+                return RedirectToFirstAllowedAdminPage(HttpContext.GetUserRole());
             }
 
             if (employeeId.HasValue)
@@ -240,6 +243,8 @@ namespace WebQuanLyNhaHang.Controllers
 
             var nhanVien = _context.NhanViens
                 .AsNoTracking()
+                .Include(employee => employee.NvPqs.Where(role => !role.Remove))
+                    .ThenInclude(role => role.Pq)
                 .FirstOrDefault(e => !e.Remove && e.TaiKhoan == name && e.MatKhau == password);
             if (nhanVien == null)
             {
@@ -247,11 +252,22 @@ namespace WebQuanLyNhaHang.Controllers
                 return View();
             }
 
-            HttpContext.Session.SetInt32("NhanVienId", nhanVien.NvId);
-            HttpContext.Session.SetString("NhanVienName", nhanVien.TenNhanVien ?? nhanVien.TaiKhoan);
-            HttpContext.Session.SetString("NhanVienTaiKhoan", nhanVien.TaiKhoan);
+            var effectiveRole = AdminPermissions.ResolveEffectiveRole(
+                nhanVien.NvPqs
+                    .Where(role => !role.Remove && role.Pq?.Remove != true)
+                    .Select(role => (role.PqId, role.Pq?.TenQuyen)));
 
-            return RedirectToAction(nameof(Index));
+            HttpContext.Session.SetInt32(SessionKeys.EmployeeId, nhanVien.NvId);
+            HttpContext.Session.SetString(SessionKeys.EmployeeName, nhanVien.TenNhanVien ?? nhanVien.TaiKhoan);
+            HttpContext.Session.SetString(SessionKeys.EmployeeAccount, nhanVien.TaiKhoan);
+            HttpContext.Session.SetString(SessionKeys.RoleKey, effectiveRole.RoleKey);
+
+            if (effectiveRole.RoleId.HasValue)
+            {
+                HttpContext.Session.SetInt32(SessionKeys.RolePermissionId, effectiveRole.RoleId.Value);
+            }
+
+            return RedirectToFirstAllowedAdminPage(effectiveRole.RoleKey);
         }
 
         [AdminSessionAuthorize]
@@ -263,6 +279,7 @@ namespace WebQuanLyNhaHang.Controllers
         }
 
         [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.DineIn, PermissionActions.View)]
         public IActionResult Ban()
         {
             var adminName = HttpContext.Session.GetString("NhanVienName") ?? "Admin";
@@ -278,6 +295,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpGet]
         [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.DineIn, PermissionActions.View)]
         public IActionResult GetFormBuy(int id)
         {
             ViewModelGetFormBuy viewModel = new ViewModelGetFormBuy(_context);
@@ -288,6 +306,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpGet]
         [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.OnlineOrders, PermissionActions.View)]
         public async Task<IActionResult> LatestOrderNotification(int? orderId)
         {
             var query = _context.DonHangs
@@ -318,6 +337,7 @@ namespace WebQuanLyNhaHang.Controllers
 
         [HttpGet]
         [AdminSessionAuthorize]
+        [RoleAuthorize(PermissionModules.DineIn, PermissionActions.ProcessPayment)]
         public async Task<IActionResult> ProcessPayment(int BanId, string? paymentMethod)
         {
             var donHangList = await _context.DonHangs
@@ -802,9 +822,47 @@ namespace WebQuanLyNhaHang.Controllers
 
         private void ClearAdminSession()
         {
-            HttpContext.Session.Remove("NhanVienId");
-            HttpContext.Session.Remove("NhanVienName");
-            HttpContext.Session.Remove("NhanVienTaiKhoan");
+            HttpContext.Session.Remove(SessionKeys.EmployeeId);
+            HttpContext.Session.Remove(SessionKeys.EmployeeName);
+            HttpContext.Session.Remove(SessionKeys.EmployeeAccount);
+            HttpContext.Session.Remove(SessionKeys.RoleKey);
+            HttpContext.Session.Remove(SessionKeys.RolePermissionId);
+        }
+
+        private IActionResult RedirectToFirstAllowedAdminPage(string role)
+        {
+            if (AdminPermissions.CanViewModule(role, PermissionModules.Reports))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (AdminPermissions.CanViewModule(role, PermissionModules.DineIn))
+            {
+                return RedirectToAction(nameof(Ban));
+            }
+
+            if (AdminPermissions.CanViewModule(role, PermissionModules.OnlineOrders))
+            {
+                return RedirectToAction(nameof(DonHangsController.Index), "DonHangs");
+            }
+
+            if (AdminPermissions.CanViewModule(role, PermissionModules.Products))
+            {
+                return RedirectToAction(nameof(ProductsController.Index), "Products");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private DashboardPayload BuildAuthorizedDashboardPayload(DashboardPayload payload)
+        {
+            if (HttpContext.CanAccessAction(PermissionModules.Reports, PermissionActions.ComparePeriod))
+            {
+                return payload;
+            }
+
+            payload.RevenueComparisonSeries = new Dictionary<string, DashboardComparisonSeries>(StringComparer.OrdinalIgnoreCase);
+            return payload;
         }
 
         private static string BuildInitials(string fullName)

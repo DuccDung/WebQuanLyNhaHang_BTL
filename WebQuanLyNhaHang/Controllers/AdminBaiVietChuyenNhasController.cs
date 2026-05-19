@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebQuanLyNhaHang.Authorization;
 using WebQuanLyNhaHang.Filters;
 using WebQuanLyNhaHang.Models;
 using WebQuanLyNhaHang.ViewModel;
@@ -7,6 +8,7 @@ using WebQuanLyNhaHang.ViewModel;
 namespace WebQuanLyNhaHang.Controllers;
 
 [AdminSessionAuthorize]
+[RoleAuthorize(PermissionModules.Stories, PermissionActions.View)]
 public class AdminBaiVietChuyenNhasController : Controller
 {
     private readonly QlnhaHangBtlContext _context;
@@ -23,6 +25,7 @@ public class AdminBaiVietChuyenNhasController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize(PermissionModules.Stories, PermissionActions.Create)]
     public async Task<IActionResult> Create(BaiVietChuyenNha form)
     {
         Normalize(form);
@@ -41,6 +44,7 @@ public class AdminBaiVietChuyenNhasController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [RoleAuthorize(PermissionModules.Stories, PermissionActions.Edit)]
     public async Task<IActionResult> Edit(int id)
     {
         var post = await _context.BaiVietChuyenNhas.FirstOrDefaultAsync(item => item.BaiVietId == id && !item.Remove);
@@ -54,6 +58,7 @@ public class AdminBaiVietChuyenNhasController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize(PermissionModules.Stories, PermissionActions.Edit)]
     public async Task<IActionResult> Edit(int id, BaiVietChuyenNha form)
     {
         var post = await _context.BaiVietChuyenNhas.FirstOrDefaultAsync(item => item.BaiVietId == id && !item.Remove);
@@ -90,6 +95,7 @@ public class AdminBaiVietChuyenNhasController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize(PermissionModules.Stories, PermissionActions.HideShow)]
     public async Task<IActionResult> Delete(int id)
     {
         var post = await _context.BaiVietChuyenNhas.FirstOrDefaultAsync(item => item.BaiVietId == id && !item.Remove);
